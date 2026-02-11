@@ -61,6 +61,15 @@ window.app = {
         this.currentPage = pageId;
         window.scrollTo(0, 0);
 
+        // Update bottom nav active state
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(function (btn) {
+            btn.classList.remove('active');
+        });
+        var navMap = { 'home': 'nav-home', 'lotes': 'nav-lotes', 'manejo': 'nav-manejo', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro', 'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'config': 'nav-config' };
+        var activeNav = navMap[pageId] || 'nav-home';
+        var navEl = document.getElementById(activeNav);
+        if (navEl) navEl.classList.add('active');
+
         // Render data-driven views
         switch (pageId) {
             case 'home':
@@ -107,6 +116,9 @@ window.app = {
             case 'funcionarios':
                 if (window.funcionarios) window.funcionarios.render();
                 break;
+            case 'balanco':
+                if (window.financeiro) window.financeiro.renderBalanco();
+                break;
         }
     },
 
@@ -127,26 +139,29 @@ window.app = {
 
         var events = window.data.events;
 
-        // Calculate KPIs
-        var totalEntradas = 0;
-        var totalSaidas = 0;
+        // Operational KPIs only — no financial values
         var totalAnimais = 0;
         var totalLotes = 0;
+        var totalPastos = 0;
+        var pesoTotal = 0;
+        var pesados = 0;
 
         events.forEach(function (ev) {
-            if (ev.type === 'VENDA') totalEntradas += (ev.value || 0);
-            if (ev.type === 'COMPRA') totalSaidas += (ev.value || 0);
-            if (ev.type === 'ANIMAL' && ev.status !== 'VENDIDO') totalAnimais++;
+            if (ev.type === 'ANIMAL' && ev.status !== 'VENDIDO') {
+                totalAnimais++;
+                if (ev.peso) { pesoTotal += ev.peso; pesados++; }
+            }
             if (ev.type === 'LOTE' && ev.status === 'ATIVO') totalLotes++;
+            if (ev.type === 'PASTO') totalPastos++;
         });
 
-        var saldo = totalEntradas - totalSaidas;
+        var pesoMedio = pesados > 0 ? (pesoTotal / pesados).toFixed(0) : '--';
 
         container.innerHTML = ''
-            + '<div class="kpi-card"><div class="kpi-label">Rebanho Total</div><div class="kpi-value positive">' + totalAnimais + ' cab</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Rebanho</div><div class="kpi-value positive">' + totalAnimais + ' cab</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value">' + totalLotes + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Entradas (R$)</div><div class="kpi-value positive">R$ ' + totalEntradas.toLocaleString('pt-BR') + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Saldo</div><div class="kpi-value ' + (saldo >= 0 ? 'positive' : 'negative') + '">R$ ' + saldo.toLocaleString('pt-BR') + '</div></div>';
+            + '<div class="kpi-card"><div class="kpi-label">Pastos</div><div class="kpi-value">' + totalPastos + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div></div>';
     },
 
     renderAlerts: function () {

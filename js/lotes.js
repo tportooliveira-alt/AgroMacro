@@ -436,6 +436,124 @@ window.lotes = {
         select.innerHTML = html;
     },
 
+    // ====== GMD — Ganho Médio Diário ======
+    calcGMD: function (lote) {
+        if (!window.data) return null;
+
+        // Get all pesagem events for this lot, sorted by date
+        var pesagens = window.data.events.filter(function (ev) {
+            return ev.type === 'MANEJO' && ev.tipoManejo === 'pesagem' && ev.lote === lote.nome && ev.pesoMedio;
+        }).sort(function (a, b) {
+            return new Date(a.date || a.timestamp) - new Date(b.date || b.timestamp);
+        });
+
+        // Use lot creation as initial weight if no pesagem exists
+        var pesoInicial = lote.pesoMedio || 0;
+        var dataInicial = lote.dataEntrada || lote.date;
+
+        if (!pesoInicial || !dataInicial) return null;
+
+        var pesoAtual = pesoInicial;
+        var dataAtual = dataInicial;
+
+        if (pesagens.length > 0) {
+            var ultima = pesagens[pesagens.length - 1];
+            pesoAtual = ultima.pesoMedio;
+            dataAtual = ultima.date || ultima.timestamp;
+        }
+
+        var d1 = new Date(dataInicial);
+        var d2 = pesagens.length > 0 ? new Date(dataAtual) : new Date();
+        var diasConfinamento = Math.max(1, Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)));
+
+        var ganhoTotal = pesoAtual - pesoInicial;
+        var gmd = ganhoTotal / diasConfinamento;
+
+        // Previsão: dias para atingir peso de abate (480kg)
+        var pesoAbate = 480;
+        var diasParaAbate = null;
+        if (gmd > 0 && pesoAtual < pesoAbate) {
+            diasParaAbate = Math.ceil((pesoAbate - pesoAtual) / gmd);
+        }
+
+        return {
+            gmd: gmd,
+            pesoInicial: pesoInicial,
+            pesoAtual: pesoAtual,
+            ganhoTotal: ganhoTotal,
+            diasConfinamento: diasConfinamento,
+            pesagens: pesagens.length,
+            diasParaAbate: diasParaAbate,
+            pesoAbate: pesoAbate,
+            ultimaPesagem: pesagens.length > 0 ? dataAtual : null
+        };
+    },
+
+    // ====== CUSTO NUTRIÇÃO POR LOTE ======
+    calcCustoNutricao: function (lote) {
+        if (!window.data) return null;
+
+        var custoSalDia = 0;
+        var custoRacaoDia = 0;
+
+        // Find unit price from latest ESTOQUE_ENTRADA for each product
+        function getPrecoUnitario(produtoNome) {
+            if (!produtoNome) return 0;
+            var lower = produtoNome.toLowerCase();
+            var entradas = window.data.events.filter(function (ev) {
+                return ev.type === 'ESTOQUE_ENTRADA' && (ev.name || '').toLowerCase().indexOf(lower) >= 0 && ev.valorUnitario;
+            });
+            if (entradas.length === 0) return 0;
+            return entradas[entradas.length - 1].valorUnitario || 0;
+        }
+
+        // Sal: consumo em g/cab/dia → kg/dia total
+        if (lote.salMineral && lote.salConsumo && lote.qtdAnimais) {
+            var precoSalKg = getPrecoUnitario(lote.salMineral);
+            var salKgDia = (lote.salConsumo / 1000) * lote.qtdAnimais;
+            custoSalDia = salKgDia * precoSalKg;
+        }
+
+        // Ração: consumo em kg/cab/dia
+        if (lote.racao && lote.racaoConsumo && lote.qtdAnimais) {
+            var precoRacaoKg = getPrecoUnitario(lote.racao);
+            var racaoKgDia = lote.racaoConsumo * lote.qtdAnimais;
+            custoRacaoDia = racaoKgDia * precoRacaoKg;
+        }
+
+        var custoDiaTotal = custoSalDia + custoRacaoDia;
+        var custoCabDia = lote.qtdAnimais > 0 ? custoDiaTotal / lote.qtdAnimais : 0;
+
+        // Dias de confinamento
+        var dataEntrada = lote.dataEntrada || lote.date;
+        var diasConf = dataEntrada ? Math.max(1, Math.floor((new Date() - new Date(dataEntrada)) / (1000 * 60 * 60 * 24))) : 1;
+
+        var custoAcumulado = custoDiaTotal * diasConf;
+
+        // Custo por arroba produzida (usando GMD)
+        var gmdData = this.calcGMD(lote);
+        var custoArrobaProduzida = 0;
+        if (gmdData && gmdData.gmd > 0 && lote.qtdAnimais > 0) {
+            // Arrobas produzidas por dia (total do lote): GMD × qtd / 15
+            var arrobasDia = (gmdData.gmd * lote.qtdAnimais) / 15;
+            custoArrobaProduzida = arrobasDia > 0 ? custoDiaTotal / arrobasDia : 0;
+        }
+
+        // Custo mensal
+        var custoMensal = custoDiaTotal * 30;
+
+        return {
+            custoSalDia: custoSalDia,
+            custoRacaoDia: custoRacaoDia,
+            custoDiaTotal: custoDiaTotal,
+            custoCabDia: custoCabDia,
+            custoMensal: custoMensal,
+            custoAcumulado: custoAcumulado,
+            custoArrobaProduzida: custoArrobaProduzida,
+            diasConfinamento: diasConf
+        };
+    },
+
     // ====== RENDER LIST ======
     renderList: function () {
         var container = document.getElementById('lotes-list');
@@ -450,11 +568,20 @@ window.lotes = {
 
         // Summary KPIs
         var totalAnimais = 0;
-        allLotes.forEach(function (l) { totalAnimais += (l.qtdAnimais || 0); });
+        var custoTotalDia = 0;
+        var self = this;
+
+        allLotes.forEach(function (l) {
+            totalAnimais += (l.qtdAnimais || 0);
+            var custo = self.calcCustoNutricao(l);
+            if (custo) custoTotalDia += custo.custoDiaTotal;
+        });
 
         var html = '<div class="kpi-grid" style="margin-bottom:16px;">'
             + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value positive">' + allLotes.length + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Total Animais</div><div class="kpi-value">' + totalAnimais + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Custo/Dia Nutrição</div><div class="kpi-value">R$ ' + custoTotalDia.toFixed(2) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Custo/Mês Nutrição</div><div class="kpi-value">R$ ' + (custoTotalDia * 30).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div></div>'
             + '</div>';
 
         // Juntar Lotes button
@@ -470,8 +597,6 @@ window.lotes = {
             'matrizes': '🐄 Matrizes',
             'touros': '🐃 Touros'
         };
-
-        var self = this;
 
         // Lot cards
         html += allLotes.slice().reverse().map(function (l) {
@@ -493,6 +618,48 @@ window.lotes = {
             }
 
             var nutriLine = nutri.length > 0 ? '<div style="font-size:12px; color:var(--text-light); margin-top:4px;">' + nutri.join(' • ') + '</div>' : '';
+
+            // ====== GMD BADGE ======
+            var gmdData = self.calcGMD(l);
+            var gmdHtml = '';
+            if (gmdData) {
+                var gmdColor = gmdData.gmd >= 0.8 ? '#2E7D32' : gmdData.gmd >= 0.5 ? '#FF8F00' : '#D32F2F';
+                var gmdIcon = gmdData.gmd >= 0.8 ? '🚀' : gmdData.gmd >= 0.5 ? '📈' : '⚠️';
+                gmdHtml += '<div class="gmd-section" style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-left:3px solid ' + gmdColor + ';">';
+                gmdHtml += '<div style="display:flex; justify-content:space-between; align-items:center;">';
+                gmdHtml += '<span style="font-weight:700; color:' + gmdColor + '; font-size:14px;">' + gmdIcon + ' GMD: ' + gmdData.gmd.toFixed(3) + ' kg/dia</span>';
+                gmdHtml += '<span style="font-size:11px; color:#888;">' + gmdData.diasConfinamento + ' dias</span>';
+                gmdHtml += '</div>';
+                gmdHtml += '<div style="font-size:11px; color:#666; margin-top:3px;">';
+                gmdHtml += 'Peso: ' + gmdData.pesoInicial + ' → ' + gmdData.pesoAtual + ' kg (+' + gmdData.ganhoTotal.toFixed(1) + 'kg)';
+                if (gmdData.diasParaAbate) {
+                    gmdHtml += ' • <strong style="color:' + gmdColor + '">Abate (' + gmdData.pesoAbate + 'kg) em ~' + gmdData.diasParaAbate + ' dias</strong>';
+                }
+                gmdHtml += '</div>';
+                if (gmdData.pesagens > 0) {
+                    gmdHtml += '<div style="font-size:10px; color:#999; margin-top:2px;">' + gmdData.pesagens + ' pesagens registradas</div>';
+                }
+                gmdHtml += '</div>';
+            }
+
+            // ====== CUSTO NUTRIÇÃO ======
+            var custoData = self.calcCustoNutricao(l);
+            var custoHtml = '';
+            if (custoData && custoData.custoDiaTotal > 0) {
+                custoHtml += '<div class="custo-section" style="margin-top:6px; padding:8px; background:rgba(46,125,50,0.05); border-radius:8px; border-left:3px solid #1565C0;">';
+                custoHtml += '<div style="font-weight:700; color:#1565C0; font-size:13px;">💰 Custo Nutrição</div>';
+                custoHtml += '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; font-size:12px;">';
+                custoHtml += '<span>📅 R$ ' + custoData.custoDiaTotal.toFixed(2) + '/dia</span>';
+                custoHtml += '<span>🐄 R$ ' + custoData.custoCabDia.toFixed(2) + '/cab/dia</span>';
+                custoHtml += '<span>📆 R$ ' + custoData.custoMensal.toFixed(0) + '/mês</span>';
+                if (custoData.custoArrobaProduzida > 0) {
+                    var corArroba = custoData.custoArrobaProduzida < 120 ? '#2E7D32' : custoData.custoArrobaProduzida < 160 ? '#FF8F00' : '#D32F2F';
+                    custoHtml += '<span style="font-weight:700; color:' + corArroba + '">⚖️ R$ ' + custoData.custoArrobaProduzida.toFixed(2) + '/@ produzida</span>';
+                }
+                custoHtml += '</div>';
+                custoHtml += '<div style="font-size:11px; color:#888; margin-top:3px;">Acumulado (' + custoData.diasConfinamento + ' dias): <strong>R$ ' + custoData.custoAcumulado.toFixed(2) + '</strong></div>';
+                custoHtml += '</div>';
+            }
 
             // Race line
             var racaLine = l.raca ? '<span class="detail">🐄 ' + l.raca + '</span>' : '';
@@ -524,6 +691,8 @@ window.lotes = {
                 + racaLine
                 + nutriLine
                 + duracaoHtml
+                + gmdHtml
+                + custoHtml
                 + '</div>'
                 + actions
                 + '</div>';

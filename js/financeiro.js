@@ -204,5 +204,237 @@ window.financeiro = {
         }
 
         container.innerHTML = html;
+    },
+
+    // ====== BALANÇO GERAL / DRE ======
+    renderBalanco: function () {
+        var container = document.getElementById('balanco-content');
+        if (!container || !window.data) return;
+
+        var events = window.data.events;
+
+        // ─── 1. RECEITAS ───
+        var receitaGado = 0;
+        var vendas = events.filter(function (ev) { return ev.type === 'VENDA'; });
+        vendas.forEach(function (v) { receitaGado += (v.value || 0); });
+
+        var totalArrobasVendidas = 0;
+        vendas.forEach(function (v) {
+            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 15);
+        });
+
+        // ─── 2. CUSTOS VARIÁVEIS ───
+        // 2a. Compra de Gado (Reposição)
+        var custoReposicao = 0;
+        var compras = events.filter(function (ev) { return ev.type === 'COMPRA'; });
+        compras.forEach(function (c) { custoReposicao += (c.value || 0); });
+
+        var totalArrobasCompradas = 0;
+        compras.forEach(function (c) {
+            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 15);
+        });
+
+        // 2b. Nutrição (Ração + Sal + Silagem + Milho...)
+        var custoNutricao = 0;
+        var estoqueNutricao = events.filter(function (ev) {
+            if (ev.type !== 'ESTOQUE_ENTRADA') return false;
+            var cat = (ev.category || '').toLowerCase();
+            var name = (ev.name || '').toLowerCase();
+            return cat === 'racao_sal' || name.indexOf('sal') >= 0 || name.indexOf('ração') >= 0 || name.indexOf('racao') >= 0 || name.indexOf('milho') >= 0 || name.indexOf('silagem') >= 0 || name.indexOf('farelo') >= 0;
+        });
+        estoqueNutricao.forEach(function (ev) { custoNutricao += (ev.value || 0); });
+
+        // 2c. Sanidade (Vacinas + Remédios + Manejo)
+        var custoSanidade = 0;
+        var estoqueRemedios = events.filter(function (ev) {
+            if (ev.type !== 'ESTOQUE_ENTRADA') return false;
+            var cat = (ev.category || '').toLowerCase();
+            var name = (ev.name || '').toLowerCase();
+            return cat === 'remedios' || name.indexOf('vacina') >= 0 || name.indexOf('ivermectina') >= 0 || name.indexOf('antibiótico') >= 0 || name.indexOf('vermifugo') >= 0;
+        });
+        estoqueRemedios.forEach(function (ev) { custoSanidade += (ev.value || 0); });
+
+        // Add manejo costs
+        var manejoCosts = events.filter(function (ev) { return ev.type === 'MANEJO' && ev.cost; });
+        manejoCosts.forEach(function (ev) { custoSanidade += (ev.cost || 0); });
+
+        // ─── 3. CUSTOS FIXOS / INFRAESTRUTURA ───
+        var custoInfra = 0;
+        var estoqueObras = events.filter(function (ev) {
+            if (ev.type !== 'ESTOQUE_ENTRADA') return false;
+            var cat = (ev.category || '').toLowerCase();
+            return cat === 'obras';
+        });
+        estoqueObras.forEach(function (ev) { custoInfra += (ev.value || 0); });
+
+        // 3b. Mão de Obra
+        var custoMaoDeObra = 0;
+        var obras = events.filter(function (ev) { return ev.type === 'OBRA'; });
+        obras.forEach(function (ob) {
+            if (ob.workers && Array.isArray(ob.workers)) {
+                ob.workers.forEach(function (w) {
+                    custoMaoDeObra += ((w.diaria || 0) * (w.dias || 1));
+                });
+            }
+        });
+
+        // ─── TOTAIS ───
+        var custoVariavelTotal = custoReposicao + custoNutricao + custoSanidade;
+        var custoFixoTotal = custoInfra + custoMaoDeObra;
+        var custoOperacionalTotal = custoVariavelTotal + custoFixoTotal;
+        var resultadoBruto = receitaGado - custoReposicao;
+        var resultadoLiquido = receitaGado - custoOperacionalTotal;
+
+        // ─── INDICADORES ZOOTÉCNICOS ───
+        var totalAnimaisAtivos = 0;
+        var totalLotesAtivos = 0;
+        var pesoMedioRebanho = 0;
+        var somaGMD = 0;
+        var countGMD = 0;
+
+        if (window.lotes) {
+            var lotes = window.lotes.getLotes();
+            totalLotesAtivos = lotes.length;
+            lotes.forEach(function (l) {
+                totalAnimaisAtivos += (l.qtdAnimais || 0);
+                pesoMedioRebanho += (l.pesoMedio || 0) * (l.qtdAnimais || 0);
+                var gmd = window.lotes.calcGMD(l);
+                if (gmd && gmd.gmd > 0) {
+                    somaGMD += gmd.gmd;
+                    countGMD++;
+                }
+            });
+            if (totalAnimaisAtivos > 0) pesoMedioRebanho = pesoMedioRebanho / totalAnimaisAtivos;
+        }
+
+        var gmdMedio = countGMD > 0 ? somaGMD / countGMD : 0;
+
+        // Custo por cabeça e por arroba
+        var custoPorCabeca = totalAnimaisAtivos > 0 ? custoOperacionalTotal / totalAnimaisAtivos : 0;
+        var arrobasTotais = totalAnimaisAtivos * pesoMedioRebanho / 15;
+        var custoPorArroba = arrobasTotais > 0 ? custoOperacionalTotal / arrobasTotais : 0;
+        var precoMedioVendaArroba = totalArrobasVendidas > 0 ? receitaGado / totalArrobasVendidas : 0;
+        var margemPorArroba = precoMedioVendaArroba - custoPorArroba;
+
+        // Valor estimado do rebanho (cabeças × peso × preço/@)
+        var valorRebanho = 0;
+        if (precoMedioVendaArroba > 0 && totalAnimaisAtivos > 0) {
+            valorRebanho = arrobasTotais * precoMedioVendaArroba;
+        }
+
+        // Custo diário da fazenda (nutrição dos lotes ativos)
+        var custoDiarioFazenda = 0;
+        if (window.lotes) {
+            window.lotes.getLotes().forEach(function (l) {
+                var c = window.lotes.calcCustoNutricao(l);
+                if (c) custoDiarioFazenda += c.custoDiaTotal;
+            });
+        }
+
+        // ─── RENDER HTML ───
+        var fmt = function (v) { return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+        var html = '';
+
+        // ══ INDICADORES ZOOTÉCNICOS ══
+        html += '<div class="kpi-section">'
+            + '<div class="kpi-title">📊 Indicadores Zootécnicos</div>'
+            + '<div class="kpi-grid">'
+            + '<div class="kpi-card"><div class="kpi-label">Rebanho Ativo</div><div class="kpi-value positive">' + totalAnimaisAtivos + ' cab</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">GMD Médio</div><div class="kpi-value ' + (gmdMedio >= 0.8 ? 'positive' : gmdMedio >= 0.5 ? '' : 'negative') + '">' + gmdMedio.toFixed(3) + ' kg/dia</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedioRebanho.toFixed(0) + ' kg</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">@ no Rebanho</div><div class="kpi-value">' + arrobasTotais.toFixed(0) + ' @</div></div>'
+            + '</div></div>';
+
+        // ══ INDICADORES ECONÔMICOS ══
+        html += '<div class="kpi-section" style="margin-top:12px;">'
+            + '<div class="kpi-title">💰 Indicadores Econômicos</div>'
+            + '<div class="kpi-grid">'
+            + '<div class="kpi-card"><div class="kpi-label">Custo/Cabeça</div><div class="kpi-value">' + fmt(custoPorCabeca) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Custo/@ Total</div><div class="kpi-value">' + fmt(custoPorArroba) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Preço Venda/@</div><div class="kpi-value positive">' + fmt(precoMedioVendaArroba) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Margem/@</div><div class="kpi-value ' + (margemPorArroba >= 0 ? 'positive' : 'negative') + '">' + fmt(margemPorArroba) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Custo Diário Fazenda</div><div class="kpi-value">' + fmt(custoDiarioFazenda) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Custo Mensal Fazenda</div><div class="kpi-value">' + fmt(custoDiarioFazenda * 30) + '</div></div>'
+            + '</div></div>';
+
+        // ══ DRE — DEMONSTRATIVO DE RESULTADO ══
+        html += '<div class="dre-section" style="margin-top:16px;">'
+            + '<div class="kpi-title">📋 DRE — Demonstrativo de Resultado</div>'
+            + '<div class="dre-table">';
+
+        // RECEITAS
+        html += '<div class="dre-header">RECEITAS</div>'
+            + '<div class="dre-row"><span>Venda de Gado</span><span class="text-green">' + fmt(receitaGado) + '</span></div>'
+            + '<div class="dre-row"><span class="dre-sub">@ Vendidas: ' + totalArrobasVendidas.toFixed(1) + ' | Vendas: ' + vendas.length + '</span><span></span></div>'
+            + '<div class="dre-total"><span>TOTAL RECEITAS</span><span class="text-green">' + fmt(receitaGado) + '</span></div>';
+
+        // CUSTOS VARIÁVEIS
+        html += '<div class="dre-header" style="margin-top:12px;">CUSTOS VARIÁVEIS</div>'
+            + '<div class="dre-row"><span>🐄 Reposição de Gado</span><span class="text-red">' + fmt(custoReposicao) + '</span></div>'
+            + '<div class="dre-row"><span>🧂 Nutrição (Ração/Sal/Silagem)</span><span class="text-red">' + fmt(custoNutricao) + '</span></div>'
+            + '<div class="dre-row"><span>💊 Sanidade (Vacinas/Remédios/Manejo)</span><span class="text-red">' + fmt(custoSanidade) + '</span></div>'
+            + '<div class="dre-total"><span>TOTAL VARIÁVEIS</span><span class="text-red">' + fmt(custoVariavelTotal) + '</span></div>';
+
+        // RESULTADO BRUTO
+        html += '<div class="dre-resultado ' + (resultadoBruto >= 0 ? 'positivo' : 'negativo') + '">'
+            + '<span>RESULTADO BRUTO</span><span>' + fmt(resultadoBruto) + '</span></div>';
+
+        // CUSTOS FIXOS
+        html += '<div class="dre-header" style="margin-top:12px;">CUSTOS FIXOS / ESTRUTURAIS</div>'
+            + '<div class="dre-row"><span>🔨 Infraestrutura (Obras/Materiais)</span><span class="text-red">' + fmt(custoInfra) + '</span></div>'
+            + '<div class="dre-row"><span>👷 Mão de Obra</span><span class="text-red">' + fmt(custoMaoDeObra) + '</span></div>'
+            + '<div class="dre-total"><span>TOTAL FIXOS</span><span class="text-red">' + fmt(custoFixoTotal) + '</span></div>';
+
+        // RESULTADO LÍQUIDO
+        html += '<div class="dre-resultado ' + (resultadoLiquido >= 0 ? 'positivo' : 'negativo') + '" style="font-size:16px;">'
+            + '<span>📊 RESULTADO LÍQUIDO</span><span>' + fmt(resultadoLiquido) + '</span></div>';
+
+        html += '</div></div>';
+
+        // ══ PROJEÇÃO / VALOR DO REBANHO ══
+        if (valorRebanho > 0) {
+            var resultadoPotencial = valorRebanho - custoOperacionalTotal + receitaGado;
+            html += '<div class="kpi-section" style="margin-top:16px;">'
+                + '<div class="kpi-title">🔮 Projeção de Resultado</div>'
+                + '<div class="kpi-grid">'
+                + '<div class="kpi-card"><div class="kpi-label">Valor est. Rebanho</div><div class="kpi-value positive">' + fmt(valorRebanho) + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">Custos Acumulados</div><div class="kpi-value negative">' + fmt(custoOperacionalTotal) + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">Resultado Potencial</div><div class="kpi-value ' + (resultadoPotencial >= 0 ? 'positive' : 'negative') + '">' + fmt(resultadoPotencial) + '</div></div>'
+                + '</div></div>';
+        }
+
+        // ══ COMPOSIÇÃO DE CUSTOS (GRÁFICO VISUAL) ══
+        var custoItems = [
+            { label: '🐄 Reposição', valor: custoReposicao, cor: '#E91E63' },
+            { label: '🧂 Nutrição', valor: custoNutricao, cor: '#FF9800' },
+            { label: '💊 Sanidade', valor: custoSanidade, cor: '#2196F3' },
+            { label: '🔨 Infraestrutura', valor: custoInfra, cor: '#795548' },
+            { label: '👷 Mão de Obra', valor: custoMaoDeObra, cor: '#9C27B0' }
+        ];
+
+        var maxCusto = Math.max.apply(null, custoItems.map(function (c) { return c.valor; }));
+
+        if (custoOperacionalTotal > 0) {
+            html += '<div class="kpi-section" style="margin-top:16px;">'
+                + '<div class="kpi-title">📈 Composição de Custos</div>';
+
+            custoItems.forEach(function (item) {
+                var pct = custoOperacionalTotal > 0 ? (item.valor / custoOperacionalTotal * 100) : 0;
+                var barWidth = maxCusto > 0 ? (item.valor / maxCusto * 100) : 0;
+                html += '<div style="margin-bottom:8px;">'
+                    + '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:2px;">'
+                    + '<span>' + item.label + '</span>'
+                    + '<span style="font-weight:700;">' + fmt(item.valor) + ' (' + pct.toFixed(1) + '%)</span>'
+                    + '</div>'
+                    + '<div style="background:rgba(0,0,0,0.06); border-radius:4px; height:12px; overflow:hidden;">'
+                    + '<div style="background:' + item.cor + '; height:100%; width:' + barWidth + '%; border-radius:4px; transition:width 0.5s;"></div>'
+                    + '</div></div>';
+            });
+
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
     }
 };

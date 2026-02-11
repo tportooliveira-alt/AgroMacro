@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AgroMacro</title>
-    <link rel="stylesheet" href="styles.css?v=20260211h">
+    <link rel="stylesheet" href="styles.css?v=20260211n">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2E7D32">
+    <meta name="theme-color" content="#0F1318">
 </head>
 
 <body>
@@ -18,12 +18,12 @@
             <svg class="logo-svg" width="32" height="32" viewBox="0 0 100 100">
                 <path
                     d="M15 75 Q15 45 35 35 Q45 30 55 35 Q65 40 68 50 L85 45 Q88 42 90 45 L88 50 Q85 52 82 50 L70 54 Q72 62 68 70 L72 85 L65 85 L62 72 Q55 78 45 78 Q38 78 32 72 L30 85 L23 85 L27 70 Q22 62 22 55"
-                    fill="#2E7D32" />
-                <circle cx="40" cy="42" r="3" fill="white" />
+                    fill="#D4A843" />
+                <circle cx="40" cy="42" r="3" fill="#0F1318" />
             </svg>
             <h1>AgroMacro</h1>
         </div>
-        <button id="menu-btn" class="icon-btn">☰</button>
+        <button id="menu-btn" class="icon-btn" onclick="window.app.navigate('config')">⚙️</button>
     </header>
 
     <main id="app-container">
@@ -31,76 +31,90 @@
         <!-- ===================== HOME ===================== -->
         <section id="view-home" class="view active">
 
-            <!-- Primary: Compra + Venda de Gado -->
-            <div class="primary-grid">
-                <button class="primary-btn" onclick="window.app.navigate('compra')">
-                    <svg width="44" height="44" viewBox="0 0 100 100">
-                        <path
-                            d="M10 72 Q10 42 30 32 Q40 27 50 32 Q60 37 63 47 L80 42 Q83 39 85 42 L83 47 Q80 49 77 47 L65 51 Q67 59 63 67 L67 82 L60 82 L57 69 Q50 75 40 75 Q33 75 27 69 L25 82 L18 82 L22 67 Q17 59 17 52"
-                            fill="#2E7D32" />
-                        <circle cx="35" cy="39" r="2.5" fill="white" />
-                    </svg>
-                    <span class="label">COMPRA DE GADO</span>
-                    <span class="sub-label">Registrar Entrada</span>
-                </button>
-                <button class="primary-btn" onclick="window.app.navigate('venda')">
-                    <svg width="44" height="44" viewBox="0 0 100 100">
-                        <path
-                            d="M50 10 Q70 10 75 25 L78 35 Q80 45 70 50 Q80 55 78 65 L75 75 Q70 90 50 90 Q30 90 25 75 L22 65 Q20 55 30 50 Q20 45 22 35 L25 25 Q30 10 50 10Z"
-                            fill="#2E7D32" />
-                        <text x="50" y="60" text-anchor="middle" font-size="32" font-weight="bold" fill="white">$</text>
-                    </svg>
-                    <span class="label">VENDA DE GADO</span>
-                    <span class="sub-label">Registrar Venda</span>
-                </button>
+            <!-- Hero Greeting -->
+            <div class="hero-greeting">
+                <div class="greeting-text" id="greeting-text">🤠 Boa tarde</div>
+                <div class="greeting-sub" id="greeting-date"></div>
             </div>
 
-            <!-- Management Grid -->
-            <div class="mgmt-grid">
-                <button class="dash-btn" onclick="window.app.navigate('rebanho')">
-                    <span class="icon">🐄</span>
-                    <span class="label">Rebanho</span>
-                </button>
-                <button class="dash-btn" onclick="window.app.navigate('lotes')">
-                    <span class="icon">📋</span>
-                    <span class="label">Lotes</span>
-                </button>
-                <button class="dash-btn" onclick="window.app.navigate('pastos')">
-                    <span class="icon">🌾</span>
-                    <span class="label">Pastos</span>
-                </button>
-                <button class="dash-btn" onclick="window.app.navigate('estoque')">
-                    <span class="icon">📦</span>
-                    <span class="label">Estoque</span>
-                </button>
-                <button class="dash-btn" onclick="window.app.navigate('fluxo')">
-                    <span class="icon">💰</span>
-                    <span class="label">Fluxo</span>
-                </button>
-                <button class="dash-btn" onclick="window.app.navigate('manejo')">
-                    <span class="icon">💉</span>
-                    <span class="label">Manejo</span>
-                </button>
-            </div>
-
-            <!-- KPI Section -->
+            <!-- KPI Dashboard — Operational only, no financial values -->
             <div class="kpi-section">
-                <div class="kpi-title">Acompanhamento de Lote</div>
+                <div class="kpi-title">Painel da Fazenda</div>
                 <div class="kpi-grid" id="kpi-grid"></div>
+            </div>
+
+            <!-- 4 Main Actions — Field worker tools -->
+            <div class="home-grid">
+                <button class="home-card" onclick="window.app.navigate('lotes')">
+                    <div class="home-card-icon">🐄</div>
+                    <span class="home-card-title">Lotes</span>
+                    <span class="home-card-sub">Gestão do rebanho</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('manejo')">
+                    <div class="home-card-icon">🩺</div>
+                    <span class="home-card-title">Manejo</span>
+                    <span class="home-card-sub">Vacinas e pesagem</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('estoque')">
+                    <div class="home-card-icon">📦</div>
+                    <span class="home-card-title">Estoque</span>
+                    <span class="home-card-sub">Insumos e materiais</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('pastos')">
+                    <div class="home-card-icon">🌾</div>
+                    <span class="home-card-title">Pastos</span>
+                    <span class="home-card-sub">Piquetes e rotação</span>
+                </button>
             </div>
 
             <!-- Alerts Section -->
             <div class="alerts-section">
-                <div class="alerts-title">ALERTAS</div>
+                <div class="alerts-title">⚠️ Alertas</div>
                 <div id="alerts-list"></div>
             </div>
 
-            <!-- Tertiary -->
-            <div class="tertiary-actions">
-                <button class="action-btn" onclick="window.app.navigate('obras')">🔨 Registrar Obra</button>
+        </section>
+
+        <!-- ===================== FINANCEIRO HUB ===================== -->
+        <section id="view-financeiro" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>💲 Financeiro</h2>
+            </div>
+
+            <div class="home-grid">
+                <button class="home-card" onclick="window.app.navigate('compra')">
+                    <div class="home-card-icon">🐂</div>
+                    <span class="home-card-title">Compra de Gado</span>
+                    <span class="home-card-sub">Registrar entrada</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('venda')">
+                    <div class="home-card-icon">💵</div>
+                    <span class="home-card-title">Venda de Gado</span>
+                    <span class="home-card-sub">Registrar saída</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('fluxo')">
+                    <div class="home-card-icon">📊</div>
+                    <span class="home-card-title">Fluxo de Caixa</span>
+                    <span class="home-card-sub">Entradas e saídas</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('balanco')">
+                    <div class="home-card-icon">📋</div>
+                    <span class="home-card-title">Balanço / DRE</span>
+                    <span class="home-card-sub">Resultado operacional</span>
+                </button>
+            </div>
+
+            <!-- Quick links -->
+            <div class="tertiary-actions" style="margin-top: 8px;">
+                <button class="action-btn" onclick="window.app.navigate('obras')">🔨 Obras</button>
                 <button class="action-btn" onclick="window.app.navigate('funcionarios')">👷 Funcionários</button>
-                <button class="action-btn action-btn-muted" onclick="window.app.navigate('config')">⚙️
-                    Configurações</button>
             </div>
         </section>
 
@@ -680,6 +694,15 @@
             <div id="funcionarios-list"></div>
         </section>
 
+        <!-- ===================== BALANÇO / DRE ===================== -->
+        <section id="view-balanco" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>📊 Balanço & DRE</h2>
+            </div>
+            <div id="balanco-content"></div>
+        </section>
+
         <!-- ===================== CONFIGURAÇÕES ===================== -->
         <section id="view-config" class="view hidden">
             <div class="view-header">
@@ -775,17 +798,69 @@
         </div>
     </div>
 
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="window.app.navigate('home')" id="nav-home">
+            <span class="nav-icon">🏠</span>
+            Home
+        </button>
+        <button class="nav-item" onclick="window.app.navigate('lotes')" id="nav-lotes">
+            <span class="nav-icon">🐄</span>
+            Lotes
+        </button>
+        <button class="nav-item" onclick="window.app.navigate('manejo')" id="nav-manejo">
+            <span class="nav-icon">🩺</span>
+            Manejo
+        </button>
+        <button class="nav-item" onclick="window.app.navigate('financeiro')" id="nav-financeiro">
+            <span class="nav-icon">💲</span>
+            Financeiro
+        </button>
+        <button class="nav-item" onclick="window.app.navigate('config')" id="nav-config">
+            <span class="nav-icon">⚙️</span>
+            Config
+        </button>
+    </nav>
+
     <!-- Scripts -->
-    <script src="js/data.js?v=20260211h"></script>
-    <script src="js/rebanho.js?v=20260211h"></script>
-    <script src="js/pastos.js?v=20260211h"></script>
-    <script src="js/lotes.js?v=20260211h"></script>
-    <script src="js/obras.js?v=20260211h"></script>
-    <script src="js/manejo.js?v=20260211h"></script>
-    <script src="js/financeiro.js?v=20260211h"></script>
-    <script src="js/estoque.js?v=20260211h"></script>
-    <script src="js/funcionarios.js?v=20260211h"></script>
-    <script src="app.js?v=20260211h"></script>
+    <script src="js/data.js?v=20260211n"></script>
+    <script src="js/rebanho.js?v=20260211n"></script>
+    <script src="js/pastos.js?v=20260211n"></script>
+    <script src="js/lotes.js?v=20260211n"></script>
+    <script src="js/obras.js?v=20260211n"></script>
+    <script src="js/manejo.js?v=20260211n"></script>
+    <script src="js/financeiro.js?v=20260211n"></script>
+    <script src="js/estoque.js?v=20260211n"></script>
+    <script src="js/funcionarios.js?v=20260211n"></script>
+    <script src="app.js?v=20260211n"></script>
+
+    <!-- Theme & Greeting Init -->
+    <script>
+        (function () {
+            var h = new Date().getHours();
+
+            // Auto dark/light mode — dark between 18h and 6h
+            if (h >= 18 || h < 6) {
+                document.body.classList.add('dark-mode');
+            }
+
+            // Greeting
+            var greetEl = document.getElementById('greeting-text');
+            var dateEl = document.getElementById('greeting-date');
+            if (greetEl) {
+                if (h < 6) greetEl.textContent = '🌙 Boa madrugada';
+                else if (h < 12) greetEl.textContent = '☀️ Bom dia';
+                else if (h < 18) greetEl.textContent = '🤠 Boa tarde';
+                else greetEl.textContent = '🌙 Boa noite';
+            }
+            if (dateEl) {
+                var days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                var months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                var now = new Date();
+                dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' de ' + months[now.getMonth()] + ' de ' + now.getFullYear();
+            }
+        })();
+    </script>
 </body>
 
 </html>
