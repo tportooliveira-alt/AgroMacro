@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AgroMacro</title>
-    <link rel="stylesheet" href="styles.css?v=20260211">
+    <link rel="stylesheet" href="styles.css?v=20260211h">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2E7D32">
 </head>
@@ -98,6 +98,7 @@
             <!-- Tertiary -->
             <div class="tertiary-actions">
                 <button class="action-btn" onclick="window.app.navigate('obras')">🔨 Registrar Obra</button>
+                <button class="action-btn" onclick="window.app.navigate('funcionarios')">👷 Funcionários</button>
                 <button class="action-btn action-btn-muted" onclick="window.app.navigate('config')">⚙️
                     Configurações</button>
             </div>
@@ -358,6 +359,23 @@
                         <input type="number" id="lote-qtd" placeholder="30" required>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Raça Predominante</label>
+                    <select id="lote-raca">
+                        <option value="">Selecionar...</option>
+                        <option value="Nelore">Nelore</option>
+                        <option value="Angus">Angus</option>
+                        <option value="Nelore x Angus">Nelore x Angus</option>
+                        <option value="Brahman">Brahman</option>
+                        <option value="Gir">Gir</option>
+                        <option value="Girolando">Girolando</option>
+                        <option value="Tabapuã">Tabapuã</option>
+                        <option value="Senepol">Senepol</option>
+                        <option value="Nelore PO">Nelore PO</option>
+                        <option value="Mestiço">Mestiço</option>
+                        <option value="Outra">Outra</option>
+                    </select>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Peso Médio (kg)</label>
@@ -558,8 +576,14 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Descrição</label>
-                    <input type="text" id="manejo-desc" placeholder="Ex: Vacinação Aftosa Lote A" required>
+                    <label>Produto / Descrição</label>
+                    <select id="manejo-produto"
+                        onchange="if(this.value==='__outro__'){document.getElementById('manejo-desc-custom').style.display='block'}else{document.getElementById('manejo-desc-custom').style.display='none'}">
+                        <option value="">Selecionar do Estoque...</option>
+                    </select>
+                    <input type="text" id="manejo-desc-custom" placeholder="Descreva o manejo..."
+                        style="display:none; margin-top:8px;">
+                    <input type="hidden" id="manejo-desc" value="">
                 </div>
                 <div class="form-group">
                     <label>Quantidade de Animais</label>
@@ -616,6 +640,46 @@
             </form>
         </section>
 
+        <!-- ===================== FUNCIONÁRIOS ===================== -->
+        <section id="view-funcionarios" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>👷 Funcionários</h2>
+            </div>
+            <form id="form-funcionario" class="card-form">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="func-nome" placeholder="Ex: João da Silva" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Função</label>
+                        <select id="func-funcao">
+                            <option value="Peão">🤠 Peão</option>
+                            <option value="Tratorista">🚜 Tratorista</option>
+                            <option value="Cercador">🔧 Cercador</option>
+                            <option value="Vaqueiro">🐄 Vaqueiro</option>
+                            <option value="Capataz">👔 Capataz</option>
+                            <option value="Servicos Gerais">🧹 Serviços Gerais</option>
+                            <option value="Diarista">📋 Diarista</option>
+                            <option value="Outro">📝 Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Diária (R$)</label>
+                        <input type="number" id="func-diaria" step="0.01" placeholder="150.00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" id="func-telefone" placeholder="(xx) xxxxx-xxxx">
+                </div>
+                <button type="submit" class="submit-btn">✅ Cadastrar Funcionário</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Funcionários Cadastrados</div>
+            <div id="funcionarios-list"></div>
+        </section>
+
         <!-- ===================== CONFIGURAÇÕES ===================== -->
         <section id="view-config" class="view hidden">
             <div class="view-header">
@@ -633,16 +697,95 @@
 
     </main>
 
+    <!-- ===================== MODAL: TROCAR PASTO ===================== -->
+    <div id="modal-trocar-pasto" class="agro-modal">
+        <div class="agro-modal-content">
+            <div class="agro-modal-header">
+                <h3>🔄 Trocar Pasto</h3>
+                <button class="modal-close" onclick="window.lotes.fecharModal('modal-trocar-pasto')">✕</button>
+            </div>
+            <div class="agro-modal-body">
+                <p><strong>Lote:</strong> <span id="modal-tp-lote"></span></p>
+                <p><strong>Pasto Atual:</strong> <span id="modal-tp-atual"></span></p>
+                <div class="form-group">
+                    <label>Novo Pasto</label>
+                    <select id="modal-tp-novo-pasto">
+                        <option value="">Selecionar...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="agro-modal-footer">
+                <button class="submit-btn" onclick="window.lotes.confirmarTrocaPasto()">✅ Confirmar Troca</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== MODAL: JUNTAR LOTES ===================== -->
+    <div id="modal-juntar-lotes" class="agro-modal">
+        <div class="agro-modal-content">
+            <div class="agro-modal-header">
+                <h3>🔗 Juntar Lotes</h3>
+                <button class="modal-close" onclick="window.lotes.fecharModal('modal-juntar-lotes')">✕</button>
+            </div>
+            <div class="agro-modal-body">
+                <p style="font-size:13px; color:#666; margin-bottom:12px;">Selecione 2 ou mais lotes para unir. Os
+                    animais serão somados e o peso será a média ponderada.</p>
+                <div id="modal-jl-lista" class="checkbox-list"></div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label>Nome do Novo Lote</label>
+                    <input type="text" id="modal-jl-novo-nome" placeholder="Ex: Lote Unificado 2026">
+                </div>
+            </div>
+            <div class="agro-modal-footer">
+                <button class="submit-btn" onclick="window.lotes.confirmarJuntarLotes()">✅ Juntar Lotes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== MODAL: ABASTECER COCHO ===================== -->
+    <div id="modal-abastecer" class="agro-modal">
+        <div class="agro-modal-content">
+            <div class="agro-modal-header">
+                <h3>🧂 Abastecer Cocho</h3>
+                <button class="modal-close" onclick="window.lotes.fecharModal('modal-abastecer')">✕</button>
+            </div>
+            <div class="agro-modal-body">
+                <p><strong>Lote:</strong> <span id="modal-ab-lote"></span></p>
+                <p><strong>Produto:</strong> <span id="modal-ab-tipo"></span></p>
+                <input type="hidden" id="modal-ab-produto" value="">
+                <p id="modal-ab-consumo-info" style="font-size:12px; color:#666; margin-bottom:10px;"></p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantidade de Sacos</label>
+                        <input type="number" id="modal-ab-sacos" placeholder="4"
+                            oninput="window.lotes.calcPrevisaoAbastecimento()">
+                    </div>
+                    <div class="form-group">
+                        <label>Kg por Saco</label>
+                        <input type="number" id="modal-ab-kg-saco" value="25" step="0.5"
+                            oninput="window.lotes.calcPrevisaoAbastecimento()">
+                    </div>
+                </div>
+                <div id="modal-ab-previsao" class="previsao-box"></div>
+            </div>
+            <div class="agro-modal-footer">
+                <button class="submit-btn" onclick="window.lotes.confirmarAbastecimento()">✅ Registrar
+                    Abastecimento</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="js/data.js?v=20260211"></script>
-    <script src="js/rebanho.js?v=20260211"></script>
-    <script src="js/pastos.js?v=20260211"></script>
-    <script src="js/lotes.js?v=20260211"></script>
-    <script src="js/obras.js?v=20260211"></script>
-    <script src="js/manejo.js?v=20260211"></script>
-    <script src="js/financeiro.js?v=20260211"></script>
-    <script src="js/estoque.js?v=20260211"></script>
-    <script src="app.js?v=20260211"></script>
+    <script src="js/data.js?v=20260211h"></script>
+    <script src="js/rebanho.js?v=20260211h"></script>
+    <script src="js/pastos.js?v=20260211h"></script>
+    <script src="js/lotes.js?v=20260211h"></script>
+    <script src="js/obras.js?v=20260211h"></script>
+    <script src="js/manejo.js?v=20260211h"></script>
+    <script src="js/financeiro.js?v=20260211h"></script>
+    <script src="js/estoque.js?v=20260211h"></script>
+    <script src="js/funcionarios.js?v=20260211h"></script>
+    <script src="app.js?v=20260211h"></script>
 </body>
 
 </html>

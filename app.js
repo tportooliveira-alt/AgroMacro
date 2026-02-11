@@ -37,6 +37,7 @@ window.app = {
         if (window.estoque) window.estoque.init();
         if (window.manejo) window.manejo.init();
         if (window.obras) window.obras.init();
+        if (window.funcionarios) window.funcionarios.init();
 
         this.navigate('home');
     },
@@ -90,7 +91,8 @@ window.app = {
             case 'manejo':
                 if (window.manejo) window.manejo.renderHistory();
                 if (window.lotes) window.lotes.populateSelect('manejo-lote');
-                if (window.estoque) window.estoque.renderMaterialCheckboxes('manejo-materials-list');
+                if (window.estoque) window.estoque.renderMaterialCheckboxes('manejo-materials-list', 'remedios');
+                if (window.estoque) window.estoque.populateManejoProducts();
                 break;
             case 'compra':
                 if (window.lotes) window.lotes.populateSelect('compra-lote');
@@ -99,7 +101,11 @@ window.app = {
                 if (window.lotes) window.lotes.populateSelect('venda-lote');
                 break;
             case 'obras':
-                if (window.estoque) window.estoque.renderMaterialCheckboxes('obra-materials-list');
+                if (window.estoque) window.estoque.renderMaterialCheckboxes('obra-materials-list', 'obras');
+                if (window.funcionarios) window.funcionarios.renderWorkersForObra();
+                break;
+            case 'funcionarios':
+                if (window.funcionarios) window.funcionarios.render();
                 break;
         }
     },

@@ -18,13 +18,25 @@ window.manejo = {
     save: function () {
         var tipo = document.getElementById('manejo-tipo').value;
         var lote = document.getElementById('manejo-lote') ? document.getElementById('manejo-lote').value : '';
-        var desc = document.getElementById('manejo-desc').value;
+        var produtoSelect = document.getElementById('manejo-produto');
+        var produtoVal = produtoSelect ? produtoSelect.value : '';
+        var desc = '';
+        if (produtoVal === '__outro__' || produtoVal === '') {
+            var customDesc = document.getElementById('manejo-desc-custom');
+            desc = customDesc ? customDesc.value : '';
+        } else {
+            desc = produtoVal;
+        }
+        if (!desc && produtoVal === '') {
+            // fallback: try hidden field
+            desc = document.getElementById('manejo-desc') ? document.getElementById('manejo-desc').value : '';
+        }
         var qtd = parseInt(document.getElementById('manejo-qtd').value) || 0;
         var data = document.getElementById('manejo-data').value;
         var custo = parseFloat(document.getElementById('manejo-custo').value) || 0;
 
         if (!desc) {
-            window.app.showToast('Preencha a descrição do manejo.', 'error');
+            window.app.showToast('Selecione um produto ou preencha a descrição.', 'error');
             return;
         }
 

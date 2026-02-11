@@ -68,26 +68,63 @@ window.estoque = {
         this.onCategoryChange();
     },
 
+    // Infers category from product name by matching against known suggestion lists
+    inferCategory: function (name) {
+        if (!name) return '';
+        var lower = name.toLowerCase();
+        var cats = this.suggestions;
+        for (var cat in cats) {
+            for (var i = 0; i < cats[cat].length; i++) {
+                if (cats[cat][i].name.toLowerCase() === lower) return cat;
+            }
+        }
+        // Keyword-based fallback
+        if (lower.indexOf('vacina') >= 0 || lower.indexOf('verm') >= 0 || lower.indexOf('antibio') >= 0
+            || lower.indexOf('anti-infla') >= 0 || lower.indexOf('carrapati') >= 0 || lower.indexOf('bernicida') >= 0
+            || lower.indexOf('ocitocina') >= 0 || lower.indexOf('aneste') >= 0 || lower.indexOf('cicatri') >= 0
+            || lower.indexOf('seringa') >= 0 || lower.indexOf('agulha') >= 0 || lower.indexOf('remedio') >= 0
+            || lower.indexOf('medicamento') >= 0 || lower.indexOf('brinco') >= 0) return 'remedios';
+        if (lower.indexOf('sal ') >= 0 || lower.indexOf('mineral') >= 0 || lower.indexOf('ra') >= 0 && lower.indexOf('ão') >= 0
+            || lower.indexOf('racao') >= 0 || lower.indexOf('farelo') >= 0 || lower.indexOf('milho') >= 0
+            || lower.indexOf('silagem') >= 0 || lower.indexOf('feno') >= 0 || lower.indexOf('ureia') >= 0
+            || lower.indexOf('proteinado') >= 0 || lower.indexOf('polpa') >= 0 || lower.indexOf('algod') >= 0) return 'racao_sal';
+        if (lower.indexOf('arame') >= 0 || lower.indexOf('estaca') >= 0 || lower.indexOf('mour') >= 0
+            || lower.indexOf('cimento') >= 0 || lower.indexOf('areia') >= 0 || lower.indexOf('brita') >= 0
+            || lower.indexOf('prego') >= 0 || lower.indexOf('grampo') >= 0 || lower.indexOf('parafuso') >= 0
+            || lower.indexOf('telha') >= 0 || lower.indexOf('madeira') >= 0 || lower.indexOf('cocho') >= 0
+            || lower.indexOf('bebedouro') >= 0 || lower.indexOf('dobrad') >= 0 || lower.indexOf('tabua') >= 0
+            || lower.indexOf('caibro') >= 0 || lower.indexOf('furadeira') >= 0 || lower.indexOf('serrote') >= 0
+            || lower.indexOf('martelo') >= 0 || lower.indexOf('alicate') >= 0) return 'obras';
+        return '';
+    },
+    // Normalizes a string key removing accents to avoid duplicates like Mourão/Mourao
+    normalizeKey: function (str) {
+        return (str || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    },
+
     // Returns array of {name, qty, unit, category} — used by Manejo and Obras
     getStockItems: function () {
         if (!window.data) return [];
+        var self = this;
         var stock = {};
         window.data.events.forEach(function (ev) {
             if (ev.type === 'ESTOQUE_ENTRADA') {
-                var key = (ev.desc || '').toLowerCase().trim();
+                var prodName = ev.name || ev.desc || '';
+                var key = self.normalizeKey(prodName);
                 if (!key) return;
-                if (!stock[key]) stock[key] = { name: ev.desc, qty: 0, unit: ev.unit || 'un', category: ev.category || '' };
+                var cat = ev.category || self.inferCategory(prodName);
+                if (!stock[key]) stock[key] = { name: prodName, qty: 0, unit: ev.unit || 'un', category: cat };
                 stock[key].qty += (ev.qty || 0);
             }
             if (ev.type === 'SAIDA_ESTOQUE' && ev.items) {
                 ev.items.forEach(function (item) {
-                    var key = (item.name || '').toLowerCase().trim();
+                    var key = self.normalizeKey(item.name);
                     if (stock[key]) stock[key].qty -= (item.qty || 0);
                 });
             }
             if (ev.type === 'OBRA_REGISTRO' && ev.materials) {
                 ev.materials.forEach(function (mat) {
-                    var key = (mat.name || '').toLowerCase().trim();
+                    var key = self.normalizeKey(mat.name);
                     if (stock[key]) stock[key].qty -= (mat.qty || 0);
                 });
             }
@@ -97,6 +134,19 @@ window.estoque = {
             if (stock[key].qty > 0) items.push(stock[key]);
         });
         return items.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    },
+
+    // Populates the manejo-produto dropdown with remedios from stock
+    populateManejoProducts: function () {
+        var select = document.getElementById('manejo-produto');
+        if (!select) return;
+        var items = this.getStockByCategory('remedios');
+        var html = '<option value="">Selecionar do Estoque...</option>';
+        items.forEach(function (item) {
+            html += '<option value="' + item.name + '">💊 ' + item.name + ' (' + item.qty + ' ' + item.unit + ')</option>';
+        });
+        html += '<option value="__outro__">📝 Outro (digitar)</option>';
+        select.innerHTML = html;
     },
 
     // Returns stock items filtered by category
@@ -142,12 +192,20 @@ window.estoque = {
     },
 
     // Renders checkboxes for materials in a container
-    renderMaterialCheckboxes: function (containerId) {
+    // categoryFilter: 'remedios' for Manejo, 'obras' for Obras, null for all
+    renderMaterialCheckboxes: function (containerId, categoryFilter) {
         var container = document.getElementById(containerId);
         if (!container) return;
         var items = this.getStockItems();
+        // Filter by category if specified
+        if (categoryFilter) {
+            items = items.filter(function (item) {
+                return item.category === categoryFilter;
+            });
+        }
         if (items.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhum material no estoque. Cadastre insumos em Estoque primeiro.</div>';
+            var catName = categoryFilter === 'remedios' ? ' (Remédios/Vacinas)' : categoryFilter === 'obras' ? ' (Obras)' : '';
+            container.innerHTML = '<div class="empty-state">Nenhum material' + catName + ' no estoque.</div>';
             return;
         }
         var html = items.map(function (item) {
@@ -258,6 +316,7 @@ window.estoque = {
 
         var ev = {
             type: 'ESTOQUE_ENTRADA',
+            name: produto,
             desc: produto,
             qty: qty,
             unit: unit || 'un',
@@ -287,11 +346,14 @@ window.estoque = {
         // Calculate stock balances
         var stock = {};
 
+        var self = this;
         events.forEach(function (ev) {
             if (ev.type === 'ESTOQUE_ENTRADA') {
-                var key = (ev.desc || '').toLowerCase().trim();
+                var prodName = ev.name || ev.desc || '';
+                var key = self.normalizeKey(prodName);
                 if (!key) return;
-                if (!stock[key]) stock[key] = { name: ev.desc, qty: 0, unit: ev.unit || 'un', totalSpent: 0, category: ev.category || '' };
+                var cat = ev.category || self.inferCategory(prodName);
+                if (!stock[key]) stock[key] = { name: prodName, qty: 0, unit: ev.unit || 'un', totalSpent: 0, category: cat };
                 stock[key].qty += (ev.qty || 0);
                 stock[key].totalSpent += (ev.value || 0);
             }

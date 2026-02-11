@@ -1,6 +1,5 @@
 // ====== MÓDULO: OBRAS (Construção e Infra Rural) ======
 window.obras = {
-    workers: ['João Silva', 'Pedro Santos', 'Carlos Oliveira'],
 
     init: function () {
         console.log('Obras Module Ready');
@@ -19,24 +18,13 @@ window.obras = {
     },
 
     renderWorkers: function () {
-        var container = document.getElementById('workers-list');
-        if (!container) return;
-
-        container.innerHTML = this.workers.map(function (name) {
-            var initials = name.split(' ').map(function (w) { return w[0]; }).join('');
-            return '<div class="worker-card">'
-                + '<div class="worker-avatar">' + initials + '</div>'
-                + '<label class="worker-name"><input type="checkbox" value="' + name + '"> ' + name + '</label>'
-                + '</div>';
-        }).join('');
+        if (window.funcionarios) {
+            window.funcionarios.renderWorkersForObra();
+        }
     },
 
     addWorker: function () {
-        var nome = prompt('Nome do Funcionário:');
-        if (nome && nome.trim()) {
-            this.workers.push(nome.trim());
-            this.renderWorkers();
-        }
+        window.app.navigate('funcionarios');
     },
 
     save: function () {
@@ -50,10 +38,19 @@ window.obras = {
             return;
         }
 
-        // Get selected workers
+        // Get selected workers with days
         var selectedWorkers = [];
         document.querySelectorAll('#workers-list input[type="checkbox"]:checked').forEach(function (cb) {
-            selectedWorkers.push(cb.value);
+            var workerName = cb.value;
+            var diaria = parseFloat(cb.getAttribute('data-diaria')) || 0;
+            var daysInput = document.querySelector('.worker-days-input[data-worker="' + workerName + '"]');
+            var dias = parseInt(daysInput ? daysInput.value : 0) || 0;
+            selectedWorkers.push({
+                nome: workerName,
+                dias: dias,
+                diaria: diaria,
+                subtotal: dias * diaria
+            });
         });
 
         // Get materials from dynamic estoque checkboxes
