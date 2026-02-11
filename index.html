@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AgroMacro</title>
+    <link rel="stylesheet" href="styles.css?v=20260211">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2E7D32">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="logo-container">
+            <svg class="logo-svg" width="32" height="32" viewBox="0 0 100 100">
+                <path
+                    d="M15 75 Q15 45 35 35 Q45 30 55 35 Q65 40 68 50 L85 45 Q88 42 90 45 L88 50 Q85 52 82 50 L70 54 Q72 62 68 70 L72 85 L65 85 L62 72 Q55 78 45 78 Q38 78 32 72 L30 85 L23 85 L27 70 Q22 62 22 55"
+                    fill="#2E7D32" />
+                <circle cx="40" cy="42" r="3" fill="white" />
+            </svg>
+            <h1>AgroMacro</h1>
+        </div>
+        <button id="menu-btn" class="icon-btn">☰</button>
+    </header>
+
+    <main id="app-container">
+
+        <!-- ===================== HOME ===================== -->
+        <section id="view-home" class="view active">
+
+            <!-- Primary: Compra + Venda de Gado -->
+            <div class="primary-grid">
+                <button class="primary-btn" onclick="window.app.navigate('compra')">
+                    <svg width="44" height="44" viewBox="0 0 100 100">
+                        <path
+                            d="M10 72 Q10 42 30 32 Q40 27 50 32 Q60 37 63 47 L80 42 Q83 39 85 42 L83 47 Q80 49 77 47 L65 51 Q67 59 63 67 L67 82 L60 82 L57 69 Q50 75 40 75 Q33 75 27 69 L25 82 L18 82 L22 67 Q17 59 17 52"
+                            fill="#2E7D32" />
+                        <circle cx="35" cy="39" r="2.5" fill="white" />
+                    </svg>
+                    <span class="label">COMPRA DE GADO</span>
+                    <span class="sub-label">Registrar Entrada</span>
+                </button>
+                <button class="primary-btn" onclick="window.app.navigate('venda')">
+                    <svg width="44" height="44" viewBox="0 0 100 100">
+                        <path
+                            d="M50 10 Q70 10 75 25 L78 35 Q80 45 70 50 Q80 55 78 65 L75 75 Q70 90 50 90 Q30 90 25 75 L22 65 Q20 55 30 50 Q20 45 22 35 L25 25 Q30 10 50 10Z"
+                            fill="#2E7D32" />
+                        <text x="50" y="60" text-anchor="middle" font-size="32" font-weight="bold" fill="white">$</text>
+                    </svg>
+                    <span class="label">VENDA DE GADO</span>
+                    <span class="sub-label">Registrar Venda</span>
+                </button>
+            </div>
+
+            <!-- Management Grid -->
+            <div class="mgmt-grid">
+                <button class="dash-btn" onclick="window.app.navigate('rebanho')">
+                    <span class="icon">🐄</span>
+                    <span class="label">Rebanho</span>
+                </button>
+                <button class="dash-btn" onclick="window.app.navigate('lotes')">
+                    <span class="icon">📋</span>
+                    <span class="label">Lotes</span>
+                </button>
+                <button class="dash-btn" onclick="window.app.navigate('pastos')">
+                    <span class="icon">🌾</span>
+                    <span class="label">Pastos</span>
+                </button>
+                <button class="dash-btn" onclick="window.app.navigate('estoque')">
+                    <span class="icon">📦</span>
+                    <span class="label">Estoque</span>
+                </button>
+                <button class="dash-btn" onclick="window.app.navigate('fluxo')">
+                    <span class="icon">💰</span>
+                    <span class="label">Fluxo</span>
+                </button>
+                <button class="dash-btn" onclick="window.app.navigate('manejo')">
+                    <span class="icon">💉</span>
+                    <span class="label">Manejo</span>
+                </button>
+            </div>
+
+            <!-- KPI Section -->
+            <div class="kpi-section">
+                <div class="kpi-title">Acompanhamento de Lote</div>
+                <div class="kpi-grid" id="kpi-grid"></div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="alerts-section">
+                <div class="alerts-title">ALERTAS</div>
+                <div id="alerts-list"></div>
+            </div>
+
+            <!-- Tertiary -->
+            <div class="tertiary-actions">
+                <button class="action-btn" onclick="window.app.navigate('obras')">🔨 Registrar Obra</button>
+                <button class="action-btn action-btn-muted" onclick="window.app.navigate('config')">⚙️
+                    Configurações</button>
+            </div>
+        </section>
+
+        <!-- ===================== COMPRA DE GADO ===================== -->
+        <section id="view-compra" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>Compra de Gado</h2>
+            </div>
+            <form id="form-compra" class="card-form">
+                <div class="form-group">
+                    <label>Quantidade de Animais</label>
+                    <input type="number" id="compra-qty" placeholder="30" required>
+                </div>
+                <div class="form-group">
+                    <label>Peso Médio (kg)</label>
+                    <input type="number" id="compra-peso" step="0.1" placeholder="220">
+                </div>
+                <div class="form-group">
+                    <label>Valor Total Pago (R$)</label>
+                    <input type="number" id="compra-valor" step="0.01" placeholder="120000.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="compra-desc" placeholder="Ex: 30 Bezerros Nelore">
+                </div>
+                <div class="form-group">
+                    <label>Fornecedor</label>
+                    <input type="text" id="compra-fornecedor" placeholder="Ex: Fazenda São João">
+                </div>
+                <div class="form-group">
+                    <label>Lote de Destino</label>
+                    <select id="compra-lote">
+                        <option value="">Selecionar Lote...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="compra-data" required>
+                </div>
+                <button type="submit" class="submit-btn">Registrar Compra</button>
+            </form>
+        </section>
+
+        <!-- ===================== VENDA DE GADO ===================== -->
+        <section id="view-venda" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>Venda de Gado</h2>
+            </div>
+            <form id="form-venda" class="card-form">
+                <div class="form-group">
+                    <label>Lote</label>
+                    <select id="venda-lote">
+                        <option value="">Selecionar Lote...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantidade de Animais</label>
+                    <input type="number" id="venda-qty" placeholder="5" required>
+                </div>
+                <div class="form-group">
+                    <label>Peso Médio (kg)</label>
+                    <input type="number" id="venda-peso" step="0.1" placeholder="480">
+                </div>
+                <div class="form-group">
+                    <label>Valor Total (R$)</label>
+                    <input type="number" id="venda-valor" step="0.01" placeholder="25000.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Comprador</label>
+                    <input type="text" id="venda-comprador" placeholder="Ex: Frigorífico XYZ">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="venda-desc" placeholder="Ex: Venda 5 Bois Gordos">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="venda-data" required>
+                </div>
+                <button type="submit" class="submit-btn">Registrar Venda</button>
+            </form>
+        </section>
+
+        <!-- ===================== REBANHO ===================== -->
+        <section id="view-rebanho" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>🐄 Cadastro de Rebanho</h2>
+            </div>
+            <!-- Tabs -->
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="window.rebanho.switchTab('individual', this)">🐮
+                    Individual</button>
+                <button class="tab-btn" onclick="window.rebanho.switchTab('lote', this)">📋 Por Lote</button>
+            </div>
+
+            <!-- Tab: Individual -->
+            <form id="form-rebanho" class="card-form tab-content active" data-tab="individual">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Brinco / ID</label>
+                        <input type="text" id="reb-brinco" placeholder="Ex: B-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Raça</label>
+                        <select id="reb-raca">
+                            <option value="Nelore">Nelore</option>
+                            <option value="Angus">Angus</option>
+                            <option value="Brahman">Brahman</option>
+                            <option value="Gir">Gir</option>
+                            <option value="Girolando">Girolando</option>
+                            <option value="Tabapuã">Tabapuã</option>
+                            <option value="Senepol">Senepol</option>
+                            <option value="Mestiço">Mestiço</option>
+                            <option value="Outra">Outra</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select id="reb-sexo">
+                            <option value="macho">♂ Macho</option>
+                            <option value="femea">♀ Fêmea</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Peso Atual (kg)</label>
+                        <input type="number" id="reb-peso" step="0.1" placeholder="220">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data Nascimento</label>
+                        <input type="date" id="reb-nascimento">
+                    </div>
+                    <div class="form-group">
+                        <label>Origem</label>
+                        <select id="reb-origem">
+                            <option value="compra">Compra</option>
+                            <option value="nascimento">Nascimento</option>
+                            <option value="doacao">Doação</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lote</label>
+                    <select id="reb-lote">
+                        <option value="">Sem Lote</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="reb-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">📋 Cadastrar Animal</button>
+            </form>
+
+            <!-- Tab: Por Lote (cadastro em grupo) -->
+            <form id="form-rebanho-lote" class="card-form tab-content" data-tab="lote" style="display:none;">
+                <div class="form-group">
+                    <label>Nome / Identificação do Lote</label>
+                    <input type="text" id="reb-lote-nome" placeholder="Ex: Lote Compra Jan/2026" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantidade de Animais</label>
+                        <input type="number" id="reb-lote-qtd" placeholder="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Raça Predominante</label>
+                        <select id="reb-lote-raca">
+                            <option value="Nelore">Nelore</option>
+                            <option value="Angus">Angus</option>
+                            <option value="Brahman">Brahman</option>
+                            <option value="Gir">Gir</option>
+                            <option value="Girolando">Girolando</option>
+                            <option value="Tabapuã">Tabapuã</option>
+                            <option value="Senepol">Senepol</option>
+                            <option value="Mestiço">Mestiço</option>
+                            <option value="Outra">Outra</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso Médio (kg)</label>
+                        <input type="number" id="reb-lote-peso" step="0.1" placeholder="220">
+                    </div>
+                    <div class="form-group">
+                        <label>Idade Média (meses)</label>
+                        <input type="number" id="reb-lote-idade" placeholder="18">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sexo Predominante</label>
+                        <select id="reb-lote-sexo">
+                            <option value="macho">♂ Machos</option>
+                            <option value="femea">♀ Fêmeas</option>
+                            <option value="misto">⚤ Misto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Origem</label>
+                        <select id="reb-lote-origem">
+                            <option value="compra">Compra</option>
+                            <option value="nascimento">Nascimento</option>
+                            <option value="doacao">Doação</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lote Destino</label>
+                    <select id="reb-lote-destino">
+                        <option value="">Sem Lote</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="reb-lote-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">📋 Cadastrar Lote de Animais</button>
+            </form>
+
+            <div class="section-title" style="margin-top:24px;">Rebanho Atual</div>
+            <div id="rebanho-list"></div>
+        </section>
+
+        <!-- ===================== LOTES ===================== -->
+        <section id="view-lotes" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>📋 Gestão de Lotes</h2>
+            </div>
+            <form id="form-lote" class="card-form">
+                <div class="form-group">
+                    <label>Nome do Lote</label>
+                    <input type="text" id="lote-nome" placeholder="Ex: Lote São João" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="lote-categoria">
+                            <option value="cria">🐮 Cria</option>
+                            <option value="recria">🐂 Recria</option>
+                            <option value="engorda">🥩 Engorda</option>
+                            <option value="matrizes">🐄 Matrizes</option>
+                            <option value="touros">🐃 Touros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qtd Animais</label>
+                        <input type="number" id="lote-qtd" placeholder="30" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso Médio (kg)</label>
+                        <input type="number" id="lote-peso-medio" step="0.1" placeholder="220">
+                    </div>
+                    <div class="form-group">
+                        <label>Pasto Atual</label>
+                        <select id="lote-pasto">
+                            <option value="">Selecionar...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data de Entrada</label>
+                    <input type="date" id="lote-data-entrada">
+                </div>
+                <div class="section-title" style="margin-top:12px;">🧂 Nutrição do Lote</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sal Mineral</label>
+                        <select id="lote-sal">
+                            <option value="">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumo Sal (g/cab/dia)</label>
+                        <input type="number" id="lote-sal-consumo" step="0.1" placeholder="80">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ração</label>
+                        <select id="lote-racao">
+                            <option value="">Nenhuma</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumo Ração (kg/cab/dia)</label>
+                        <input type="number" id="lote-racao-consumo" step="0.1" placeholder="2.5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="lote-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">📋 Cadastrar Lote</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Lotes Ativos</div>
+            <div id="lotes-list"></div>
+        </section>
+
+        <!-- ===================== PASTOS ===================== -->
+        <section id="view-pastos" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>🌾 Cadastro de Pastos</h2>
+            </div>
+            <form id="form-pasto" class="card-form">
+                <div class="form-group">
+                    <label>Nome do Pasto / Piquete</label>
+                    <input type="text" id="pasto-nome" placeholder="Ex: Piquete Norte" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Área (hectares)</label>
+                        <input type="number" id="pasto-area" step="0.1" placeholder="15.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidade (cabeças)</label>
+                        <input type="number" id="pasto-capacidade" placeholder="50">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Capim</label>
+                        <select id="pasto-tipo">
+                            <option value="Braquiária">Braquiária</option>
+                            <option value="Mombaça">Mombaça</option>
+                            <option value="Tifton">Tifton</option>
+                            <option value="Marandu">Marandu</option>
+                            <option value="Tanzânia">Tanzânia</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="pasto-status">
+                            <option value="disponivel">🟢 Disponível</option>
+                            <option value="ocupado">🔴 Ocupado</option>
+                            <option value="descanso">🟡 Em Descanso</option>
+                            <option value="manutencao">🔧 Manutenção</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="pasto-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">🌾 Cadastrar Pasto</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Pastos Cadastrados</div>
+            <div id="pastos-list"></div>
+        </section>
+
+        <!-- ===================== ESTOQUE ===================== -->
+        <section id="view-estoque" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>📦 Estoque de Insumos</h2>
+            </div>
+            <!-- Quick add form -->
+            <form id="form-estoque" class="card-form" style="margin-bottom:16px;">
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="est-categoria" onchange="window.estoque.onCategoryChange()">
+                        <option value="racao_sal">🧂 Ração / Sal Mineral</option>
+                        <option value="remedios">💊 Remédios / Vacinas</option>
+                        <option value="obras">🔨 Obras / Ferramentas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Produto</label>
+                    <select id="est-produto-sugestao" onchange="window.estoque.onSuggestionSelect()">
+                        <option value="">— Selecionar ou digitar abaixo —</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome do Produto</label>
+                        <input type="text" id="est-produto" placeholder="Ex: Sal Mineral" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="est-qty" placeholder="10" required
+                            oninput="window.estoque.calcTotal()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Unidade</label>
+                        <input type="text" id="est-unit" placeholder="sacos / kg / doses">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Unitário (R$)</label>
+                        <input type="number" id="est-valor" step="0.01" placeholder="85.00"
+                            oninput="window.estoque.calcTotal()">
+                    </div>
+                </div>
+                <div id="est-total-preview"
+                    style="text-align:right; font-size:14px; font-weight:700; color:var(--primary); padding:4px 8px; margin-bottom:8px; display:none;">
+                    Total: R$ 0,00
+                </div>
+                <button type="submit" class="submit-btn">📥 Registrar Entrada</button>
+            </form>
+            <!-- Filter -->
+            <div class="filter-bar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <button type="button" class="filter-btn active" onclick="window.estoque.filterBy('todos')">📦
+                    Todos</button>
+                <button type="button" class="filter-btn" onclick="window.estoque.filterBy('racao_sal')">🧂
+                    Ração/Sal</button>
+                <button type="button" class="filter-btn" onclick="window.estoque.filterBy('remedios')">💊
+                    Remédios</button>
+                <button type="button" class="filter-btn" onclick="window.estoque.filterBy('obras')">🔨 Obras</button>
+            </div>
+            <div id="estoque-list"></div>
+        </section>
+
+        <!-- ===================== FLUXO DE CAIXA ===================== -->
+        <section id="view-fluxo" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>💰 Fluxo de Caixa</h2>
+            </div>
+            <div id="fluxo-content"></div>
+        </section>
+
+        <!-- ===================== MANEJO ===================== -->
+        <section id="view-manejo" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>💉 Manejo</h2>
+            </div>
+            <form id="form-manejo" class="card-form">
+                <div class="form-group">
+                    <label>Tipo de Manejo</label>
+                    <select id="manejo-tipo">
+                        <option value="vacinacao">🩺 Vacinação / Sanitário</option>
+                        <option value="pesagem">⚖️ Pesagem</option>
+                        <option value="movimentacao">🔄 Movimentação de Pasto</option>
+                        <option value="mortalidade">⚠️ Mortalidade</option>
+                        <option value="outro">📝 Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Lote</label>
+                    <select id="manejo-lote">
+                        <option value="">Selecionar Lote...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="manejo-desc" placeholder="Ex: Vacinação Aftosa Lote A" required>
+                </div>
+                <div class="form-group">
+                    <label>Quantidade de Animais</label>
+                    <input type="number" id="manejo-qtd" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="manejo-data" required>
+                </div>
+                <div class="section-title">Materiais Utilizados (do Estoque)</div>
+                <div id="manejo-materials-list" class="materials-list"></div>
+                <div class="form-group">
+                    <label>Custo Estimado (R$)</label>
+                    <input type="number" id="manejo-custo" step="0.01" placeholder="0,00">
+                </div>
+                <button type="submit" class="submit-btn">✅ Registrar Manejo</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Histórico de Manejos</div>
+            <div id="manejo-history"></div>
+        </section>
+
+        <!-- ===================== OBRAS ===================== -->
+        <section id="view-obras" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>🔨 Registrar Obra</h2>
+            </div>
+            <form id="form-obra" class="card-form">
+                <div class="form-group">
+                    <label>Nome da Obra</label>
+                    <input type="text" id="obra-nome" placeholder="Ex: Cercamento Curral 2" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data de Início</label>
+                        <input type="date" id="obra-inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Término</label>
+                        <input type="date" id="obra-fim">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="obra-obs" rows="2"></textarea>
+                </div>
+                <div class="section-title">Funcionários na Obra</div>
+                <div id="workers-list" class="workers-grid"></div>
+                <button type="button" class="add-btn" onclick="window.obras.addWorker()">+ Adicionar
+                    Funcionário</button>
+                <div class="section-title">Materiais Utilizados (do Estoque)</div>
+                <div id="obra-materials-list" class="materials-list"></div>
+                <button type="submit" class="submit-btn">✅ Registrar Obra</button>
+            </form>
+        </section>
+
+        <!-- ===================== CONFIGURAÇÕES ===================== -->
+        <section id="view-config" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>⚙️ Configurações</h2>
+            </div>
+            <div class="card-form">
+                <div class="section-title">Dados</div>
+                <button type="button" class="submit-btn danger-btn" onclick="window.app.resetData()">🗑️ Zerar Todos os
+                    Dados</button>
+                <p class="info-note" style="margin-top:15px;">⚠️ Esta ação apaga todos os registros. Não pode ser
+                    desfeita.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/data.js?v=20260211"></script>
+    <script src="js/rebanho.js?v=20260211"></script>
+    <script src="js/pastos.js?v=20260211"></script>
+    <script src="js/lotes.js?v=20260211"></script>
+    <script src="js/obras.js?v=20260211"></script>
+    <script src="js/manejo.js?v=20260211"></script>
+    <script src="js/financeiro.js?v=20260211"></script>
+    <script src="js/estoque.js?v=20260211"></script>
+    <script src="app.js?v=20260211"></script>
+</body>
+
+</html>
