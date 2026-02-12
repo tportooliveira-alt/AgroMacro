@@ -516,31 +516,34 @@
                         <option value="">— Selecionar ou digitar abaixo —</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="est-produto" placeholder="Ex: Sal Mineral Fosbovi" required>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nome do Produto</label>
-                        <input type="text" id="est-produto" placeholder="Ex: Sal Mineral" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Quantidade</label>
+                        <label>Qtd de Sacos</label>
                         <input type="number" id="est-qty" placeholder="10" required
                             oninput="window.estoque.calcTotal()">
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
-                        <label>Unidade</label>
-                        <input type="text" id="est-unit" placeholder="sacos / kg / doses">
-                    </div>
-                    <div class="form-group">
-                        <label>Valor Unitário (R$)</label>
-                        <input type="number" id="est-valor" step="0.01" placeholder="85.00"
+                        <label>Peso por Saco (kg)</label>
+                        <input type="number" id="est-peso-saco" step="0.1" placeholder="25" value="25"
                             oninput="window.estoque.calcTotal()">
                     </div>
                 </div>
-                <div id="est-total-preview"
-                    style="text-align:right; font-size:14px; font-weight:700; color:var(--primary); padding:4px 8px; margin-bottom:8px; display:none;">
-                    Total: R$ 0,00
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor por Saco (R$)</label>
+                        <input type="number" id="est-valor" step="0.01" placeholder="85.00"
+                            oninput="window.estoque.calcTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <input type="text" id="est-unit" placeholder="sacos" value="sacos">
+                    </div>
+                </div>
+                <div id="est-total-preview" class="calc-preview" style="display:none;">
                 </div>
                 <button type="submit" class="submit-btn">📥 Registrar Entrada</button>
             </form>
@@ -823,16 +826,16 @@
     </nav>
 
     <!-- Scripts -->
-    <script src="js/data.js?v=20260211q"></script>
-    <script src="js/rebanho.js?v=20260211q"></script>
-    <script src="js/pastos.js?v=20260211q"></script>
-    <script src="js/lotes.js?v=20260211q"></script>
-    <script src="js/obras.js?v=20260211q"></script>
-    <script src="js/manejo.js?v=20260211q"></script>
-    <script src="js/financeiro.js?v=20260211q"></script>
-    <script src="js/estoque.js?v=20260211q"></script>
-    <script src="js/funcionarios.js?v=20260211q"></script>
-    <script src="app.js?v=20260211q"></script>
+    <script src="js/data.js?v=20260211r"></script>
+    <script src="js/rebanho.js?v=20260211r"></script>
+    <script src="js/pastos.js?v=20260211r"></script>
+    <script src="js/lotes.js?v=20260211r"></script>
+    <script src="js/obras.js?v=20260211r"></script>
+    <script src="js/manejo.js?v=20260211r"></script>
+    <script src="js/financeiro.js?v=20260211r"></script>
+    <script src="js/estoque.js?v=20260211r"></script>
+    <script src="js/funcionarios.js?v=20260211r"></script>
+    <script src="app.js?v=20260211r"></script>
 
     <!-- Theme & Greeting Init -->
     <script>

@@ -287,14 +287,24 @@ window.estoque = {
     },
 
     calcTotal: function () {
-        var qty = parseFloat(document.getElementById('est-qty').value) || 0;
-        var valorUnit = parseFloat(document.getElementById('est-valor').value) || 0;
-        var total = qty * valorUnit;
+        var qtdSacos = parseFloat(document.getElementById('est-qty').value) || 0;
+        var pesoSaco = parseFloat(document.getElementById('est-peso-saco').value) || 0;
+        var valorSaco = parseFloat(document.getElementById('est-valor').value) || 0;
+        var totalKg = qtdSacos * pesoSaco;
+        var custoTotal = qtdSacos * valorSaco;
+        var custoKg = totalKg > 0 ? custoTotal / totalKg : 0;
         var preview = document.getElementById('est-total-preview');
         if (preview) {
-            if (qty > 0 && valorUnit > 0) {
+            if (qtdSacos > 0 && (pesoSaco > 0 || valorSaco > 0)) {
+                var html = '<div style="background:var(--bg-3);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);padding:12px;margin:8px 0;">';
+                html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-2);font-size:12px;">Total Kg</span><strong style="font-size:16px;color:var(--green);">' + totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' kg</strong></div>';
+                if (custoTotal > 0) {
+                    html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-2);font-size:12px;">Custo Total</span><strong style="font-size:16px;color:var(--text-0);">R$ ' + custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</strong></div>';
+                    html += '<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-2);font-size:12px;">Custo por Kg</span><strong style="font-size:16px;color:var(--gold);">R$ ' + custoKg.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '/kg</strong></div>';
+                }
+                html += '</div>';
+                preview.innerHTML = html;
                 preview.style.display = 'block';
-                preview.textContent = 'Total: R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
             } else {
                 preview.style.display = 'none';
             }
@@ -303,13 +313,16 @@ window.estoque = {
 
     saveEntrada: function () {
         var produto = document.getElementById('est-produto').value;
-        var qty = parseFloat(document.getElementById('est-qty').value) || 0;
+        var qtdSacos = parseFloat(document.getElementById('est-qty').value) || 0;
+        var pesoSaco = parseFloat(document.getElementById('est-peso-saco').value) || 0;
         var unit = document.getElementById('est-unit').value;
-        var valorUnit = parseFloat(document.getElementById('est-valor').value) || 0;
+        var valorSaco = parseFloat(document.getElementById('est-valor').value) || 0;
         var categoria = document.getElementById('est-categoria').value;
-        var valorTotal = qty * valorUnit;
+        var totalKg = qtdSacos * pesoSaco;
+        var custoTotal = qtdSacos * valorSaco;
+        var custoKg = totalKg > 0 ? custoTotal / totalKg : 0;
 
-        if (!produto || !qty) {
+        if (!produto || !qtdSacos) {
             window.app.showToast('Preencha o produto e a quantidade.', 'error');
             return;
         }
@@ -318,19 +331,23 @@ window.estoque = {
             type: 'ESTOQUE_ENTRADA',
             name: produto,
             desc: produto,
-            qty: qty,
-            unit: unit || 'un',
-            valorUnitario: valorUnit,
-            value: valorTotal,
+            qty: qtdSacos,
+            totalKg: totalKg,
+            pesoSaco: pesoSaco,
+            unit: unit || 'sacos',
+            valorUnitario: custoKg,
+            valorSaco: valorSaco,
+            value: custoTotal,
             category: categoria,
             date: new Date().toISOString().split('T')[0]
         };
 
         window.data.saveEvent(ev);
-        var msg = '✅ ' + qty + ' ' + (unit || 'un') + ' de ' + produto;
-        if (valorTotal > 0) msg += ' — R$ ' + valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        var msg = '✅ ' + qtdSacos + ' sacos de ' + produto + ' (' + totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 0 }) + 'kg)';
+        if (custoTotal > 0) msg += ' — R$ ' + custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' (R$' + custoKg.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '/kg)';
         window.app.showToast(msg);
         document.getElementById('form-estoque').reset();
+        document.getElementById('est-peso-saco').value = '25';
         document.getElementById('est-total-preview').style.display = 'none';
         this.onCategoryChange();
         this.render();
