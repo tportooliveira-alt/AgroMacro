@@ -370,9 +370,10 @@ window.estoque = {
                 var key = self.normalizeKey(prodName);
                 if (!key) return;
                 var cat = ev.category || self.inferCategory(prodName);
-                if (!stock[key]) stock[key] = { name: prodName, qty: 0, unit: ev.unit || 'un', totalSpent: 0, category: cat };
+                if (!stock[key]) stock[key] = { name: prodName, qty: 0, unit: ev.unit || 'un', totalSpent: 0, category: cat, maxQty: 0 };
                 stock[key].qty += (ev.qty || 0);
                 stock[key].totalSpent += (ev.value || 0);
+                if (stock[key].qty > stock[key].maxQty) stock[key].maxQty = stock[key].qty;
             }
 
             if (ev.type === 'SAIDA_ESTOQUE' && ev.items) {
@@ -405,27 +406,48 @@ window.estoque = {
             return;
         }
 
-        var catIcons = { racao_sal: '🧂', remedios: '💊', obras: '🔨' };
+        var catConfig = {
+            'racao_sal': { icon: '🧂', label: 'Ração/Sal', color: '#D97706', bg: 'rgba(217,119,6,0.06)' },
+            'remedios': { icon: '💊', label: 'Remédios', color: '#7C3AED', bg: 'rgba(124,58,237,0.06)' },
+            'obras': { icon: '🔨', label: 'Materiais', color: '#2563EB', bg: 'rgba(37,99,235,0.06)' }
+        };
 
-        // Stock table
-        var html = '<table class="stock-table">'
-            + '<thead><tr><th></th><th>Produto</th><th>Saldo</th><th>Unid</th><th>Investido</th></tr></thead>'
-            + '<tbody>';
-
+        // Stock cards with progress bars
+        var html = '';
         keys.sort().forEach(function (key) {
             var item = stock[key];
-            var saldoClass = item.qty <= 0 ? ' text-red' : '';
-            var icon = catIcons[item.category] || '📦';
-            html += '<tr>'
-                + '<td>' + icon + '</td>'
-                + '<td><strong>' + item.name + '</strong></td>'
-                + '<td class="' + saldoClass + '">' + item.qty + '</td>'
-                + '<td>' + item.unit + '</td>'
-                + '<td>R$ ' + (item.totalSpent || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</td>'
-                + '</tr>';
-        });
+            var cfg = catConfig[item.category] || { icon: '📦', label: 'Geral', color: '#64748B', bg: 'rgba(100,116,139,0.06)' };
+            var maxQ = item.maxQty > 0 ? item.maxQty : Math.max(item.qty, 100);
+            var pct = Math.max(0, Math.min(100, Math.round((item.qty / maxQ) * 100)));
+            var barColor = pct > 50 ? '#059669' : pct > 20 ? '#D97706' : '#DC2626';
+            var unitPrice = item.qty > 0 ? (item.totalSpent / item.qty) : 0;
 
-        html += '</tbody></table>';
+            var cardStyle = 'background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);';
+            var iconBoxStyle = 'width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:' + cfg.bg + ';border-radius:10px;font-size:20px;flex-shrink:0;border:1px solid ' + cfg.color + '20;';
+            var barBg = 'height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;margin-top:8px;';
+            var barFill = 'height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:4px;transition:width 0.8s cubic-bezier(0.25,1,0.5,1);';
+
+            html += '<div style="' + cardStyle + '">'
+                + '<div style="display:flex;gap:12px;align-items:flex-start;">'
+                + '<div style="' + iconBoxStyle + '">' + cfg.icon + '</div>'
+                + '<div style="flex:1;min-width:0;">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                + '<div style="font-size:14px;font-weight:700;color:#1E293B;">' + item.name + '</div>'
+                + '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:' + cfg.color + ';">' + cfg.label + '</div>'
+                + '</div>'
+                + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;">'
+                + '<div style="font-family:monospace;font-size:18px;font-weight:800;color:' + barColor + ';">' + item.qty + ' <span style="font-size:12px;font-weight:600;color:#94A3B8;">' + item.unit + '</span></div>'
+                + '<div style="font-size:11px;color:#64748B;">' + (unitPrice > 0 ? 'R$ ' + unitPrice.toFixed(2) + '/' + item.unit : '') + '</div>'
+                + '</div>'
+                + '<div style="' + barBg + '"><div style="' + barFill + '"></div></div>'
+                + '<div style="display:flex;justify-content:space-between;margin-top:4px;">'
+                + '<span style="font-size:10px;color:#94A3B8;">' + pct + '% do máximo</span>'
+                + '<span style="font-size:10px;font-weight:600;color:#64748B;">Investido: R$ ' + (item.totalSpent || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</span>'
+                + '</div>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+        });
 
         // Recent movements
         var movements = events.filter(function (ev) {
@@ -444,16 +466,22 @@ window.estoque = {
             html += '<div class="section-title" style="margin-top:16px;">Últimas Movimentações</div>';
             movements.forEach(function (ev) {
                 var isEntrada = ev.type === 'ESTOQUE_ENTRADA';
-                html += '<div class="history-card">'
-                    + '<div class="history-card-header">'
-                    + '  <span class="badge ' + (isEntrada ? 'badge-green' : 'badge-red') + '">'
-                    + (isEntrada ? '📥 ENTRADA' : '📤 SAÍDA') + '</span>'
-                    + '  <span class="date">' + (ev.date || '').split('T')[0] + '</span>'
+                var moveColor = isEntrada ? '#059669' : '#DC2626';
+                var moveBg = isEntrada ? 'rgba(5,150,105,0.08)' : 'rgba(220,38,38,0.08)';
+                var moveIcon = isEntrada ? '📥' : '📤';
+                var moveLabel = isEntrada ? 'ENTRADA' : 'SAÍDA';
+                var dateStr = (ev.date || '').split('T')[0];
+                var dp = dateStr.split('-');
+                var df = dp.length === 3 ? dp[2] + '/' + dp[1] : dateStr;
+
+                html += '<div style="background:' + moveBg + ';border-left:4px solid ' + moveColor + ';border-radius:10px;padding:10px 12px;margin-bottom:8px;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:' + moveColor + ';">' + moveIcon + ' ' + moveLabel + '</span>'
+                    + '<span style="font-size:10px;color:#94A3B8;">📅 ' + df + '</span>'
                     + '</div>'
-                    + '<div class="history-card-body">'
-                    + '  <strong>' + (ev.desc || '--') + '</strong>'
-                    + '  <span class="detail">' + (ev.qty || 0) + ' ' + (ev.unit || 'un') + '</span>'
-                    + '</div>'
+                    + '<div style="font-size:13px;font-weight:600;color:#1E293B;margin-top:2px;">' + (ev.desc || ev.name || '--') + '</div>'
+                    + '<div style="font-size:11px;color:#64748B;">' + (ev.qty || 0) + ' ' + (ev.unit || 'un')
+                    + (ev.value ? ' · R$ ' + ev.value.toFixed(2) : '') + '</div>'
                     + '</div>';
             });
         }
