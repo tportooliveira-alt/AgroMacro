@@ -713,11 +713,29 @@ window.lotes = {
                 }
             }
 
-            return '<div class="lot-card">'
-                + '<div class="lot-card-header">'
-                + '<div class="lot-card-id">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome') + '</div>'
-                + '<div class="lot-card-count">' + (l.qtdAnimais || 0) + ' cab</div>'
+            var catLabel = {
+                'cria': 'CRIA', 'recria': 'RECRIA', 'engorda': 'ENGORDA',
+                'matrizes': 'MATRIZES', 'touros': 'TOUROS'
+            }[categoria] || '';
+
+            var catGradient = {
+                'cria': 'linear-gradient(135deg, #D97706, #F59E0B)',
+                'recria': 'linear-gradient(135deg, #2563EB, #3B82F6)',
+                'engorda': 'linear-gradient(135deg, #DC2626, #EF4444)',
+                'matrizes': 'linear-gradient(135deg, #7C3AED, #8B5CF6)',
+                'touros': 'linear-gradient(135deg, #059669, #10B981)'
+            }[categoria] || 'linear-gradient(135deg, #0F766E, #14B8A6)';
+
+            var headerStyle = 'background:' + catGradient + ';color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;';
+
+            return '<div class="lot-card" data-cat="' + categoria + '" style="overflow:hidden;border-radius:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+                + '<div class="lot-card-header" style="' + headerStyle + '">'
+                + '<div class="lot-card-id" style="font-size:16px;font-weight:800;color:#fff;">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome')
+                + (catLabel ? '<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.25);color:#fff;margin-left:6px;">' + catLabel + '</span>' : '')
                 + '</div>'
+                + '<div style="font-family:monospace;font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;">' + (l.qtdAnimais || 0) + ' cab</div>'
+                + '</div>'
+                + '<div class="lot-card-body">'
                 + '<div class="lot-card-stats">'
                 + '<div class="lot-stat"><div class="lot-stat-label">Peso</div><div class="lot-stat-value">' + (l.pesoMedio || '-') + ' kg</div></div>'
                 + '<div class="lot-stat"><div class="lot-stat-label">GMD</div><div class="lot-stat-value">' + gmdText + '</div></div>'
@@ -727,7 +745,7 @@ window.lotes = {
                 + '<div class="lot-stat"><div class="lot-stat-label">R$/@</div><div class="lot-stat-value">' + custoArrobaText + '</div></div>'
                 + '</div>'
                 + resultadoHtml
-                + '<div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">'
+                + '<div class="lot-actions">'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🌾 Pasto</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTransferencia(\'' + l.nome + '\')">🔄 Transferir</button>'
@@ -736,6 +754,7 @@ window.lotes = {
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Hist.</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.registrarProtocolo(\'' + l.nome + '\')">🐄 Reprod.</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.renderFichaSanitaria(\'' + l.nome + '\')">📋 Ficha</button>'
+                + '</div>'
                 + '</div>'
                 + '</div>';
         }).join('');
