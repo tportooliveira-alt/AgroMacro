@@ -694,21 +694,21 @@ window.lotes = {
             var custoArrobaText = '--';
             var resultadoHtml = '';
             if (custoData && custoData.custoTotal > 0) {
-                custoTotalText = 'R$ ' + custoData.custoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                custoCabText = 'R$ ' + custoData.custoPorCab.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                custoTotalText = 'R$ ' + custoData.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                custoCabText = 'R$ ' + custoData.custoPorCab.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 if (custoData.custoPorArroba > 0) {
-                    custoArrobaText = 'R$ ' + custoData.custoPorArroba.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '/@';
+                    custoArrobaText = 'R$ ' + custoData.custoPorArroba.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '/@';
                 }
                 // Mini breakdown
                 var parts = [];
-                if (custoData.custoCompra > 0) parts.push('🐄 Compra: R$ ' + custoData.custoCompra.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
-                if (custoData.custoNutricao > 0) parts.push('🧂 Nutrição: R$ ' + custoData.custoNutricao.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
-                if (custoData.custoManejo > 0) parts.push('💉 Manejo: R$ ' + custoData.custoManejo.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+                if (custoData.custoCompra > 0) parts.push('🐄 Compra: R$ ' + custoData.custoCompra.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+                if (custoData.custoNutricao > 0) parts.push('🧂 Nutrição: R$ ' + custoData.custoNutricao.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+                if (custoData.custoManejo > 0) parts.push('💉 Manejo: R$ ' + custoData.custoManejo.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
                 if (parts.length > 0) {
                     resultadoHtml = '<div class="lot-cost-breakdown" style="margin-top:6px;padding:8px 10px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:11px;line-height:1.6;">'
                         + '<div style="font-weight:700;margin-bottom:2px;font-size:12px;">💰 Custo Total: ' + custoTotalText + '</div>'
                         + parts.join(' · ')
-                        + (custoData.receitaVenda > 0 ? '<div style="margin-top:4px;font-weight:700;color:' + (custoData.resultado >= 0 ? '#22C55E' : '#EF4444') + ';">📊 Resultado: R$ ' + custoData.resultado.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</div>' : '')
+                        + (custoData.receitaVenda > 0 ? '<div style="margin-top:4px;font-weight:700;color:' + (custoData.resultado >= 0 ? '#22C55E' : '#EF4444') + ';">📊 Resultado: R$ ' + custoData.resultado.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div>' : '')
                         + '</div>';
                 }
             }
@@ -734,6 +734,8 @@ window.lotes = {
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirMortalidade(\'' + l.nome + '\')">💀 Baixa</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirNascimento(\'' + l.nome + '\')">🐣 Nasc.</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Hist.</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.registrarProtocolo(\'' + l.nome + '\')">🐄 Reprod.</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.renderFichaSanitaria(\'' + l.nome + '\')">📋 Ficha</button>'
                 + '</div>'
                 + '</div>';
         }).join('');

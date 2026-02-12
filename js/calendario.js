@@ -74,11 +74,7 @@ window.calendario = {
 
         var alertas = this.getProximasVacinas();
 
-        if (alertas.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhum lote ativo.</div>';
-            return;
-        }
-
+        // ═══ SEÇÃO 1: CALENDÁRIO SANITÁRIO ═══
         var statusColors = {
             'vencida': { bg: '#fee2e2', border: '#ef4444', text: '#991b1b', badge: '🚨 VENCIDA' },
             'alerta': { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', badge: '⚠️ ALERTA' },
@@ -88,28 +84,113 @@ window.calendario = {
 
         var html = '<div class="kpi-section"><div class="kpi-title">🗓️ Calendário Sanitário</div>';
 
-        // Urgentes primeiro
-        var urgentes = alertas.filter(function (a) { return a.status === 'vencida' || a.status === 'alerta'; });
-        var normais = alertas.filter(function (a) { return a.status !== 'vencida' && a.status !== 'alerta'; });
+        if (alertas.length === 0) {
+            html += '<div class="empty-state">Nenhum lote ativo.</div>';
+        } else {
+            var urgentes = alertas.filter(function (a) { return a.status === 'vencida' || a.status === 'alerta'; });
+            var okCount = alertas.filter(function (a) { return a.status === 'ok'; }).length;
 
-        if (urgentes.length > 0) {
-            html += '<div class="kpi-grid" style="margin-bottom:12px;"><div class="kpi-card" style="background:#fee2e2;"><div class="kpi-label">Pendências</div><div class="kpi-value negative">' + urgentes.length + '</div></div></div>';
+            // KPIs sanitários
+            html += '<div class="kpi-grid" style="margin-bottom:12px;">'
+                + '<div class="kpi-card" style="' + (urgentes.length > 0 ? 'background:#fee2e2;' : '') + '"><div class="kpi-label">Pendências</div><div class="kpi-value' + (urgentes.length > 0 ? ' negative' : ' positive') + '">' + urgentes.length + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">Em Dia</div><div class="kpi-value positive">' + okCount + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">Total</div><div class="kpi-value">' + alertas.length + '</div></div>'
+                + '</div>';
+
+            var allItems = urgentes.concat(alertas.filter(function (a) { return a.status !== 'vencida' && a.status !== 'alerta'; }));
+            allItems.slice(0, 30).forEach(function (a) {
+                var colors = statusColors[a.status] || statusColors.pendente;
+                html += '<div style="background:' + colors.bg + ';border:1px solid ' + colors.border + ';border-radius:8px;padding:10px;margin-bottom:8px;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<div><strong style="color:' + colors.text + ';">' + a.vacina + '</strong>'
+                    + '<div style="font-size:12px;color:' + colors.text + ';">' + a.lote + ' (' + a.qtdAnimais + ' cab)</div></div>'
+                    + '<div style="text-align:right;">'
+                    + '<div style="font-size:11px;font-weight:700;">' + colors.badge + '</div>'
+                    + '<div style="font-size:11px;color:' + colors.text + ';">Próx: ' + a.proximaData + '</div>'
+                    + '</div></div></div>';
+            });
+        }
+        html += '</div>';
+
+        // ═══ SEÇÃO 2: PROTOCOLO REPRODUTIVO ═══
+        var repros = window.data ? window.data.events.filter(function (ev) { return ev.type === 'REPRODUCAO'; }) : [];
+        repros.sort(function (a, b) { return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp); });
+
+        var tipoLabels = { iatf: '💉 IATF', monta: '🐂 Monta Natural', prenhez: '🔍 Diagnóstico Prenhez', parto: '🐣 Previsão Parto' };
+
+        html += '<div class="kpi-section" style="margin-top:16px;"><div class="kpi-title">🐄 Protocolo Reprodutivo</div>';
+
+        if (repros.length === 0) {
+            html += '<div class="empty-state" style="padding:12px;">Nenhum protocolo registrado. Use o botão 🐄 Reprod. nos lotes.</div>';
+        } else {
+            // KPIs reprodutivos
+            var totalMatrizes = 0;
+            var taxaMedia = 0;
+            var taxaCount = 0;
+            repros.forEach(function (r) {
+                totalMatrizes += (r.qtdMatrizes || 0);
+                if (r.taxaPrenhez > 0) { taxaMedia += r.taxaPrenhez; taxaCount++; }
+            });
+            if (taxaCount > 0) taxaMedia = taxaMedia / taxaCount;
+
+            html += '<div class="kpi-grid" style="margin-bottom:12px;">'
+                + '<div class="kpi-card"><div class="kpi-label">Protocolos</div><div class="kpi-value positive">' + repros.length + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">Matrizes</div><div class="kpi-value">' + totalMatrizes + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">Taxa Prenhez</div><div class="kpi-value">' + (taxaMedia > 0 ? taxaMedia.toFixed(0) + '%' : '--') + '</div></div>'
+                + '</div>';
+
+            // Timeline reprodutiva
+            repros.slice(0, 15).forEach(function (r) {
+                html += '<div class="history-card">'
+                    + '<div class="history-card-header">'
+                    + '<span class="badge badge-blue">' + (tipoLabels[r.tipoProtocolo] || r.tipoProtocolo) + '</span>'
+                    + '<span class="date">' + (r.date || '').split('T')[0] + '</span>'
+                    + '</div>'
+                    + '<div class="history-card-body">'
+                    + '<strong>' + (r.lote || '') + '</strong>'
+                    + '<span class="detail">' + (r.qtdMatrizes || 0) + ' matrizes</span>'
+                    + (r.taxaPrenhez ? '<span class="detail">Taxa: ' + r.taxaPrenhez + '%</span>' : '')
+                    + (r.obs ? '<span class="detail">' + r.obs + '</span>' : '')
+                    + '</div></div>';
+            });
+        }
+        html += '</div>';
+
+        // ═══ SEÇÃO 3: RESUMO SANITÁRIO POR LOTE ═══
+        var lotes = window.lotes ? window.lotes.getLotes() : [];
+        if (lotes.length > 0) {
+            html += '<div class="kpi-section" style="margin-top:16px;"><div class="kpi-title">📋 Ficha Sanitária por Lote</div>';
+
+            var self = this;
+            lotes.forEach(function (l) {
+                var manejos = window.data ? window.data.events.filter(function (ev) {
+                    return (ev.type === 'MANEJO' || ev.type === 'REPRODUCAO') && ev.lote === l.nome;
+                }) : [];
+
+                var vacinacoes = manejos.filter(function (m) { return m.tipoManejo === 'vacinacao'; }).length;
+                var pesagens = manejos.filter(function (m) { return m.tipoManejo === 'pesagem'; }).length;
+                var vermifugacoes = manejos.filter(function (m) { return (m.desc || '').toLowerCase().indexOf('vermif') >= 0 || (m.desc || '').toLowerCase().indexOf('ivermec') >= 0; }).length;
+                var ultimoManejo = manejos.length > 0 ? manejos[manejos.length - 1] : null;
+
+                html += '<div class="history-card" style="cursor:pointer" onclick="window.calendario.renderFichaSanitaria(\'' + l.nome + '\')">'
+                    + '<div class="history-card-header">'
+                    + '<span class="badge badge-green">📋 ' + l.nome + '</span>'
+                    + '<span class="date">' + (l.qtdAnimais || 0) + ' cab</span>'
+                    + '</div>'
+                    + '<div class="history-card-body">'
+                    + '<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;">'
+                    + '<span>💉 ' + vacinacoes + ' vacinas</span>'
+                    + '<span>⚖️ ' + pesagens + ' pesagens</span>'
+                    + '<span>🪱 ' + vermifugacoes + ' vermífugos</span>'
+                    + '<span>📝 ' + manejos.length + ' total</span>'
+                    + '</div>'
+                    + (ultimoManejo ? '<div style="font-size:12px;margin-top:4px;color:rgba(255,255,255,.5)">Último: ' + (ultimoManejo.desc || ultimoManejo.tipoManejo || '') + ' (' + (ultimoManejo.date || '').split('T')[0] + ')</div>' : '')
+                    + '</div></div>';
+            });
+
+            html += '</div>';
         }
 
-        var allItems = urgentes.concat(normais);
-        allItems.forEach(function (a) {
-            var colors = statusColors[a.status] || statusColors.pendente;
-            html += '<div style="background:' + colors.bg + ';border:1px solid ' + colors.border + ';border-radius:8px;padding:10px;margin-bottom:8px;">'
-                + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-                + '<div><strong style="color:' + colors.text + ';">' + a.vacina + '</strong>'
-                + '<div style="font-size:12px;color:' + colors.text + ';">' + a.lote + ' (' + a.qtdAnimais + ' cab)</div></div>'
-                + '<div style="text-align:right;">'
-                + '<div style="font-size:11px;font-weight:700;">' + colors.badge + '</div>'
-                + '<div style="font-size:11px;color:' + colors.text + ';">Próx: ' + a.proximaData + '</div>'
-                + '</div></div></div>';
-        });
-
-        html += '</div>';
         container.innerHTML = html;
     },
 
