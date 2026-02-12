@@ -132,20 +132,28 @@ window.financeiro = {
 
         var saldo = totalEntradas - totalSaidas;
 
-        // Summary cards
-        var html = '<div class="fluxo-cards">'
-            + '<div class="fluxo-card entrada">'
-            + '  <div class="fluxo-label">💰 Entradas (Vendas)</div>'
-            + '  <div class="fluxo-value text-green">R$ ' + totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
+        // Summary cards — premium inline styles
+        var saldoColor = saldo >= 0 ? '#059669' : '#DC2626';
+        var saldoBg = saldo >= 0 ? 'rgba(5,150,105,0.08)' : 'rgba(220,38,38,0.08)';
+
+        var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+            // Entradas
+            + '<div style="background:linear-gradient(135deg, #059669, #10B981);border-radius:14px;padding:14px 16px;color:#fff;">'
+            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;">💰 Entradas</div>'
+            + '<div style="font-size:22px;font-weight:800;margin-top:4px;">R$ ' + totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
+            + '<div style="font-size:10px;opacity:0.7;margin-top:2px;">' + vendas.length + ' vendas</div>'
             + '</div>'
-            + '<div class="fluxo-card saida">'
-            + '  <div class="fluxo-label">📉 Saídas (Compras + Insumos + Manejo)</div>'
-            + '  <div class="fluxo-value text-red">R$ ' + totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
+            // Saídas
+            + '<div style="background:linear-gradient(135deg, #DC2626, #EF4444);border-radius:14px;padding:14px 16px;color:#fff;">'
+            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;">📉 Saídas</div>'
+            + '<div style="font-size:22px;font-weight:800;margin-top:4px;">R$ ' + totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
+            + '<div style="font-size:10px;opacity:0.7;margin-top:2px;">Compras + Insumos + Manejo</div>'
             + '</div>'
-            + '<div class="fluxo-card ' + (saldo >= 0 ? 'positivo' : 'negativo') + '">'
-            + '  <div class="fluxo-label">📊 Saldo</div>'
-            + '  <div class="fluxo-value ' + (saldo >= 0 ? 'text-green' : 'text-red') + '">R$ ' + saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
             + '</div>'
+            // Saldo — full width
+            + '<div style="background:' + saldoBg + ';border:2px solid ' + saldoColor + ';border-radius:14px;padding:14px 16px;text-align:center;margin-bottom:16px;">'
+            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:' + saldoColor + ';">📊 SALDO</div>'
+            + '<div style="font-size:28px;font-weight:800;color:' + saldoColor + ';margin-top:4px;">' + (saldo >= 0 ? '+' : '') + 'R$ ' + saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
             + '</div>';
 
         // Indicadores de Gado de Corte
@@ -186,26 +194,26 @@ window.financeiro = {
         } else {
             allTransactions.slice(0, 30).forEach(function (ev) {
                 var isEntrada = ev.type === 'VENDA';
-                var badgeClass = isEntrada ? 'badge-green' : 'badge-red';
-                var icon = '📉';
-                var label = 'COMPRA';
                 var valor = ev.value || ev.cost || 0;
+                var txConfig = {
+                    'VENDA': { icon: '📈', label: 'VENDA', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+                    'COMPRA': { icon: '🐄', label: 'COMPRA GADO', color: '#DC2626', bg: 'rgba(220,38,38,0.08)' },
+                    'ESTOQUE_ENTRADA': { icon: '📦', label: 'INSUMO', color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
+                    'MANEJO': { icon: '💉', label: 'MANEJO', color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' }
+                };
+                var cfg = txConfig[ev.type] || { icon: '📝', label: 'OUTRO', color: '#64748B', bg: 'rgba(100,116,139,0.08)' };
+                var dateStr = (ev.date || '').split('T')[0];
+                var dp = dateStr.split('-');
+                var df = dp.length === 3 ? dp[2] + '/' + dp[1] : dateStr;
 
-                if (ev.type === 'VENDA') { icon = '📈'; label = 'VENDA'; }
-                else if (ev.type === 'COMPRA') { icon = '🐄'; label = 'COMPRA GADO'; }
-                else if (ev.type === 'ESTOQUE_ENTRADA') { icon = '📦'; label = 'INSUMO'; }
-                else if (ev.type === 'MANEJO') { icon = '💉'; label = 'MANEJO'; }
-
-                html += '<div class="history-card">'
-                    + '<div class="history-card-header">'
-                    + '  <span class="badge ' + badgeClass + '">'
-                    + icon + ' ' + label + '</span>'
-                    + '  <span class="date">' + (ev.date || '').split('T')[0] + '</span>'
+                html += '<div style="background:' + cfg.bg + ';border-left:4px solid ' + cfg.color + ';border-radius:10px;padding:10px 12px;margin-bottom:8px;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:' + cfg.color + ';">' + cfg.icon + ' ' + cfg.label + '</span>'
+                    + '<span style="font-size:10px;color:#94A3B8;">📅 ' + df + '</span>'
                     + '</div>'
-                    + '<div class="history-card-body">'
-                    + '  <strong>' + (ev.desc || '--') + '</strong>'
-                    + '  <span class="detail cost ' + (isEntrada ? 'text-green' : 'text-red') + '">'
-                    + (isEntrada ? '+' : '-') + ' R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</span>'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">'
+                    + '<div style="font-size:13px;font-weight:600;color:#1E293B;">' + (ev.desc || '--') + '</div>'
+                    + '<div style="font-size:14px;font-weight:800;color:' + cfg.color + ';">' + (isEntrada ? '+' : '-') + ' R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
                     + '</div>'
                     + '</div>';
             });

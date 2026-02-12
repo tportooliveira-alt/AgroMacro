@@ -1718,6 +1718,130 @@ input[type="radio"] {
     font-size: 14px;
 }
 
+/* ═══════ MICRO-ANIMATIONS & PAGE TRANSITIONS ═══════ */
+
+@keyframes pageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-content {
+    animation: pageSlideIn 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+.skeleton-card {
+    height: 120px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+}
+
+.skeleton-line {
+    height: 14px;
+    margin-bottom: 8px;
+    width: 60%;
+}
+
+.skeleton-line.short {
+    width: 40%;
+}
+
+.skeleton-line.full {
+    width: 100%;
+}
+
+.btn-sm:active,
+.submit-btn:active,
+.home-card:active,
+.nav-item:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+}
+
+.lot-card:hover,
+.home-card:hover,
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+.fab:hover {
+    transform: scale(1.08) rotate(90deg);
+    transition: transform 0.3s ease;
+}
+
+.nav-item {
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.kpi-value {
+    animation: countUp 0.4s ease-out;
+}
+
 @media print {
 
 

@@ -86,11 +86,11 @@ window.pastos = {
             + '</div>';
 
         // ═══ Cards de Pasto ═══
-        var statusLabels = {
-            'disponivel': '🟢 Disponível',
-            'ocupado': '🔴 Ocupado',
-            'descanso': '🟡 Em Descanso',
-            'manutencao': '🔧 Manutenção'
+        var statusConfig = {
+            'disponivel': { label: 'DISPONÍVEL', icon: '🟢', gradient: 'linear-gradient(135deg, #059669, #10B981)', dot: '#10B981' },
+            'ocupado': { label: 'OCUPADO', icon: '🔴', gradient: 'linear-gradient(135deg, #DC2626, #EF4444)', dot: '#EF4444' },
+            'descanso': { label: 'EM DESCANSO', icon: '🟡', gradient: 'linear-gradient(135deg, #D97706, #F59E0B)', dot: '#F59E0B' },
+            'manutencao': { label: 'MANUTENÇÃO', icon: '🔧', gradient: 'linear-gradient(135deg, #2563EB, #3B82F6)', dot: '#3B82F6' }
         };
 
         html += pastos.slice().reverse().map(function (p) {
@@ -101,21 +101,28 @@ window.pastos = {
             // Avaliação
             var avalBadge = window.pastoMgmt ? window.pastoMgmt.getAvaliacaoBadge(p.nome) : '';
 
+            // Status config
+            var st = statusConfig[p.statusPasto] || statusConfig['disponivel'];
+
+            // Capacidade usage bar
+            var capPct = p.capacidade > 0 ? Math.min(100, Math.round((lotacao.animais / p.capacidade) * 100)) : 0;
+            var capColor = capPct > 90 ? '#DC2626' : capPct > 70 ? '#D97706' : '#059669';
+
             // Lotes neste pasto
             var lotesHtml = '';
             if (lotacao.lotesNoPasto && lotacao.lotesNoPasto.length > 0) {
-                lotesHtml = '<div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08)">'
-                    + '<div style="font-size:11px; color:rgba(255,255,255,.5); margin-bottom:4px">LOTES NESTE PASTO</div>';
+                lotesHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;">'
+                    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94A3B8;margin-bottom:6px;">LOTES NESTE PASTO</div>';
                 lotacao.lotesNoPasto.forEach(function (l) {
-                    lotesHtml += '<div style="display:flex; justify-content:space-between; font-size:13px; padding:2px 0">'
-                        + '<span>🐄 ' + (l.nome || 'Sem nome') + '</span>'
-                        + '<span style="color:rgba(255,255,255,.7)">' + (l.qtdAnimais || 0) + ' cab · ' + (l.pesoMedio || 0) + 'kg</span>'
+                    lotesHtml += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 8px;background:#F8FAFC;border-radius:8px;margin-bottom:4px;">'
+                        + '<span style="font-weight:600;color:#1E293B;">🐄 ' + (l.nome || 'Sem nome') + '</span>'
+                        + '<span style="color:#64748B;">' + (l.qtdAnimais || 0) + ' cab · ' + (l.pesoMedio || 0) + 'kg</span>'
                         + '</div>';
                 });
                 lotesHtml += '</div>';
             } else {
-                lotesHtml = '<div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08)">'
-                    + '<div style="font-size:12px; color:rgba(255,255,255,.35); font-style:italic">Nenhum lote alocado</div></div>';
+                lotesHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;">'
+                    + '<div style="font-size:12px;color:#CBD5E1;font-style:italic;text-align:center;padding:8px 0;">Nenhum lote alocado</div></div>';
             }
 
             // Dias de descanso
@@ -123,40 +130,60 @@ window.pastos = {
             if (window.pastoMgmt) {
                 var dias = window.pastoMgmt.getDiasDescanso(p.nome);
                 if (dias !== null && lotacao.animais === 0) {
-                    descansoHtml = '<div style="margin-top:6px; font-size:12px; color:#3498db">🔄 ' + dias + ' dias em descanso</div>';
+                    descansoHtml = '<div style="margin-top:6px;font-size:12px;color:#2563EB;font-weight:600;">🔄 ' + dias + ' dias em descanso</div>';
                 }
             }
 
-            return '<div class="history-card" style="margin-bottom:12px">'
-                + '<div class="history-card-header">'
-                + '  <span class="badge badge-green">🌾 ' + p.nome + '</span>'
-                + '  <span class="date">' + (statusLabels[p.statusPasto] || p.statusPasto || '') + '</span>'
+            // Card header style
+            var headerStyle = 'background:' + st.gradient + ';color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;';
+
+            return '<div style="overflow:hidden;border-radius:16px;margin-bottom:14px;border:1px solid #E2E8F0;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+                // Header com gradiente por status
+                + '<div style="' + headerStyle + '">'
+                + '<div style="font-size:15px;font-weight:800;color:#fff;">🌾 ' + p.nome + '</div>'
+                + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,0.25);color:#fff;">' + st.label + '</span>'
                 + '</div>'
-                + '<div class="history-card-body">'
-                // Linha 1: Área + Capacidade + Tipo
-                + '  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:6px">'
-                + '    <span><strong>' + (p.area ? p.area + ' ha' : '--') + '</strong></span>'
-                + '    <span class="detail">Cap: ' + (p.capacidade || '--') + ' cab</span>'
-                + '    <span class="detail">' + (p.tipoPasto || p.tipoCapim || '') + '</span>'
-                + '  </div>'
-                // Linha 2: Lotação UA/ha
-                + '  <div style="margin-bottom:6px">' + lotacaoBadge + '</div>'
-                // Linha 3: Animais + UA
-                + '  <div style="display:flex; gap:16px; font-size:13px; margin-bottom:4px">'
-                + '    <span>🐄 <strong>' + lotacao.animais + '</strong> cab alocados</span>'
-                + '    <span>📊 <strong>' + lotacao.ua.toFixed(1) + '</strong> UA</span>'
-                + '  </div>'
-                // Linha 4: Avaliação
-                + '  <div style="margin-bottom:4px">🌿 ' + avalBadge + '</div>'
+                // Body
+                + '<div style="padding:14px 16px;">'
+                // Stats grid
+                + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">'
+                + '<div style="text-align:center;padding:8px;background:#F8FAFC;border-radius:10px;">'
+                + '<div style="font-size:10px;color:#94A3B8;font-weight:600;">ÁREA</div>'
+                + '<div style="font-size:16px;font-weight:800;color:#1E293B;">' + (p.area ? p.area + '<span style="font-size:11px;font-weight:600;color:#94A3B8;"> ha</span>' : '--') + '</div>'
+                + '</div>'
+                + '<div style="text-align:center;padding:8px;background:#F8FAFC;border-radius:10px;">'
+                + '<div style="font-size:10px;color:#94A3B8;font-weight:600;">CAPACIDADE</div>'
+                + '<div style="font-size:16px;font-weight:800;color:#1E293B;">' + (p.capacidade || '--') + '<span style="font-size:11px;font-weight:600;color:#94A3B8;"> cab</span></div>'
+                + '</div>'
+                + '<div style="text-align:center;padding:8px;background:#F8FAFC;border-radius:10px;">'
+                + '<div style="font-size:10px;color:#94A3B8;font-weight:600;">UA/ha</div>'
+                + '<div style="font-size:16px;font-weight:800;color:#1E293B;">' + lotacao.uaha.toFixed(1) + '</div>'
+                + '</div>'
+                + '</div>'
+                // Capacity bar
+                + '<div style="margin-bottom:8px;">'
+                + '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+                + '<span style="font-size:10px;color:#64748B;">Ocupação: ' + lotacao.animais + '/' + (p.capacidade || '?') + ' cab</span>'
+                + '<span style="font-size:10px;font-weight:700;color:' + capColor + ';">' + capPct + '%</span>'
+                + '</div>'
+                + '<div style="height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;">'
+                + '<div style="height:100%;width:' + capPct + '%;background:' + capColor + ';border-radius:3px;transition:width 0.8s ease;"></div>'
+                + '</div>'
+                + '</div>'
+                // Tipo capim + Avaliação
+                + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">'
+                + (p.tipoPasto || p.tipoCapim ? '<span style="font-size:11px;padding:3px 8px;background:#ECFDF5;color:#059669;border-radius:8px;font-weight:600;">🌿 ' + (p.tipoPasto || p.tipoCapim) + '</span>' : '')
+                + (avalBadge ? '<span style="font-size:11px;">' + avalBadge + '</span>' : '')
+                + '</div>'
                 // Descanso
                 + descansoHtml
-                // Lotes neste pasto
+                // Lotes
                 + lotesHtml
-                + '</div>'
                 // Botões
-                + '<div style="margin-top:10px; padding:8px 12px; display:flex; gap:6px; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,.08)">'
-                + '  <button class="btn-sm" onclick="event.stopPropagation(); window.pastoMgmt.abrirAvaliacao(\'' + p.nome + '\')">🌿 Avaliar</button>'
-                + '  <button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto && window.lotes.trocarPasto(\'' + (p.nome) + '\')">🔄 Rotacionar</button>'
+                + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;display:flex;gap:6px;flex-wrap:wrap;">'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.pastoMgmt.abrirAvaliacao(\'' + p.nome + '\')">🌿 Avaliar</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto && window.lotes.trocarPasto(\'' + (p.nome) + '\')">🔄 Rotacionar</button>'
+                + '</div>'
                 + '</div>'
                 + '</div>';
         }).join('');
