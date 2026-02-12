@@ -554,6 +554,80 @@ window.lotes = {
         };
     },
 
+    // ====== CUSTO TOTAL POR LOTE (Fluxo Conectado ao Rebanho) ======
+    calcCustoTotalLote: function (lote) {
+        if (!window.data) return null;
+
+        var nome = lote.nome;
+        var events = window.data.events;
+
+        // 1. COMPRA — valor total da compra vinculada ao lote
+        var custoCompra = 0;
+        events.forEach(function (ev) {
+            if (ev.type === 'COMPRA' && ev.lote === nome) {
+                custoCompra += (ev.value || 0);
+            }
+        });
+
+        // 2. NUTRIÇÃO — custo acumulado (sal + ração) usando calcCustoNutricao
+        var custoNutricao = 0;
+        var nutData = this.calcCustoNutricao(lote);
+        if (nutData) {
+            custoNutricao = nutData.custoAcumulado || 0;
+        }
+
+        // 3. MANEJO — custo de vacinas, vermífugos etc vinculados ao lote
+        var custoManejo = 0;
+        events.forEach(function (ev) {
+            if (ev.type === 'MANEJO' && ev.lote === nome && ev.cost) {
+                custoManejo += ev.cost;
+            }
+        });
+
+        // 4. INSUMOS de ESTOQUE usados no lote (abastecimentos com custo)
+        var custoInsumos = 0;
+        events.forEach(function (ev) {
+            if (ev.type === 'ABASTECIMENTO' && ev.lote === nome && ev.custo) {
+                custoInsumos += ev.custo;
+            }
+        });
+
+        // 5. VENDA — receita do lote
+        var receitaVenda = 0;
+        events.forEach(function (ev) {
+            if (ev.type === 'VENDA' && ev.lote === nome) {
+                receitaVenda += (ev.value || 0);
+            }
+        });
+
+        // TOTAIS
+        var custoTotal = custoCompra + custoNutricao + custoManejo + custoInsumos;
+        var custoPorCab = lote.qtdAnimais > 0 ? custoTotal / lote.qtdAnimais : 0;
+
+        // Custo por arroba produzida
+        var custoPorArroba = 0;
+        var gmdData = this.calcGMD(lote);
+        if (gmdData && gmdData.ganhoTotal > 0 && lote.qtdAnimais > 0) {
+            var arrobasProduzidas = (gmdData.ganhoTotal * lote.qtdAnimais) / 15;
+            custoPorArroba = arrobasProduzidas > 0 ? custoTotal / arrobasProduzidas : 0;
+        }
+
+        // Resultado (receita - custo)
+        var resultado = receitaVenda - custoTotal;
+
+        return {
+            custoCompra: custoCompra,
+            custoNutricao: custoNutricao,
+            custoManejo: custoManejo,
+            custoInsumos: custoInsumos,
+            custoTotal: custoTotal,
+            custoPorCab: custoPorCab,
+            custoPorArroba: custoPorArroba,
+            receitaVenda: receitaVenda,
+            resultado: resultado
+        };
+    },
+
     // ====== RENDER LIST ======
     renderList: function () {
         var container = document.getElementById('lotes-list');
@@ -613,6 +687,32 @@ window.lotes = {
                 if (kpis.diasCocho > 0) diasText = kpis.diasCocho + 'd';
             }
 
+            // Custo total por lote (Fluxo Conectado)
+            var custoData = self.calcCustoTotalLote(l);
+            var custoTotalText = '--';
+            var custoCabText = '--';
+            var custoArrobaText = '--';
+            var resultadoHtml = '';
+            if (custoData && custoData.custoTotal > 0) {
+                custoTotalText = 'R$ ' + custoData.custoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                custoCabText = 'R$ ' + custoData.custoPorCab.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                if (custoData.custoPorArroba > 0) {
+                    custoArrobaText = 'R$ ' + custoData.custoPorArroba.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '/@';
+                }
+                // Mini breakdown
+                var parts = [];
+                if (custoData.custoCompra > 0) parts.push('🐄 Compra: R$ ' + custoData.custoCompra.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+                if (custoData.custoNutricao > 0) parts.push('🧂 Nutrição: R$ ' + custoData.custoNutricao.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+                if (custoData.custoManejo > 0) parts.push('💉 Manejo: R$ ' + custoData.custoManejo.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+                if (parts.length > 0) {
+                    resultadoHtml = '<div class="lot-cost-breakdown" style="margin-top:6px;padding:8px 10px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:11px;line-height:1.6;">'
+                        + '<div style="font-weight:700;margin-bottom:2px;font-size:12px;">💰 Custo Total: ' + custoTotalText + '</div>'
+                        + parts.join(' · ')
+                        + (custoData.receitaVenda > 0 ? '<div style="margin-top:4px;font-weight:700;color:' + (custoData.resultado >= 0 ? '#22C55E' : '#EF4444') + ';">📊 Resultado: R$ ' + custoData.resultado.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</div>' : '')
+                        + '</div>';
+                }
+            }
+
             return '<div class="lot-card">'
                 + '<div class="lot-card-header">'
                 + '<div class="lot-card-id">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome') + '</div>'
@@ -623,7 +723,10 @@ window.lotes = {
                 + '<div class="lot-stat"><div class="lot-stat-label">GMD</div><div class="lot-stat-value">' + gmdText + '</div></div>'
                 + '<div class="lot-stat"><div class="lot-stat-label">Dias</div><div class="lot-stat-value">' + diasText + '</div></div>'
                 + '<div class="lot-stat"><div class="lot-stat-label">Pasto</div><div class="lot-stat-value">' + pastoAtual + '</div></div>'
+                + '<div class="lot-stat"><div class="lot-stat-label">R$/cab</div><div class="lot-stat-value">' + custoCabText + '</div></div>'
+                + '<div class="lot-stat"><div class="lot-stat-label">R$/@</div><div class="lot-stat-value">' + custoArrobaText + '</div></div>'
                 + '</div>'
+                + resultadoHtml
                 + '<div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🌾 Pasto</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
