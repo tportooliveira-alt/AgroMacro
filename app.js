@@ -70,7 +70,19 @@ window.app = {
         document.querySelectorAll('.bottom-nav .nav-item').forEach(function (btn) {
             btn.classList.remove('active');
         });
-        var navMap = { 'home': 'nav-home', 'lotes': 'nav-lotes', 'manejo': 'nav-manejo', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro', 'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'calendario': 'nav-manejo', 'contas': 'nav-financeiro', 'config': 'nav-config' };
+        var navMap = {
+            'home': 'nav-home',
+            // Rebanho hub + sub-views
+            'rebanho-hub': 'nav-rebanho', 'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
+            'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho',
+            // Financeiro hub + sub-views
+            'financeiro-hub': 'nav-financeiro', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro',
+            'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
+            // Operações hub + sub-views
+            'operacoes-hub': 'nav-operacoes', 'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes',
+            // Config
+            'config': 'nav-config'
+        };
         var activeNav = navMap[pageId] || 'nav-home';
         var navEl = document.getElementById(activeNav);
         if (navEl) navEl.classList.add('active');
