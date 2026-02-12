@@ -40,8 +40,13 @@ window.app = {
         if (window.funcionarios) window.funcionarios.init();
         if (window.rebanhoOps) window.rebanhoOps.init();
         if (window.pastoMgmt) window.pastoMgmt.init();
+        if (window.clima) window.clima.init();
+        if (window.nutricao) window.nutricao.init();
+        if (window.balanca) window.balanca.init();
+        if (window.safebeef) window.safebeef.init();
         if (window.calendario) window.calendario.init();
         if (window.contas) window.contas.init();
+        if (window.rastreabilidade) window.rastreabilidade.init();
         if (window.indicadores) window.indicadores.init();
 
         this.loadConfig();

@@ -78,7 +78,10 @@ window.pastos = {
         var ocupacaoPct = totalCap > 0 ? Math.round((totalAnimaisAlocados / totalCap) * 100) : 0;
         var uahaGlobal = totalArea > 0 ? (totalUA / totalArea).toFixed(2) : '0';
 
-        var html = '<div class="kpi-grid" style="margin-bottom:16px;">'
+        var html = '<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">'
+            + '<button class="btn-sm" onclick="var p=prompt(\'Quantos mm de chuva?\'); if(p) window.clima.registrarChuva(p); window.pastos.renderList();" style="background:#2563EB;color:white;">🌧️ Registrar Chuva</button>'
+            + '</div>'
+            + '<div class="kpi-grid" style="margin-bottom:16px;">'
             + '<div class="kpi-card"><div class="kpi-label">Piquetes</div><div class="kpi-value positive">' + pastos.length + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Área Total</div><div class="kpi-value">' + totalArea.toFixed(1) + ' ha</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Ocupação</div><div class="kpi-value" style="color:' + (ocupacaoPct > 90 ? '#e74c3c' : ocupacaoPct > 70 ? '#f39c12' : '#27ae60') + '">' + ocupacaoPct + '%</div></div>'
@@ -100,6 +103,10 @@ window.pastos = {
 
             // Avaliação
             var avalBadge = window.pastoMgmt ? window.pastoMgmt.getAvaliacaoBadge(p.nome) : '';
+
+            // Dias de descanso
+            var dias = window.pastoMgmt ? window.pastoMgmt.getDiasDescanso(p.nome) : null;
+            var climaBadge = (window.pastoMgmt && dias !== null) ? window.pastoMgmt.getClimaBadge(dias) : '';
 
             // Status config
             var st = statusConfig[p.statusPasto] || statusConfig['disponivel'];
@@ -125,13 +132,13 @@ window.pastos = {
                     + '<div style="font-size:12px;color:#CBD5E1;font-style:italic;text-align:center;padding:8px 0;">Nenhum lote alocado</div></div>';
             }
 
-            // Dias de descanso
+            // Dias de descanso HTML
             var descansoHtml = '';
-            if (window.pastoMgmt) {
-                var dias = window.pastoMgmt.getDiasDescanso(p.nome);
-                if (dias !== null && lotacao.animais === 0) {
-                    descansoHtml = '<div style="margin-top:6px;font-size:12px;color:#2563EB;font-weight:600;">🔄 ' + dias + ' dias em descanso</div>';
-                }
+            if (dias !== null && lotacao.animais === 0) {
+                descansoHtml = '<div style="margin-top:6px;font-size:12px;color:#2563EB;font-weight:600;display:flex;align-items:center;gap:6px;">'
+                    + '<span>🔄 ' + dias + ' dias em descanso</span>'
+                    + climaBadge
+                    + '</div>';
             }
 
             // Card header style

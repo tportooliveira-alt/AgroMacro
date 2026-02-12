@@ -90,6 +90,42 @@ window.pastoMgmt = {
         return Math.floor((hoje - ultimaSaida) / (1000 * 60 * 60 * 24));
     },
 
+    // ====== INTEGRAÇÃO CLIMA (JETBOV FEATURE) ======
+    getRecuperacaoAjustada: function (diasDescanso) {
+        if (!window.clima) return { status: 'normal', diasRestantes: 0, fator: 1 };
+
+        var chuva30d = window.clima.getAcumulado30Dias();
+        var fator = 1.0;
+        var msg = 'Normal';
+
+        // Se choveu muito (>100mm), recupera 30% mais rápido
+        if (chuva30d > 100) { fator = 1.3; msg = 'Acelerada (Chuva)'; }
+        else if (chuva30d > 50) { fator = 1.15; msg = 'Boa'; }
+        else if (chuva30d < 10) { fator = 0.8; msg = 'Lenta (Seca)'; }
+
+        // Exemplo: Braquiária precisa de 28 dias. Com chuva, precisa de 28/1.3 = 21 dias.
+        var diasPadrao = 28;
+        var diasNecessarios = Math.round(diasPadrao / fator);
+        var diasRestantes = Math.max(0, diasNecessarios - diasDescanso);
+
+        return {
+            status: msg,
+            diasRestantes: diasRestantes,
+            diasPadrao: diasPadrao,
+            chuva: chuva30d
+        };
+    },
+
+    getClimaBadge: function (diasDescanso) {
+        var rec = this.getRecuperacaoAjustada(diasDescanso);
+        if (rec.status === 'Normal') return '';
+
+        var color = rec.fator > 1 ? '#27ae60' : '#e74c3c';
+        var icon = rec.fator > 1 ? '🌧️' : '☀️';
+        return '<span class="badge" style="background:' + color + '30; color:' + color + '; border:1px solid ' + color + '">'
+            + icon + ' Recup. ' + rec.status + '</span>';
+    },
+
     // ====== 14. ROTAÇÃO DE PIQUETES ======
     renderRotacao: function () {
         if (!window.data) return '';

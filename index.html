@@ -638,6 +638,27 @@
         </section>
 
         <!-- ===================== OBRAS ===================== -->
+        <section id="view-rastreabilidade" class="view hidden">
+            <header class="top-header">
+                <button class="nav-icon" onclick="window.app.toggleMenu()">
+                    <svg viewBox="0 0 24 24" fill="none" class="icon-svg">
+                        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        </path>
+                    </svg>
+                </button>
+                <h1>Rastreabilidade SISBOV</h1>
+                <button class="nav-icon" onclick="window.app.showSection('view-operacoes-hub')">
+                    <svg viewBox="0 0 24 24" fill="none" class="icon-svg">
+                        <path d="M19 12H5m0 0l7 7m-7-7l7-7" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+            </header>
+            <main class="page-content" id="rastreabilidade-content">
+                <!-- Rendered by JS -->
+            </main>
+        </section>
+
         <section id="view-obras" class="view hidden">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('operacoes-hub')">←</button>
@@ -921,6 +942,18 @@
                 <h2>Operações</h2>
             </div>
             <div class="home-grid">
+                <button class="home-card" onclick="window.app.navigate('rastreabilidade')">
+                    <div class="home-card-icon" data-icon="sisbov"
+                        style="background: linear-gradient(135deg, #1E40AF, #3B82F6);"></div>
+                    <span class="home-card-title">Rastreabilidade</span>
+                    <span class="home-card-sub">SISBOV / GTA</span>
+                </button>
+                <button class="home-card" onclick="window.balanca.abrirModoPesagem()">
+                    <div class="home-card-icon" data-icon="balanca_rfid"
+                        style="background: linear-gradient(135deg, #059669, #10B981);"></div>
+                    <span class="home-card-title">Modo Pesagem</span>
+                    <span class="home-card-sub">Balança + RFID</span>
+                </button>
                 <button class="home-card" onclick="window.app.navigate('estoque')">
                     <div class="home-card-icon" data-icon="estoque"
                         style="background: linear-gradient(135deg, #78350F, #92400E);"></div>
@@ -1157,14 +1190,19 @@
     <script src="js/estoque.js?v=20260211r"></script>
     <script src="js/funcionarios.js?v=20260211r"></script>
     <script src="js/rebanho-ops.js?v=20260211s"></script>
+    <script src="js/clima.js"></script>
     <script src="js/pasto-mgmt.js?v=20260211s"></script>
     <script src="js/calendario.js?v=20260212b"></script>
     <script src="js/graficos.js?v=20260212a"></script>
     <script src="js/relatorio.js?v=20260212a"></script>
     <script src="js/contas.js?v=20260211s"></script>
     <script src="js/indicadores.js?v=20260211s"></script>
+    <script src="js/nutricao.js"></script>
+    <script src="js/balanca.js"></script>
+    <script src="js/blockchain.js"></script>
     <script src="js/cabecas.js?v=20260212a"></script>
-    <script src="app.js?v=20260212a"></script>
+    <script src="js/rastreabilidade.js"></script>
+    <script src="app.js"></script>
 
     <!-- Theme & Greeting Init -->
     <script>

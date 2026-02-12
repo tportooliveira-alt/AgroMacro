@@ -728,25 +728,48 @@ window.lotes = {
 
             var headerStyle = 'background:' + catGradient + ';color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;';
 
-            return '<div class="lot-card" data-cat="' + categoria + '" style="overflow:hidden;border-radius:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+            // Leitura de Cocho
+            var leituraHtml = '';
+            if (window.nutricao) {
+                var ultLeitura = window.nutricao.getUltimaLeitura(l.nome);
+                if (ultLeitura) {
+                    var corAjuste = ultLeitura.ajuste.includes('-') ? '#DC2626' : ultLeitura.ajuste.includes('+') ? '#059669' : '#2563EB';
+                    leituraHtml = '<div style="margin-top:8px; display:flex; gap:6px; align-items:center;">'
+                        + '<span style="font-size:11px; font-weight:600; padding:2px 6px; background:#F1F5F9; border-radius:4px;">🍽️ Cocho Nota ' + ultLeitura.nota + '</span>'
+                        + '<span style="font-size:11px; font-weight:700; color:' + corAjuste + ';">Ajuste: ' + ultLeitura.ajuste + '</span>'
+                        + '</div>';
+                }
+            }
+
+            // Determine badge for category
+            var badge = '';
+            if (catLabel) {
+                badge = '<span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;margin-right:6px;">' + catLabel + '</span>';
+            }
+
+            return '<div class="lot-card" onclick="window.lotes.abrirDetalhes(\'' + l.nome + '\')">'
                 + '<div class="lot-card-header" style="' + headerStyle + '">'
-                + '<div class="lot-card-id" style="font-size:16px;font-weight:800;color:#fff;">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome')
-                + (catLabel ? '<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.25);color:#fff;margin-left:6px;">' + catLabel + '</span>' : '')
+                + '<div class="lot-title">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome') + '</div>'
+                + '<div class="lot-badges">'
+                + badge
+                + '<span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;">' + (l.qtdAnimais || 0) + ' cab</span>'
                 + '</div>'
-                + '<div style="font-family:monospace;font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;">' + (l.qtdAnimais || 0) + ' cab</div>'
                 + '</div>'
                 + '<div class="lot-card-body">'
-                + '<div class="lot-card-stats">'
-                + '<div class="lot-stat"><div class="lot-stat-label">Peso</div><div class="lot-stat-value">' + (l.pesoMedio || '-') + ' kg</div></div>'
-                + '<div class="lot-stat"><div class="lot-stat-label">GMD</div><div class="lot-stat-value">' + gmdText + '</div></div>'
-                + '<div class="lot-stat"><div class="lot-stat-label">Dias</div><div class="lot-stat-value">' + diasText + '</div></div>'
-                + '<div class="lot-stat"><div class="lot-stat-label">Pasto</div><div class="lot-stat-value">' + pastoAtual + '</div></div>'
-                + '<div class="lot-stat"><div class="lot-stat-label">R$/cab</div><div class="lot-stat-value">' + custoCabText + '</div></div>'
-                + '<div class="lot-stat"><div class="lot-stat-label">R$/@</div><div class="lot-stat-value">' + custoArrobaText + '</div></div>'
+                + '<div class="lot-info-grid">'
+                + '<div><span class="label">Pasto</span><span class="value">' + (l.pastoAtual || 'Sem pasto') + '</span></div>'
+                + '<div><span class="label">Peso Médio</span><span class="value">' + (l.pesoMedio || 0) + ' kg</span></div>'
+                + '<div><span class="label">GMD</span><span class="value text-green">' + gmdText + '</span></div>'
+                + '<div><span class="label">R$/cab</span><span class="value">' + custoCabText + '</span></div>'
+                + '<div><span class="label">R$/@</span><span class="value">' + custoArrobaText + '</span></div>'
+                + '<div><span class="label">Dias</span><span class="value">' + diasText + '</span></div>'
                 + '</div>'
                 + resultadoHtml
+                + leituraHtml
                 + '<div class="lot-actions">'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🌾 Pasto</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirManejo(\'' + l.nome + '\')">💉 Manejo</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🔄 Mover</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.nutricao.abrirLeitura(\'' + l.nome + '\')">🍽️ Cocho</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTransferencia(\'' + l.nome + '\')">🔄 Transferir</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirMortalidade(\'' + l.nome + '\')">💀 Baixa</button>'
