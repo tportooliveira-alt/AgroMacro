@@ -12,6 +12,7 @@ window.cabecas = {
         var lote = document.getElementById('cab-lote').value;
         var pasto = document.getElementById('cab-pasto').value;
         var obs = document.getElementById('cab-obs').value.trim();
+        var foto = this._fotoBase64 || '';
 
         if (!brinco) {
             window.app.showToast('Informe o número do brinco', 'error');
@@ -39,6 +40,7 @@ window.cabecas = {
             lote: lote,
             pasto: pasto,
             obs: obs,
+            foto: foto,
             status: 'ativo',
             historico: []
         };
@@ -48,8 +50,13 @@ window.cabecas = {
 
         // Reset form
         document.getElementById('form-cabeca').reset();
+        this._fotoBase64 = '';
+        var preview = document.getElementById('cab-foto-preview');
+        if (preview) preview.style.display = 'none';
         this.renderList();
     },
+
+    _fotoBase64: '',
 
     // ── Get all active animals ──
     getAtivos: function () {
@@ -134,9 +141,12 @@ window.cabecas = {
                 if (loteObj) loteNome = loteObj.nome;
             }
 
+            var fotoThumb = a.foto ? '<img src="' + a.foto + '" style="width:40px;height:40px;border-radius:8px;object-fit:cover;margin-right:8px;">' : '';
+
             html += '<div class="animal-card">' +
                 '<div class="animal-card-header">' +
-                '<div class="animal-id">' +
+                '<div class="animal-id" style="display:flex;align-items:center;">' +
+                fotoThumb +
                 '<span class="brinco-badge">' + a.brinco + '</span>' +
                 '<strong>' + (a.nome || '') + '</strong>' +
                 '</div>' +
@@ -188,6 +198,11 @@ window.cabecas = {
             '<p><strong>Data Nasc.:</strong> ' + (animal.dataNasc || '—') + '</p>' +
             '<p><strong>Observações:</strong> ' + (animal.obs || '—') + '</p>' +
             '</div>';
+
+        // Show photo if exists
+        if (animal.foto) {
+            html += '<div style="text-align:center;margin:12px 0;"><img src="' + animal.foto + '" style="max-width:200px;border-radius:12px;border:2px solid var(--green);"></div>';
+        }
 
         if (pesagens.length > 0) {
             html += '<div class="section-title" style="margin-top:12px;">Histórico de Pesagens</div>';
@@ -269,6 +284,41 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             window.cabecas.save();
+        });
+    }
+
+    // Photo preview handler
+    var fotoInput = document.getElementById('cab-foto');
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function (e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            // Resize for storage efficiency (max 200px)
+            var reader = new FileReader();
+            reader.onload = function (evt) {
+                var img = new Image();
+                img.onload = function () {
+                    var canvas = document.createElement('canvas');
+                    var maxSize = 200;
+                    var w = img.width, h = img.height;
+                    if (w > h) { h = h * (maxSize / w); w = maxSize; }
+                    else { w = w * (maxSize / h); h = maxSize; }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    var base64 = canvas.toDataURL('image/jpeg', 0.7);
+                    window.cabecas._fotoBase64 = base64;
+
+                    var preview = document.getElementById('cab-foto-preview');
+                    if (preview) {
+                        preview.src = base64;
+                        preview.style.display = 'block';
+                    }
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
         });
     }
 });

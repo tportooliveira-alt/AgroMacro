@@ -257,6 +257,142 @@ window.indicadores = {
         return this.daysBetween(lote.dataEntrada || lote.date, this.today());
     },
 
+    // ====== 9. PROJEÇÃO DE RECEITA ======
+    // Projeta receita futura por lote baseado no GMD e preço da arroba
+    calcProjecaoReceita: function () {
+        var lotes = this.getActiveLotes();
+        if (lotes.length === 0) return { totalReceita: 0, totalLucro: 0, lotes: [] };
+
+        var self = this;
+        var precoArroba = 0;
+
+        // Get arroba price from config or last sale
+        var config = {};
+        try { config = JSON.parse(localStorage.getItem('agromacro_config') || '{}'); } catch (e) { }
+        precoArroba = parseFloat(config.precoArroba) || 0;
+
+        // Fallback: use average sale price
+        if (precoArroba <= 0) {
+            var margemInfo = this.calcMargemArroba();
+            precoArroba = margemInfo.precoVenda || 300; // Default R$300/@
+        }
+
+        var resultado = [];
+        var totalReceita = 0, totalLucro = 0;
+
+        lotes.forEach(function (lote) {
+            var qtd = lote.qtdAnimais || 1;
+            var pesoAtual = lote.pesoMedio || 0;
+            var gmdInfo = self.calcGMD(lote);
+            var gmd = gmdInfo.gmd || 0;
+
+            // Get latest weight from pesagens
+            var pesagens = (window.data ? window.data.events : []).filter(function (ev) {
+                return ev.type === 'MANEJO' && ev.tipoManejo === 'pesagem' && ev.lote === lote.nome;
+            });
+            if (pesagens.length > 0) {
+                pesoAtual = pesagens[pesagens.length - 1].pesoMedio || pesoAtual;
+            }
+
+            // Project to target weight (540kg default for abate)
+            var pesoAlvo = 540;
+            var diasRestantes = 0;
+            if (gmd > 0 && pesoAtual < pesoAlvo) {
+                diasRestantes = Math.ceil((pesoAlvo - pesoAtual) / gmd);
+            }
+            var pesoProjetado = gmd > 0 ? pesoAtual + (gmd * diasRestantes) : pesoAtual;
+            pesoProjetado = Math.min(pesoProjetado, pesoAlvo);
+
+            // Calculate projected arrobas and revenue
+            var arrobasProjetadas = (pesoProjetado * qtd) / 30; // em pé
+            var receitaProjetada = arrobasProjetadas * precoArroba;
+
+            // Get current costs
+            var custoInfo = self.calcCustoCabDia(lote);
+            var custoAtual = custoInfo.custoTotal || 0;
+            // Project future costs (custo/cab/dia × dias restantes × qtd)
+            var custoFuturo = (custoInfo.custoCabDia || 0) * diasRestantes * qtd;
+            var custoTotal = custoAtual + custoFuturo;
+
+            var lucroProjetado = receitaProjetada - custoTotal;
+
+            resultado.push({
+                lote: lote.nome,
+                categoria: lote.categoria,
+                qtd: qtd,
+                pesoAtual: pesoAtual,
+                pesoProjetado: pesoProjetado,
+                gmd: gmd,
+                diasRestantes: diasRestantes,
+                arrobas: arrobasProjetadas,
+                receita: receitaProjetada,
+                custoTotal: custoTotal,
+                lucro: lucroProjetado
+            });
+
+            totalReceita += receitaProjetada;
+            totalLucro += lucroProjetado;
+        });
+
+        return {
+            totalReceita: totalReceita,
+            totalLucro: totalLucro,
+            precoArroba: precoArroba,
+            lotes: resultado
+        };
+    },
+
+    // ====== 10. CUSTO POR LOTE (BREAKDOWN) ======
+    // Vincula custos ao lote específico com breakdown por categoria
+    getCustoPorLote: function (lote) {
+        if (!window.data || !lote) return { nutricao: 0, manejo: 0, insumos: 0, total: 0 };
+
+        var events = window.data.events;
+        var nutricao = 0, manejo = 0, insumos = 0;
+
+        events.forEach(function (ev) {
+            // Custos de manejo deste lote
+            if (ev.type === 'MANEJO' && ev.lote === lote.nome && ev.cost) {
+                manejo += ev.cost;
+            }
+            // Custos de abastecimento (nutrição)
+            if (ev.type === 'ABASTECIMENTO' && ev.lote === lote.nome) {
+                var custoProduto = 0;
+                events.forEach(function (e2) {
+                    if (e2.type === 'ESTOQUE_ENTRADA' && e2.name &&
+                        ev.produto && e2.name.toLowerCase().indexOf(ev.produto) >= 0 && e2.valorUnitario) {
+                        custoProduto = e2.valorUnitario;
+                    }
+                });
+                nutricao += (ev.qtdKg || 0) * custoProduto;
+            }
+        });
+
+        // Proportional daily nutrition cost
+        if (window.lotes && window.lotes.calcCustoNutricao) {
+            var nutri = window.lotes.calcCustoNutricao(lote);
+            if (nutri && nutri.custoDiarioTotal) {
+                var dias = this.daysBetween(lote.dataEntrada || lote.date, this.today());
+                nutricao += nutri.custoDiarioTotal * dias;
+            }
+        }
+
+        // Insumos (estoque entries attributed to this lot's compra)
+        var compras = events.filter(function (ev) {
+            return ev.type === 'COMPRA' && ev.lote === lote.nome;
+        });
+        compras.forEach(function (c) {
+            insumos += (c.value || 0);
+        });
+
+        return {
+            nutricao: nutricao,
+            manejo: manejo,
+            insumos: insumos,
+            total: nutricao + manejo + insumos
+        };
+    },
+
     // ====== RENDER: Indicadores Financeiros (for Fluxo de Caixa view) ======
     renderIndicadoresFinanceiros: function () {
         var container = document.getElementById('indicadores-financeiros');
@@ -264,6 +400,7 @@ window.indicadores = {
 
         var margemInfo = this.calcMargemArroba();
         var pontoEq = this.calcPontoEquilibrio();
+        var projecao = this.calcProjecaoReceita();
 
         // Custo/cab/dia médio de todos os lotes
         var lotes = this.getActiveLotes();
@@ -292,6 +429,64 @@ window.indicadores = {
             + '<div class="kpi-card"><div class="kpi-label">🥩 @ Vendidas</div>'
             + '<div class="kpi-value">' + margemInfo.arrobasVendidas.toFixed(1) + '</div></div>'
             + '</div></div>';
+
+        // Projeção de Receita
+        if (projecao.lotes.length > 0) {
+            html += '<div class="kpi-section" style="margin-top:16px;">'
+                + '<div class="kpi-title">📈 Projeção de Receita</div>'
+                + '<div class="kpi-grid">'
+                + '<div class="kpi-card"><div class="kpi-label">💵 Receita Projetada</div>'
+                + '<div class="kpi-value positive">' + this.fmt(projecao.totalReceita) + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">' + (projecao.totalLucro >= 0 ? '✅' : '🚨') + ' Lucro Projetado</div>'
+                + '<div class="kpi-value ' + (projecao.totalLucro >= 0 ? 'positive' : 'negative') + '">' + this.fmt(projecao.totalLucro) + '</div></div>'
+                + '<div class="kpi-card"><div class="kpi-label">💲 Preço/@</div>'
+                + '<div class="kpi-value">' + this.fmt(projecao.precoArroba) + '</div></div>'
+                + '</div>';
+
+            // Breakdown por lote
+            projecao.lotes.forEach(function (l) {
+                var catEmoji = { 'cria': '🐮', 'recria': '🐄', 'engorda': '🥩', 'matrizes': '👑' };
+                var emoji = catEmoji[l.categoria] || '🐂';
+                html += '<div class="premium-card" style="margin-top:8px;padding:10px;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<strong style="font-size:13px;">' + emoji + ' ' + l.lote + '</strong>'
+                    + '<span style="font-size:11px;color:var(--text-2);">' + l.qtd + ' cab | ' + l.diasRestantes + ' dias p/ abate</span>'
+                    + '</div>'
+                    + '<div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">'
+                    + '<span style="font-size:11px;">Peso: ' + l.pesoAtual.toFixed(0) + '→' + l.pesoProjetado.toFixed(0) + 'kg</span>'
+                    + '<span style="font-size:11px;">' + l.arrobas.toFixed(1) + '@</span>'
+                    + '<span style="font-size:11px;color:var(--green);">' + self.fmt(l.receita) + '</span>'
+                    + '<span style="font-size:11px;color:' + (l.lucro >= 0 ? 'var(--green)' : 'var(--red)') + ';">Lucro: ' + self.fmt(l.lucro) + '</span>'
+                    + '</div></div>';
+            });
+
+            html += '</div>';
+        }
+
+        // Custo por Lote (breakdown)
+        if (lotes.length > 0) {
+            html += '<div class="kpi-section" style="margin-top:16px;">'
+                + '<div class="kpi-title">🏷️ Custo por Lote</div>';
+
+            lotes.forEach(function (lote) {
+                var custos = self.getCustoPorLote(lote);
+                var catEmoji = { 'cria': '🐮', 'recria': '🐄', 'engorda': '🥩', 'matrizes': '👑' };
+                var emoji = catEmoji[lote.categoria] || '🐂';
+
+                html += '<div class="premium-card" style="margin-top:8px;padding:10px;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+                    + '<strong style="font-size:13px;">' + emoji + ' ' + lote.nome + '</strong>'
+                    + '<span style="font-size:12px;font-weight:600;">Total: ' + self.fmt(custos.total) + '</span>'
+                    + '</div>'
+                    + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'
+                    + '<span style="font-size:11px;color:var(--text-2);">🌾 Nutrição: ' + self.fmt(custos.nutricao) + '</span>'
+                    + '<span style="font-size:11px;color:var(--text-2);">💉 Manejo: ' + self.fmt(custos.manejo) + '</span>'
+                    + '<span style="font-size:11px;color:var(--text-2);">🛒 Compra: ' + self.fmt(custos.insumos) + '</span>'
+                    + '</div></div>';
+            });
+
+            html += '</div>';
+        }
 
         container.innerHTML = html;
     },

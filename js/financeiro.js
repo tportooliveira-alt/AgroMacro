@@ -75,6 +75,14 @@ window.financeiro = {
             return;
         }
 
+        // ══ VERIFICAÇÃO DE CARÊNCIA SANITÁRIA ══
+        if (lote && window.calendario && window.calendario.verificarCarenciaVenda) {
+            if (!window.calendario.verificarCarenciaVenda(lote)) {
+                window.app.showToast('❌ Venda cancelada — período de carência ativo.', 'error');
+                return;
+            }
+        }
+
         var precoArroba = 0;
         if (peso > 0) {
             var totalArrobas = (qty * peso) / 30; // em pé /30
@@ -255,7 +263,7 @@ window.financeiro = {
         estoqueRemedios.forEach(function (ev) { custoSanidade += (ev.value || 0); });
 
         // Add manejo costs
-        var manejoCosts = events.filter(function (ev) { return ev.type === 'MANEJO' && ev.cost; });
+        var manejoCosts = events.filter(function (ev) { return (ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && ev.cost; });
         manejoCosts.forEach(function (ev) { custoSanidade += (ev.cost || 0); });
 
         // ─── 3. CUSTOS FIXOS / INFRAESTRUTURA ───

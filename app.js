@@ -94,6 +94,7 @@ window.app = {
                 this.renderKPIs();
                 this.renderAlerts();
                 if (window.contas) window.contas.renderCotacaoRebanho();
+                if (window.graficos) window.graficos.renderGraficosHome();
                 break;
             case 'rebanho':
                 if (window.rebanho) window.rebanho.renderList();
@@ -210,11 +211,24 @@ window.app = {
 
         var pesoMedio = pesados > 0 ? (pesoTotal / pesados).toFixed(0) : '--';
 
+        // Get projeção summary
+        var projStr = '';
+        if (window.indicadores && window.indicadores.calcProjecaoReceita) {
+            try {
+                var proj = window.indicadores.calcProjecaoReceita();
+                if (proj.totalReceita > 0) {
+                    projStr = '<div class="kpi-card"><div class="kpi-label">📈 Receita Proj.</div><div class="kpi-value positive">R$ ' + (proj.totalReceita / 1000).toFixed(0) + 'k</div></div>'
+                        + '<div class="kpi-card"><div class="kpi-label">' + (proj.totalLucro >= 0 ? '✅' : '🚨') + ' Lucro Proj.</div><div class="kpi-value ' + (proj.totalLucro >= 0 ? 'positive' : 'negative') + '">R$ ' + (proj.totalLucro / 1000).toFixed(0) + 'k</div></div>';
+                }
+            } catch (e) { /* ignore */ }
+        }
+
         container.innerHTML = ''
             + '<div class="kpi-card"><div class="kpi-label">Rebanho</div><div class="kpi-value positive">' + totalAnimais + ' cab</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value">' + totalLotes + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Pastos</div><div class="kpi-value">' + totalPastos + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div></div>';
+            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div></div>'
+            + projStr;
     },
 
     renderAlerts: function () {
@@ -223,31 +237,122 @@ window.app = {
 
         var alerts = [];
         var events = window.data.events;
+        var hoje = new Date().toISOString().split('T')[0];
 
-        // Animals without lot
+        // ══ 1. Animais sem lote ══
         var semLote = events.filter(function (ev) {
             return ev.type === 'ANIMAL' && ev.status !== 'VENDIDO' && !ev.lote;
         }).length;
-        if (semLote > 0) alerts.push('🐄 ' + semLote + ' animais sem lote atribuído.');
+        if (semLote > 0) alerts.push({ icon: '🐄', msg: semLote + ' animais sem lote atribuído', type: 'warning' });
 
-        // Pastos em descanso
+        // ══ 2. Pastos em descanso ══
         var descanso = events.filter(function (ev) {
             return ev.type === 'PASTO' && ev.statusPasto === 'descanso';
         }).length;
-        if (descanso > 0) alerts.push('🌾 ' + descanso + ' pastos em descanso.');
+        if (descanso > 0) alerts.push({ icon: '🌾', msg: descanso + ' pastos em descanso', type: 'info' });
 
-        // Pending manejos (vacinations coming up)
-        var manejos = events.filter(function (ev) { return ev.type === 'MANEJO'; });
-        if (manejos.length === 0) {
-            alerts.push('💉 Nenhum manejo registrado. Lembre-se de registrar vacinações.');
+        // ══ 3. Estoque acabando (< 20% do último registro) ══
+        if (window.estoque && window.estoque.getSaldos) {
+            try {
+                var saldos = window.estoque.getSaldos();
+                if (saldos && typeof saldos === 'object') {
+                    Object.keys(saldos).forEach(function (item) {
+                        var s = saldos[item];
+                        if (s && s.saldo !== undefined && s.saldo <= 10 && s.saldo >= 0) {
+                            alerts.push({ icon: '📦', msg: item + ' — estoque baixo: ' + s.saldo.toFixed(1) + ' kg', type: 'danger' });
+                        }
+                    });
+                }
+            } catch (e) { /* ignore */ }
         }
 
+        // ══ 4. Contas vencidas ══
+        var contasVencidas = events.filter(function (ev) {
+            return ev.type === 'CONTA_PAGAR' && !ev.pago && ev.vencimento && ev.vencimento < hoje;
+        });
+        if (contasVencidas.length > 0) {
+            var totalVencido = 0;
+            contasVencidas.forEach(function (c) { totalVencido += (c.value || 0); });
+            alerts.push({ icon: '💸', msg: contasVencidas.length + ' contas vencidas (R$ ' + totalVencido.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ')', type: 'danger' });
+        }
+
+        // ══ 5. Vacinas vencidas / próximas ══
+        if (window.calendario && window.calendario.getProximasVacinas) {
+            try {
+                var vacinas = window.calendario.getProximasVacinas();
+                var vencidas = 0;
+                var proximaSemana = 0;
+                vacinas.forEach(function (v) {
+                    if (v.status === 'vencida') vencidas++;
+                    else if (v.status === 'alerta') proximaSemana++;
+                });
+                if (vencidas > 0) alerts.push({ icon: '💉', msg: vencidas + ' vacinas VENCIDAS — ação imediata!', type: 'danger' });
+                if (proximaSemana > 0) alerts.push({ icon: '💉', msg: proximaSemana + ' vacinas próximas do vencimento', type: 'warning' });
+            } catch (e) { /* ignore */ }
+        }
+
+        // ══ 6. Carência ativa (lotes com restrição de venda) ══
+        if (window.calendario && window.calendario.getCarenciaAtiva) {
+            try {
+                var lotes = window.lotes ? window.lotes.getLotes() : [];
+                lotes.forEach(function (l) {
+                    var carencia = window.calendario.getCarenciaAtiva(l.nome || l.name);
+                    if (carencia) {
+                        alerts.push({ icon: '🚫', msg: (l.nome || l.name) + ' em carência até ' + carencia.dataLiberacao + ' (' + carencia.produto + ')', type: 'danger' });
+                    }
+                });
+            } catch (e) { /* ignore */ }
+        }
+
+        // ══ 7. Tarefas IATF do dia ══
+        if (window.calendario && window.calendario.getTarefasDoDia) {
+            try {
+                var tarefas = window.calendario.getTarefasDoDia();
+                if (tarefas.length > 0) {
+                    alerts.push({ icon: '🧬', msg: tarefas.length + ' tarefa(s) IATF para hoje!', type: 'warning' });
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // ══ 8. Lotes sem pesagem recente (>60 dias) ══
+        if (window.lotes) {
+            try {
+                var lotesAtivos = window.lotes.getLotes();
+                lotesAtivos.forEach(function (l) {
+                    var loteNome = l.nome || l.name;
+                    var pesagens = events.filter(function (ev) {
+                        return ev.type === 'PESAGEM' && ev.lote === loteNome;
+                    });
+                    if (pesagens.length > 0) {
+                        var ultima = pesagens.sort(function (a, b) { return new Date(b.date) - new Date(a.date); })[0];
+                        var dias = Math.floor((new Date() - new Date(ultima.date)) / (1000 * 60 * 60 * 24));
+                        if (dias > 60) {
+                            alerts.push({ icon: '⚖️', msg: loteNome + ' sem pesagem há ' + dias + ' dias', type: 'warning' });
+                        }
+                    }
+                });
+            } catch (e) { /* ignore */ }
+        }
+
+        // ══ Sem alertas ══
         if (alerts.length === 0) {
-            alerts.push('✅ Tudo em dia! Nenhum alerta no momento.');
+            alerts.push({ icon: '✅', msg: 'Tudo em dia! Nenhum alerta no momento.', type: 'ok' });
         }
 
-        container.innerHTML = alerts.map(function (msg) {
-            return '<div class="alert-item"><span class="alert-icon">⚠️</span><span>' + msg + '</span></div>';
+        // ══ Render ══
+        var typeColors = {
+            danger: 'var(--accent-red, #EF4444)',
+            warning: 'var(--accent-yellow, #FBBF24)',
+            info: 'var(--accent-blue, #3B82F6)',
+            ok: 'var(--accent-green, #22C55E)'
+        };
+
+        container.innerHTML = alerts.map(function (a) {
+            var borderColor = typeColors[a.type] || typeColors.info;
+            return '<div class="alert-item" style="border-left:3px solid ' + borderColor + ';">' +
+                '<span class="alert-icon">' + a.icon + '</span>' +
+                '<span>' + a.msg + '</span>' +
+                '</div>';
         }).join('');
     },
 
