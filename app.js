@@ -44,6 +44,7 @@ window.app = {
         if (window.contas) window.contas.init();
         if (window.indicadores) window.indicadores.init();
 
+        this.loadConfig();
         this.navigate('home');
     },
 
@@ -151,6 +152,9 @@ window.app = {
                 if (window.lotes) window.lotes.populateSelect('cab-lote');
                 this.populatePastosSelect('cab-pasto');
                 break;
+            case 'config':
+                this.loadConfig();
+                break;
         }
     },
 
@@ -251,10 +255,82 @@ window.app = {
         if (confirm('Tem certeza que deseja APAGAR todos os dados?\n\nEsta ação não pode ser desfeita.')) {
             if (window.data) {
                 window.data.resetAll();
-                alert('Dados apagados com sucesso!');
+                window.app.showToast('Dados apagados com sucesso!', 'success');
                 location.reload();
             }
         }
+    },
+
+    // ── Config persistence ──
+    CONFIG_KEY: 'agromacro_config',
+
+    saveConfig: function () {
+        var config = {
+            nomeFazenda: document.getElementById('config-nome-fazenda') ? document.getElementById('config-nome-fazenda').value : '',
+            proprietario: document.getElementById('config-proprietario') ? document.getElementById('config-proprietario').value : '',
+            cidade: document.getElementById('config-cidade') ? document.getElementById('config-cidade').value : '',
+            estado: document.getElementById('config-estado') ? document.getElementById('config-estado').value : '',
+            area: document.getElementById('config-area') ? document.getElementById('config-area').value : ''
+        };
+        try {
+            localStorage.setItem(this.CONFIG_KEY, JSON.stringify(config));
+        } catch (e) {
+            console.error('Erro ao salvar config:', e);
+        }
+    },
+
+    loadConfig: function () {
+        try {
+            var raw = localStorage.getItem(this.CONFIG_KEY);
+            if (!raw) return;
+            var config = JSON.parse(raw);
+
+            var fields = {
+                'config-nome-fazenda': config.nomeFazenda,
+                'config-proprietario': config.proprietario,
+                'config-cidade': config.cidade,
+                'config-estado': config.estado,
+                'config-area': config.area
+            };
+
+            for (var id in fields) {
+                var el = document.getElementById(id);
+                if (el && fields[id]) el.value = fields[id];
+            }
+
+            // Update header with farm name
+            if (config.nomeFazenda) {
+                var h1 = document.querySelector('.top-header h1');
+                if (h1) h1.textContent = config.nomeFazenda;
+            }
+        } catch (e) {
+            console.error('Erro ao carregar config:', e);
+        }
+    },
+
+    exportData: function () {
+        var allData = {
+            config: {},
+            events: window.data ? window.data.events : [],
+            exportDate: new Date().toISOString(),
+            version: 'AgroMacro v2.0'
+        };
+
+        try {
+            var raw = localStorage.getItem(this.CONFIG_KEY);
+            if (raw) allData.config = JSON.parse(raw);
+        } catch (e) { }
+
+        var blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'agromacro_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.showToast('Dados exportados com sucesso!', 'success');
     }
 };
 
