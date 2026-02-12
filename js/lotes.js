@@ -562,142 +562,67 @@ window.lotes = {
         var allLotes = this.getLotes();
 
         if (allLotes.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhum lote cadastrado. Crie seu primeiro lote!</div>';
+            container.innerHTML = '<div class="empty-state">🐄 Nenhum lote cadastrado. Crie seu primeiro lote!</div>';
             return;
         }
 
         // Summary KPIs
         var totalAnimais = 0;
-        var custoTotalDia = 0;
+        var pesoMedio = 0;
+        var idadeMedia = 0;
         var self = this;
 
         allLotes.forEach(function (l) {
             totalAnimais += (l.qtdAnimais || 0);
-            var custo = self.calcCustoNutricao(l);
-            if (custo) custoTotalDia += custo.custoDiaTotal;
+            pesoMedio += (l.pesoMedio || 0) * (l.qtdAnimais || 0);
+            idadeMedia += (l.idadeMedia || 0) * (l.qtdAnimais || 0);
         });
+
+        if (totalAnimais > 0) {
+            pesoMedio = pesoMedio / totalAnimais;
+            idadeMedia = idadeMedia / totalAnimais;
+        }
 
         var html = '<div class="kpi-grid" style="margin-bottom:16px;">'
             + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value positive">' + allLotes.length + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Total Animais</div><div class="kpi-value">' + totalAnimais + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Custo/Dia Nutrição</div><div class="kpi-value">R$ ' + custoTotalDia.toFixed(2) + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Custo/Mês Nutrição</div><div class="kpi-value">R$ ' + (custoTotalDia * 30).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + Math.round(pesoMedio) + ' kg</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Idade Média</div><div class="kpi-value">' + Math.round(idadeMedia) + ' m</div></div>'
             + '</div>';
-
-        // Juntar Lotes button
-        if (allLotes.length >= 2) {
-            html += '<button class="action-btn" onclick="window.lotes.abrirJuntarLotes()" style="margin-bottom:16px;width:100%;">🔗 Juntar Lotes</button>';
-        }
-
-        // Category labels
-        var catLabels = {
-            'cria': '🐮 Cria',
-            'recria': '🐂 Recria',
-            'engorda': '🥩 Engorda',
-            'matrizes': '🐄 Matrizes',
-            'touros': '🐃 Touros'
-        };
 
         // Lot cards
         html += allLotes.slice().reverse().map(function (l) {
-            // Nutrition info
-            var nutri = [];
-            if (l.salMineral) nutri.push('🧂 ' + l.salMineral + (l.salConsumo ? ' (' + l.salConsumo + 'g/cab/dia)' : ''));
-            if (l.racao) nutri.push('🌾 ' + l.racao + (l.racaoConsumo ? ' (' + l.racaoConsumo + 'kg/cab/dia)' : ''));
+            var pastoAtual = l.pastoAtual || 'Sem pasto';
+            var categoria = l.categoria || 'Não definida';
 
-            // Duration info
-            var duracao = self.calcDuracaoNutricao(l);
-            var duracaoHtml = '';
-            if (duracao.sal) {
-                var corSal = duracao.sal.diasRestantes <= 3 ? '#D32F2F' : duracao.sal.diasRestantes <= 7 ? '#FF8F00' : '#2E7D32';
-                duracaoHtml += '<div class="duracao-badge" style="color:' + corSal + '">🧂 Sal: <strong>' + duracao.sal.diasRestantes + ' dias restantes</strong></div>';
-            }
-            if (duracao.racao) {
-                var corRacao = duracao.racao.diasRestantes <= 3 ? '#D32F2F' : duracao.racao.diasRestantes <= 7 ? '#FF8F00' : '#2E7D32';
-                duracaoHtml += '<div class="duracao-badge" style="color:' + corRacao + '">🌾 Ração: <strong>' + duracao.racao.diasRestantes + ' dias restantes</strong></div>';
-            }
+            // Category emoji
+            var catEmoji = {
+                'cria': '🐮',
+                'recria': '🐂',
+                'engorda': '🥩',
+                'matrizes': '🐄',
+                'touros': '🐃'
+            }[categoria] || '📦';
 
-            var nutriLine = nutri.length > 0 ? '<div style="font-size:12px; color:var(--text-light); margin-top:4px;">' + nutri.join(' • ') + '</div>' : '';
-
-            // ====== GMD BADGE ======
-            var gmdData = self.calcGMD(l);
-            var gmdHtml = '';
-            if (gmdData) {
-                var gmdColor = gmdData.gmd >= 0.8 ? '#2E7D32' : gmdData.gmd >= 0.5 ? '#FF8F00' : '#D32F2F';
-                var gmdIcon = gmdData.gmd >= 0.8 ? '🚀' : gmdData.gmd >= 0.5 ? '📈' : '⚠️';
-                gmdHtml += '<div class="gmd-section" style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-left:3px solid ' + gmdColor + ';">';
-                gmdHtml += '<div style="display:flex; justify-content:space-between; align-items:center;">';
-                gmdHtml += '<span style="font-weight:700; color:' + gmdColor + '; font-size:14px;">' + gmdIcon + ' GMD: ' + gmdData.gmd.toFixed(3) + ' kg/dia</span>';
-                gmdHtml += '<span style="font-size:11px; color:#888;">' + gmdData.diasConfinamento + ' dias</span>';
-                gmdHtml += '</div>';
-                gmdHtml += '<div style="font-size:11px; color:#666; margin-top:3px;">';
-                gmdHtml += 'Peso: ' + gmdData.pesoInicial + ' → ' + gmdData.pesoAtual + ' kg (+' + gmdData.ganhoTotal.toFixed(1) + 'kg)';
-                if (gmdData.diasParaAbate) {
-                    gmdHtml += ' • <strong style="color:' + gmdColor + '">Abate (' + gmdData.pesoAbate + 'kg) em ~' + gmdData.diasParaAbate + ' dias</strong>';
-                }
-                gmdHtml += '</div>';
-                if (gmdData.pesagens > 0) {
-                    gmdHtml += '<div style="font-size:10px; color:#999; margin-top:2px;">' + gmdData.pesagens + ' pesagens registradas</div>';
-                }
-                gmdHtml += '</div>';
-            }
-
-            // ====== CUSTO NUTRIÇÃO ======
-            var custoData = self.calcCustoNutricao(l);
-            var custoHtml = '';
-            if (custoData && custoData.custoDiaTotal > 0) {
-                custoHtml += '<div class="custo-section" style="margin-top:6px; padding:8px; background:rgba(46,125,50,0.05); border-radius:8px; border-left:3px solid #1565C0;">';
-                custoHtml += '<div style="font-weight:700; color:#1565C0; font-size:13px;">💰 Custo Nutrição</div>';
-                custoHtml += '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; font-size:12px;">';
-                custoHtml += '<span>📅 R$ ' + custoData.custoDiaTotal.toFixed(2) + '/dia</span>';
-                custoHtml += '<span>🐄 R$ ' + custoData.custoCabDia.toFixed(2) + '/cab/dia</span>';
-                custoHtml += '<span>📆 R$ ' + custoData.custoMensal.toFixed(0) + '/mês</span>';
-                if (custoData.custoArrobaProduzida > 0) {
-                    var corArroba = custoData.custoArrobaProduzida < 120 ? '#2E7D32' : custoData.custoArrobaProduzida < 160 ? '#FF8F00' : '#D32F2F';
-                    custoHtml += '<span style="font-weight:700; color:' + corArroba + '">⚖️ R$ ' + custoData.custoArrobaProduzida.toFixed(2) + '/@ produzida</span>';
-                }
-                custoHtml += '</div>';
-                custoHtml += '<div style="font-size:11px; color:#888; margin-top:3px;">Acumulado (' + custoData.diasConfinamento + ' dias): <strong>R$ ' + custoData.custoAcumulado.toFixed(2) + '</strong></div>';
-                custoHtml += '</div>';
-            }
-
-            // Race line
-            var racaLine = l.raca ? '<span class="detail">🐄 ' + l.raca + '</span>' : '';
-
-            // Action buttons
-            var actions = '<div class="lote-actions">'
-                + '<button class="lote-action-btn" onclick="window.lotes.trocarPasto(\'' + l.nome.replace(/'/g, "\\'") + '\')" title="Trocar Pasto">🔄</button>';
-
-            if (l.salMineral) {
-                actions += '<button class="lote-action-btn" onclick="window.lotes.abrirAbastecer(\'' + l.nome.replace(/'/g, "\\'") + '\', \'sal\')" title="Abastecer Sal">🧂</button>';
-            }
-            if (l.racao) {
-                actions += '<button class="lote-action-btn" onclick="window.lotes.abrirAbastecer(\'' + l.nome.replace(/'/g, "\\'") + '\', \'racao\')" title="Abastecer Ração">🌾</button>';
-            }
-
-            actions += '<button class="lote-action-btn" onclick="window.lotes.manejoRapido(\'' + l.nome.replace(/'/g, "\\'") + '\', \'vacinacao\')" title="Vacinar">💉</button>'
-                + '<button class="lote-action-btn" onclick="window.lotes.manejoRapido(\'' + l.nome.replace(/'/g, "\\'") + '\', \'pesagem\')" title="Pesar">⚖️</button>'
-                + '</div>';
-
-            return '<div class="history-card lote-card">'
-                + '<div class="history-card-header">'
-                + '  <span class="badge badge-green">' + (catLabels[l.categoria] || '📋') + ' ' + l.nome + '</span>'
-                + '  <span class="date">' + (l.status === 'ATIVO' ? '🟢 Ativo' : '⚪ Inativo') + '</span>'
+            return '<div class="lot-card" onclick="window.app.navigate(\'lote-detalhes\')">'
+                + '<div class="lot-card-header">'
+                + '<div class="lot-card-id">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome') + '</div>'
+                + '<div class="lot-card-count">' + (l.qtdAnimais || 0) + ' cab</div>'
                 + '</div>'
-                + '<div class="history-card-body">'
-                + '  <strong>' + l.qtdAnimais + ' cabeças</strong>'
-                + '  <span class="detail">' + (l.pesoMedio ? l.pesoMedio + ' kg médio' : '') + '</span>'
-                + '  <span class="detail">' + (l.pasto ? '📍 ' + l.pasto : 'Sem pasto') + '</span>'
-                + racaLine
-                + nutriLine
-                + duracaoHtml
-                + gmdHtml
-                + custoHtml
+                + '<div class="lot-card-stats">'
+                + '<div class="lot-stat"><div class="lot-stat-label">Idade</div><div class="lot-stat-value">' + (l.idadeMedia || '-') + ' m</div></div>'
+                + '<div class="lot-stat"><div class="lot-stat-label">Peso</div><div class="lot-stat-value">' + (l.pesoMedio || '-') + ' kg</div></div>'
+                + '<div class="lot-stat"><div class="lot-stat-label">Pasto</div><div class="lot-stat-value">' + pastoAtual + '</div></div>'
                 + '</div>'
-                + actions
+                + '<div style="margin-top:12px; display:flex; gap:8px;">'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🌾 Trocar Pasto</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
+                + '</div>'
                 + '</div>';
         }).join('');
 
+        // FAB button
+        html += '<button class="fab" onclick="window.app.navigate(\'rebanho\'); setTimeout(function(){ document.getElementById(\'reb-lote-nome\').focus(); }, 100);">+</button>';
+
         container.innerHTML = html;
     }
-};
