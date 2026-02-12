@@ -40,7 +40,7 @@ window.financeiro = {
 
         // Custo por cabeça e por arroba
         var custoCabeca = qty > 0 ? (valor / qty) : 0;
-        var pesoArroba = peso > 0 ? (peso / 15) : 0; // 1 arroba = 15kg
+        var pesoArroba = peso > 0 ? (peso / 30) : 0; // 1 arroba em pé = 30kg
         var custoArroba = pesoArroba > 0 ? (custoCabeca / pesoArroba) : 0;
 
         var ev = {
@@ -77,7 +77,7 @@ window.financeiro = {
 
         var precoArroba = 0;
         if (peso > 0) {
-            var totalArrobas = (qty * peso) / 15;
+            var totalArrobas = (qty * peso) / 30; // em pé /30
             precoArroba = valor / totalArrobas;
         }
 
@@ -144,10 +144,10 @@ window.financeiro = {
         var totalArrobasCompradas = 0;
         var totalArrobasVendidas = 0;
         compras.forEach(function (c) {
-            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 15);
+            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 30); // em pé /30
         });
         vendas.forEach(function (v) {
-            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 15);
+            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 30); // em pé /30
         });
 
         var custoMedioArroba = totalArrobasCompradas > 0 ? (totalSaidas / totalArrobasCompradas) : 0;
@@ -220,7 +220,7 @@ window.financeiro = {
 
         var totalArrobasVendidas = 0;
         vendas.forEach(function (v) {
-            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 15);
+            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 30); // em pé /30
         });
 
         // ─── 2. CUSTOS VARIÁVEIS ───
@@ -231,7 +231,7 @@ window.financeiro = {
 
         var totalArrobasCompradas = 0;
         compras.forEach(function (c) {
-            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 15);
+            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 30); // em pé /30
         });
 
         // 2b. Nutrição (Ração + Sal + Silagem + Milho...)
@@ -311,7 +311,7 @@ window.financeiro = {
 
         // Custo por cabeça e por arroba
         var custoPorCabeca = totalAnimaisAtivos > 0 ? custoOperacionalTotal / totalAnimaisAtivos : 0;
-        var arrobasTotais = totalAnimaisAtivos * pesoMedioRebanho / 15;
+        var arrobasTotais = totalAnimaisAtivos * pesoMedioRebanho / 30; // em pé /30
         var custoPorArroba = arrobasTotais > 0 ? custoOperacionalTotal / arrobasTotais : 0;
         var precoMedioVendaArroba = totalArrobasVendidas > 0 ? receitaGado / totalArrobasVendidas : 0;
         var margemPorArroba = precoMedioVendaArroba - custoPorArroba;

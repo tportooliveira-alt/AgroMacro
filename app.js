@@ -40,6 +40,7 @@ window.app = {
         if (window.funcionarios) window.funcionarios.init();
 
         this.navigate('home');
+        if (window.indicadores) window.indicadores.init();
     },
 
     navigate: function (pageId) {
@@ -87,6 +88,7 @@ window.app = {
                 if (window.lotes) window.lotes.renderList();
                 this.populatePastosSelect('lote-pasto');
                 if (window.estoque) window.estoque.populateLoteNutrition();
+                if (window.indicadores) window.indicadores.renderIndicadoresProdutivos();
                 break;
             case 'pastos':
                 if (window.pastos) window.pastos.renderList();
@@ -96,6 +98,7 @@ window.app = {
                 break;
             case 'fluxo':
                 if (window.financeiro) window.financeiro.updateFluxoUI();
+                if (window.indicadores) window.indicadores.renderIndicadoresFinanceiros();
                 break;
             case 'manejo':
                 if (window.manejo) window.manejo.renderHistory();
