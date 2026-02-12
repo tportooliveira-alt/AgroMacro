@@ -9,23 +9,26 @@ window.pastoMgmt = {
     // ====== 13. LOTAÇÃO POR HECTARE (UA/ha) ======
     // 1 UA = 450kg (convenção brasileira)
     calcLotacao: function (pasto) {
-        if (!pasto || !pasto.hectares) return { uaha: 0, lotacao: 'N/A' };
+        var ha = pasto ? (pasto.hectares || pasto.area || 0) : 0;
+        if (!pasto || ha === 0) return { uaha: 0, ua: 0, animais: 0, pesoMedio: 0, hectares: 0, status: 'vazio', lotesNoPasto: [] };
 
         var animaisNoPasto = 0;
         var pesoTotal = 0;
+        var lotesNoPasto = [];
 
         if (window.lotes) {
             window.lotes.getLotes().forEach(function (l) {
                 if ((l.pasto || l.pastoAtual) === pasto.nome) {
                     animaisNoPasto += (l.qtdAnimais || 0);
                     pesoTotal += (l.pesoMedio || 0) * (l.qtdAnimais || 0);
+                    lotesNoPasto.push(l);
                 }
             });
         }
 
         var pesoMedio = animaisNoPasto > 0 ? pesoTotal / animaisNoPasto : 0;
         var ua = pesoTotal / 450; // Unidades Animais
-        var uaha = pasto.hectares > 0 ? ua / pasto.hectares : 0;
+        var uaha = ha > 0 ? ua / ha : 0;
 
         // Classificação (ideal: 0.8-1.2 UA/ha para pasto tropical)
         var status = 'ideal';
@@ -39,16 +42,59 @@ window.pastoMgmt = {
             ua: ua,
             animais: animaisNoPasto,
             pesoMedio: pesoMedio,
-            hectares: pasto.hectares,
-            status: status
+            hectares: ha,
+            status: status,
+            lotesNoPasto: lotesNoPasto
         };
+    },
+
+    // Indicador colorido de lotação
+    getLotacaoBadge: function (status, uaha) {
+        var badges = {
+            'superlotado': '<span class="badge" style="background:#e74c3c;color:#fff">🔴 Superlotado ' + uaha.toFixed(2) + ' UA/ha</span>',
+            'alto': '<span class="badge" style="background:#f39c12;color:#fff">🟡 Lotação Alta ' + uaha.toFixed(2) + ' UA/ha</span>',
+            'ideal': '<span class="badge" style="background:#27ae60;color:#fff">🟢 Ideal ' + uaha.toFixed(2) + ' UA/ha</span>',
+            'subutilizado': '<span class="badge" style="background:#3498db;color:#fff">🔵 Subutilizado ' + uaha.toFixed(2) + ' UA/ha</span>',
+            'vazio': '<span class="badge" style="background:#95a5a6;color:#fff">⚪ Vazio</span>'
+        };
+        return badges[status] || badges['vazio'];
+    },
+
+    // Badge da avaliação
+    getAvaliacaoBadge: function (pastoNome) {
+        var aval = this.getUltimaAvaliacao(pastoNome);
+        if (!aval) return '<span class="detail" style="color:#95a5a6">Sem avaliação</span>';
+
+        var notas = {
+            'otimo': '🟢 Ótima',
+            'bom': '🟡 Boa',
+            'regular': '🟠 Regular',
+            'ruim': '🔴 Ruim',
+            'degradado': '⚫ Degradada'
+        };
+        var label = notas[aval.nota] || aval.nota;
+        var altura = aval.alturaCapim ? ' · ' + aval.alturaCapim + 'cm' : '';
+        return '<span class="detail">' + label + altura + ' <small style="opacity:.6">(' + (aval.date || '').split('T')[0] + ')</small></span>';
+    },
+
+    // Dias de descanso de um pasto
+    getDiasDescanso: function (pastoNome) {
+        if (!window.data) return null;
+        var trocas = window.data.events.filter(function (ev) {
+            return (ev.type === 'TROCA_PASTO' || ev.type === 'MOVIMENTACAO_PASTO') && ev.pastoAnterior === pastoNome;
+        });
+        if (trocas.length === 0) return null;
+        trocas.sort(function (a, b) { return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp); });
+        var ultimaSaida = new Date(trocas[0].date || trocas[0].timestamp);
+        var hoje = new Date();
+        return Math.floor((hoje - ultimaSaida) / (1000 * 60 * 60 * 24));
     },
 
     // ====== 14. ROTAÇÃO DE PIQUETES ======
     renderRotacao: function () {
         if (!window.data) return '';
         var trocas = window.data.events.filter(function (ev) {
-            return ev.type === 'TROCA_PASTO';
+            return ev.type === 'TROCA_PASTO' || ev.type === 'MOVIMENTACAO_PASTO';
         });
 
         trocas.sort(function (a, b) {
