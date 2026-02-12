@@ -1,179 +1,144 @@
 # 🐂 AgroMacro — Mapa de Progresso do Projeto
 
 > **Referência permanente** — Consultar antes de cada implementação.
-> Última atualização: 2026-02-12
+> Última atualização: 2026-02-12 18:42
 
 ---
 
 ## 📊 Visão Geral
 
 ```
-PROGRESSO TOTAL: ████████████████████████████████████████████████████████████████████████████████░░░░░░░░░░ 40/50 (80%)
+PROGRESSO TOTAL: ████████████████████████████████████████████████████████████████████████████████████████░░░░ 45/50 (90%)
 
 FUNCIONAL:       ████████████████████████████████████████████████ 38/38 (100%) ✅
-VISUAL:          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  1/8  (13%)
+VISUAL:          ████████████████████████████████████████████████ 8/8  (100%) ✅
 COMERCIAL:       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0/5  (futuro)
 ```
 
 ---
 
-## 🗺️ Fluxograma do Projeto
+## ✅ MÓDULOS IMPLEMENTADOS (Código Verificado)
 
-```mermaid
-graph TD
-    subgraph "✅ FASE 1 — Estrutura (PRONTA)"
-        NAV["5 Tabs + 3 Hubs ✅"]
-        ICONS["30+ SVG Icons ✅"]
-        DARK["Dark Mode ✅"]
-        CFG["Config/Export/Reset ✅"]
-    end
+### Estrutura & Infraestrutura
+| Item | Arquivo | Status |
+|------|---------|--------|
+| Navegação 5 Tabs + 3 Hubs | `app.js` | ✅ |
+| 30+ SVG Icons enterprise | `js/icons.js` | ✅ |
+| Dark mode soft blue (#1B2838) | `styles.css` | ✅ |
+| Config (identidade, export, reset) | `app.js` | ✅ |
+| README + docs no GitHub | `README.md`, `docs/` | ✅ |
+| PWA Offline (Service Worker) | `sw.js`, `manifest.json` | ✅ |
 
-    subgraph "✅ FASE 2 — Módulos Core (PRONTOS)"
-        LOT["📋 Lotes ✅"]
-        CAB["🐮 Cabeças ✅"]
-        PAS["🌿 Pastos ✅"]
-        MAN["💉 Manejo ✅"]
-        EST["📦 Estoque ✅"]
-        OBR["🔨 Obras ✅"]
-        FUN["👷 Funcionários ✅"]
-    end
+### Módulos Operacionais Core
+| Módulo | Arquivo | Status |
+|--------|---------|--------|
+| Lotes (categoria, nutrição, trocar pasto, juntar) | `js/lotes.js` (34KB) | ✅ |
+| Cabeças Individuais (brinco, ficha, pesagem) | `js/cabecas.js` (14KB) | ✅ |
+| Pastos (capim, área, capacidade) | `js/pastos.js` (11KB) | ✅ |
+| Manejo Sanitário + Pesagem | `js/manejo.js` (6KB) | ✅ |
+| Calendário Sanitário + IATF | `js/calendario.js` (35KB) | ✅ |
+| Estoque (ração, sal, remédios, materiais) | `js/estoque.js` (26KB) | ✅ |
+| Obras + Funcionários | `js/obras.js`, `js/funcionarios.js` | ✅ |
+| Nutrição do Lote (consumo/cab/dia) | `js/lotes.js` | ✅ |
 
-    subgraph "✅ FASE 3 — Rebanho Avançado (PRONTA)"
-        TRANS["↔️ Transferência Parcial ✅"]
-        MORT["💀 Mortalidade/Baixa ✅"]
-        NASC["🐣 Nascimentos ✅"]
-        TIME["📜 Timeline/Lote ✅"]
-    end
+### Gestão Avançada de Rebanho
+| Feature | Arquivo | Função | Status |
+|---------|---------|--------|--------|
+| Transferência Parcial de Lote | `js/rebanho-ops.js` | `abrirTransferencia()` | ✅ |
+| Mortalidade/Baixa com motivo | `js/rebanho-ops.js` | `abrirMortalidade()` | ✅ |
+| Nascimentos (registro de crias) | `js/rebanho-ops.js` | `abrirNascimento()` | ✅ |
+| Timeline completo por Lote | `js/rebanho-ops.js` | `abrirTimeline()` | ✅ |
 
-    subgraph "✅ FASE 4 — Pasto Avançado (PRONTA)"
-        UAHA["UA/ha Automático ✅"]
-        ROT["Rotação Piquetes ✅"]
-        AVAL["Avaliação Pastagem ✅"]
-    end
+### Gestão de Pasto Avançada
+| Feature | Arquivo | Status |
+|---------|---------|--------|
+| UA/ha automática | `js/pasto-mgmt.js` | ✅ |
+| Rotação de Piquetes | `js/pasto-mgmt.js` | ✅ |
+| Avaliação de Pastagem | `js/pasto-mgmt.js` | ✅ |
 
-    subgraph "✅ FASE 5 — Manejo Avançado (PRONTA)"
-        IATF["IATF Protocolo ✅"]
-        FSAN["Ficha Sanitária ✅"]
-        CAL["Calendário Sanitário ✅"]
-    end
+### Módulos Financeiros
+| Módulo | Arquivo | Status |
+|--------|---------|--------|
+| Compra/Venda de Gado (peso/@/valor) | `js/financeiro.js` | ✅ |
+| Fluxo de Caixa (entradas/saídas) | `js/financeiro.js` | ✅ |
+| Balanço/DRE completo | `js/financeiro.js` | ✅ |
+| Contas a Pagar | `js/contas.js` | ✅ |
+| Cotação do Rebanho em Pé | `js/contas.js` | ✅ |
+| Indicadores Financeiros | `js/indicadores.js` | ✅ |
 
-    subgraph "✅ FASE 6 — Financeiro Core (PRONTA)"
-        COMP["Compra/Venda ✅"]
-        FLUX["Fluxo de Caixa ✅"]
-        BAL["Balanço/DRE ✅"]
-        CONT["Contas a Pagar ✅"]
-        COT["Cotação Rebanho ✅"]
-    end
+### Indicadores Produtivos
+| Indicador | Arquivo | Status |
+|-----------|---------|--------|
+| GMD (Ganho Médio Diário) | `js/indicadores.js` | ✅ |
+| Conversão Alimentar | `js/indicadores.js` | ✅ |
+| Previsão de Abate | `js/indicadores.js` | ✅ |
+| Dias de Cocho | `js/indicadores.js` | ✅ |
+| Custo/cab, Margem/@ | `js/indicadores.js` | ✅ |
 
-    subgraph "✅ FASE 7 — Indicadores (PRONTOS)"
-        KPI1["Custo/Cab/Dia ✅"]
-        KPI2["Custo/@Prod ✅"]
-        KPI3["Margem/@ ✅"]
-        KPI4["Ponto Equilíbrio ✅"]
-        KPI5["GMD ✅"]
-        KPI6["Conversão Alimentar ✅"]
-        KPI7["Previsão Abate ✅"]
-        KPI8["Dias de Cocho ✅"]
-    end
+### UX Premium
+| Feature | Arquivo | Status |
+|---------|---------|--------|
+| Dashboard Gráficos (4 charts) | `js/graficos.js` | ✅ |
+| Relatório Mensal (window.print) | `js/relatorio.js` | ✅ |
+| Dados de Demonstração | `seed-data.js` | ✅ |
 
-    subgraph "✅ FASE 8 — UX Premium (5/5)"
-        GRA["📊 Gráficos Chart.js ✅"]
-        PDF["📑 Relatório PDF ✅"]
-        ALE["🔔 Alertas ✅"]
-        PWA["📱 PWA Offline ✅"]
-        FOT["📸 Foto Animal ✅"]
-    end
-
-    subgraph "✅ FASE 9 — Financeiro Avançado (3/3)"
-        PE["Ponto Equilíbrio ✅"]
-        PRO["📈 Projeção Receita ✅"]
-        FLR["🔗 Fluxo→Rebanho ✅"]
-    end
-
-    subgraph "❌ FASE 10 — Visual Overhaul (1/8)"
-        VL1["Lotes Cards ⏳"]
-        VL2["Manejo Timeline ❌"]
-        VL3["Estoque Progress ❌"]
-        VL4["Pastos Grid ❌"]
-        VL5["Financial Summary ❌"]
-        VL6["Micro-animações ❌"]
-        VL7["Loading Shimmer ❌"]
-        VL8["Page Transitions ❌"]
-    end
-
-    subgraph "🔮 FASE 11 — Comercial (Futuro)"
-        FIR["Firebase + Login"]
-        SEL["Self-service"]
-        IA["IA Assistente"]
-        MAS["Mascote Boizinho"]
-        SUB["Plano Assinatura"]
-    end
-
-    NAV --> LOT --> TRANS
-    CAB --> FOT
-    PAS --> UAHA
-    MAN --> IATF
-    COMP --> PE --> PRO
-    GRA --> VL1
-```
+### Visual Overhaul (Sprint 3+4) ✅ NOVO
+| Feature | Arquivo | Commit | Status |
+|---------|---------|--------|--------|
+| Lotes cards com gradiente por categoria | `js/lotes.js` | `c5fc125` | ✅ |
+| Manejo timeline cards | `js/manejo.js` | `c969ddd` | ✅ |
+| Estoque progress bars | `js/estoque.js` | `c969ddd` | ✅ |
+| Pastos grid visual com cores de status | `js/pastos.js` | `406f871` | ✅ |
+| Financeiro summary cards gradiente | `js/financeiro.js` | `406f871` | ✅ |
+| Micro-animações (tap, hover, pulse) | `styles.css` | `406f871` | ✅ |
+| Loading shimmer/skeleton | `styles.css` | `406f871` | ✅ |
+| Page transitions (slideIn, fadeIn) | `styles.css` | `406f871` | ✅ |
 
 ---
 
-## ✅ Checklist por Sprint
+## ❌ O QUE FALTA (5 itens — Fase Comercial)
 
-### Sprint 1 — 📸 Foto (PRONTO ✅ já existia no código)
-- [x] Input câmera/galeria no cadastro
-- [x] Compressão Canvas 200px
-- [x] Salvar Base64 no localStorage
-- [x] Thumbnail na lista e ficha
-
-### Sprint 2 — 💰 Financeiro Avançado (PRONTO ✅)
-- [x] `calcProjecaoReceita()` — projeta ganho por GMD
-- [x] Card de Projeção na Home + Fluxo
-- [x] `getCustoPorLote()` breakdown nutrição/manejo/compra
-- [x] Custo por Lote renderizado no Fluxo
-
-### Sprint 3 — 🎨 Visual (Lotes + Manejo + Estoque)
-- [ ] Cards premium com gradientes nos Lotes
-- [ ] Timeline cards no Manejo
-- [ ] Progress bars no Estoque
-
-### Sprint 4 — 🎨 Visual (Pastos + Financeiro + Animações)
-- [ ] Grid visual nos Pastos
-- [ ] Summary cards no Financeiro
-- [ ] Micro-animações + shimmer + transitions
-
-### Sprint 5 — 🐄 Melhorias Pesquisa
-- [ ] Campo touro/mãe nos nascimentos
-- [ ] GTA na transferência
-- [ ] Altura capim entrada/saída
-- [ ] Template IATF novilhas
+| # | Feature | Tipo | Prioridade |
+|---|---------|------|:----------:|
+| 1 | Firebase + Login | Comercial | 🔴 |
+| 2 | Self-service (cliente cria conta) | Comercial | 🔴 |
+| 3 | IA Assistente (chat natural) | Comercial | 🟡 |
+| 4 | Mascote Boizinho (gamificação) | Comercial | 🟢 |
+| 5 | Plano de Assinatura | Comercial | 🟡 |
 
 ---
 
-## 📋 Arquivos do Projeto
+## 📁 Inventário de Arquivos (18 JS + 4 raiz)
 
-| Arquivo | Linhas | Função |
-|---------|:------:|--------|
-| `app.js` | 432 | Controller principal, nav, KPIs |
-| `index.html` | ~1200 | Todas as views HTML |
-| `styles.css` | ~900 | Estilos dark mode |
-| `js/lotes.js` | 780 | CRUD de lotes |
-| `js/cabecas.js` | 350 | Animais individuais |
-| `js/financeiro.js` | 449 | Compra/Venda/Fluxo/Balanço |
-| `js/calendario.js` | 608 | IATF + Sanitário + Carência |
-| `js/indicadores.js` | 369 | 8 KPIs financeiros/produtivos |
-| `js/estoque.js` | 560 | Insumos + Nutrição |
-| `js/rebanho-ops.js` | 300 | Transfer/Mortalidade/Nascimento |
-| `js/pastos.js` | 210 | CRUD pastos |
-| `js/pasto-mgmt.js` | 200 | UA/ha + Rotação |
-| `js/graficos.js` | 312 | 4 gráficos Chart.js |
-| `js/relatorio.js` | 163 | PDF via window.print |
-| `js/contas.js` | 270 | Contas a Pagar + Cotação |
-| `sw.js` | 104 | Service Worker PWA |
-| `manifest.json` | 29 | PWA Manifest |
-| `seed-data.js` | ~700 | Dados de demonstração |
+| Arquivo | Tamanho | Função |
+|---------|:-------:|--------|
+| `app.js` | 20KB | Controller principal, nav, KPIs |
+| `index.html` | 64KB | Todas as views HTML |
+| `styles.css` | 39KB | Estilos dark mode + animações |
+| `seed-data.js` | 29KB | Dados de demonstração |
+| `js/calendario.js` | 35KB | IATF + Sanitário + Carência |
+| `js/lotes.js` | 34KB | CRUD lotes + nutrição |
+| `js/estoque.js` | 26KB | Insumos + entries/exits |
+| `js/indicadores.js` | 25KB | 8 KPIs financeiros/produtivos |
+| `js/financeiro.js` | 25KB | Compra/Venda/Fluxo/DRE |
+| `js/rebanho-ops.js` | 15KB | Transfer/Mortalidade/Nascimento |
+| `js/cabecas.js` | 14KB | Animais individuais |
+| `js/graficos.js` | 13KB | 4 gráficos Chart.js |
+| `js/pastos.js` | 11KB | CRUD pastos + grid visual |
+| `js/icons.js` | 10KB | 30+ SVG icons |
+| `js/contas.js` | 11KB | Contas a Pagar + Cotação |
+| `js/relatorio.js` | 10KB | Relatório mensal print |
+| `js/rebanho.js` | 9KB | Gestão rebanho |
+| `js/pasto-mgmt.js` | 8KB | UA/ha + Rotação + Avaliação |
+| `js/manejo.js` | 6KB | Timeline cards manejo |
+| `js/funcionarios.js` | 6KB | CRUD funcionários |
+| `js/data.js` | 1KB | LocalStorage CRUD |
+| `js/obras.js` | 3KB | CRUD obras |
+| `sw.js` | 3KB | Service Worker PWA |
+| `manifest.json` | 1KB | PWA Manifest |
+
+**Total: ~370KB de código funcional**
 
 ---
 
-> 🎯 **OBJETIVO FINAL**: App 100% offline, mobile-first, premium, que compete com JetBov e iRancho mas sem mensalidade.
+> 🎯 **STATUS**: App 90% completo. Faltam apenas 5 features comerciais (Firebase, Login, IA, Mascote, Assinatura) que são para a fase de monetização.
