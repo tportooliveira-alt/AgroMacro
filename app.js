@@ -145,6 +145,12 @@ window.app = {
             case 'contas':
                 if (window.contas) window.contas.renderContasPagar();
                 break;
+            case 'cabecas':
+                if (window.cabecas) window.cabecas.renderList();
+                if (window.cabecas) window.cabecas.populateLoteFilter();
+                if (window.lotes) window.lotes.populateSelect('cab-lote');
+                this.populatePastosSelect('cab-pasto');
+                break;
         }
     },
 

@@ -867,17 +867,94 @@
             </div>
         </section>
 
-        <!-- ===================== CABEÇAS INDIVIDUAIS (placeholder) ===================== -->
+        <!-- ===================== CABEÇAS INDIVIDUAIS ===================== -->
         <section id="view-cabecas" class="view hidden">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
                 <h2>Cabeças Individuais</h2>
             </div>
-            <div class="empty-state">
-                <p>Módulo em desenvolvimento</p>
-                <p style="margin-top:8px; font-size:12px; color:var(--text-3);">Cadastro individual por brinco, ficha e
-                    histórico — em breve!</p>
+
+            <!-- Search + Filters -->
+            <div class="search-bar" style="margin-bottom:12px;">
+                <input type="text" id="cab-search" placeholder="Buscar por brinco, nome ou raça..."
+                    oninput="window.cabecas.setFilter('text', this.value)">
             </div>
+            <div class="filter-bar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <button type="button" class="filter-btn active"
+                    onclick="window.cabecas.setFilter('sexo','todos'); this.parentNode.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')}); this.classList.add('active')">Todos</button>
+                <button type="button" class="filter-btn"
+                    onclick="window.cabecas.setFilter('sexo','macho'); this.parentNode.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')}); this.classList.add('active')">Machos</button>
+                <button type="button" class="filter-btn"
+                    onclick="window.cabecas.setFilter('sexo','femea'); this.parentNode.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')}); this.classList.add('active')">Fêmeas</button>
+                <select id="cab-filter-lote" class="filter-select"
+                    onchange="window.cabecas.setFilter('lote', this.value)">
+                    <option value="todos">Todos os Lotes</option>
+                </select>
+            </div>
+
+            <!-- Stats -->
+            <div id="cabecas-stats" class="stats-panel"></div>
+
+            <!-- Registration Form -->
+            <form id="form-cabeca" class="card-form">
+                <div class="section-title">Cadastrar Animal</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nº Brinco *</label>
+                        <input type="text" id="cab-brinco" placeholder="Ex: 0123" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nome / Apelido</label>
+                        <input type="text" id="cab-nome" placeholder="Opcional">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select id="cab-sexo">
+                            <option value="macho">Macho</option>
+                            <option value="femea">Fêmea</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Raça</label>
+                        <input type="text" id="cab-raca" placeholder="Ex: Nelore">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso (kg)</label>
+                        <input type="number" id="cab-peso" step="0.1" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Nascimento</label>
+                        <input type="date" id="cab-nascimento">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Lote</label>
+                        <select id="cab-lote">
+                            <option value="">Sem lote</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pasto</label>
+                        <select id="cab-pasto">
+                            <option value="">Sem pasto</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="cab-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">Cadastrar Animal</button>
+            </form>
+
+            <!-- Animal List -->
+            <div class="section-title" style="margin-top:24px;">Animais Cadastrados</div>
+            <div id="cabecas-list"></div>
         </section>
 
     </main>
@@ -1000,7 +1077,8 @@
     <script src="js/calendario.js?v=20260211s"></script>
     <script src="js/contas.js?v=20260211s"></script>
     <script src="js/indicadores.js?v=20260211s"></script>
-    <script src="app.js?v=20260211s"></script>
+    <script src="js/cabecas.js?v=20260212a"></script>
+    <script src="app.js?v=20260212a"></script>
 
     <!-- Theme & Greeting Init -->
     <script>
