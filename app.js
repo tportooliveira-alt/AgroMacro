@@ -139,21 +139,38 @@ window.app = {
 
         var events = window.data.events;
 
-        // Operational KPIs only — no financial values
+        // Get active lotes (use last event per lote name)
+        var lotesMap = {};
+        var totalPastos = 0;
+        var pastosSet = {};
+
+        events.forEach(function (ev) {
+            if (ev.type === 'LOTE') {
+                lotesMap[ev.nome] = ev;
+            }
+            if (ev.type === 'PASTO' && !pastosSet[ev.nome]) {
+                pastosSet[ev.nome] = true;
+                totalPastos++;
+            }
+        });
+
         var totalAnimais = 0;
         var totalLotes = 0;
-        var totalPastos = 0;
         var pesoTotal = 0;
         var pesados = 0;
 
-        events.forEach(function (ev) {
-            if (ev.type === 'ANIMAL' && ev.status !== 'VENDIDO') {
-                totalAnimais++;
-                if (ev.peso) { pesoTotal += ev.peso; pesados++; }
+        for (var nome in lotesMap) {
+            var lote = lotesMap[nome];
+            if (lote.status === 'ATIVO') {
+                totalLotes++;
+                var qtd = lote.qtdAnimais || 0;
+                totalAnimais += qtd;
+                if (lote.pesoMedio && qtd > 0) {
+                    pesoTotal += lote.pesoMedio * qtd;
+                    pesados += qtd;
+                }
             }
-            if (ev.type === 'LOTE' && ev.status === 'ATIVO') totalLotes++;
-            if (ev.type === 'PASTO') totalPastos++;
-        });
+        }
 
         var pesoMedio = pesados > 0 ? (pesoTotal / pesados).toFixed(0) : '--';
 
