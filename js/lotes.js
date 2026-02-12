@@ -604,19 +604,33 @@ window.lotes = {
                 'touros': '🐃'
             }[categoria] || '📦';
 
-            return '<div class="lot-card" onclick="window.app.navigate(\'lote-detalhes\')">'
+            // Get KPIs if available
+            var gmdText = '--';
+            var diasText = '--';
+            if (window.indicadores) {
+                var kpis = window.indicadores.getLoteKPIs(l);
+                if (kpis.gmd > 0) gmdText = kpis.gmd.toFixed(2) + ' kg/d';
+                if (kpis.diasCocho > 0) diasText = kpis.diasCocho + 'd';
+            }
+
+            return '<div class="lot-card">'
                 + '<div class="lot-card-header">'
                 + '<div class="lot-card-id">' + catEmoji + ' ' + (l.nome || 'Lote Sem Nome') + '</div>'
                 + '<div class="lot-card-count">' + (l.qtdAnimais || 0) + ' cab</div>'
                 + '</div>'
                 + '<div class="lot-card-stats">'
-                + '<div class="lot-stat"><div class="lot-stat-label">Idade</div><div class="lot-stat-value">' + (l.idadeMedia || '-') + ' m</div></div>'
                 + '<div class="lot-stat"><div class="lot-stat-label">Peso</div><div class="lot-stat-value">' + (l.pesoMedio || '-') + ' kg</div></div>'
+                + '<div class="lot-stat"><div class="lot-stat-label">GMD</div><div class="lot-stat-value">' + gmdText + '</div></div>'
+                + '<div class="lot-stat"><div class="lot-stat-label">Dias</div><div class="lot-stat-value">' + diasText + '</div></div>'
                 + '<div class="lot-stat"><div class="lot-stat-label">Pasto</div><div class="lot-stat-value">' + pastoAtual + '</div></div>'
                 + '</div>'
-                + '<div style="margin-top:12px; display:flex; gap:8px;">'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🌾 Trocar Pasto</button>'
+                + '<div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🌾 Pasto</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTransferencia(\'' + l.nome + '\')">🔄 Transferir</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirMortalidade(\'' + l.nome + '\')">💀 Baixa</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirNascimento(\'' + l.nome + '\')">🐣 Nasc.</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Hist.</button>'
                 + '</div>'
                 + '</div>';
         }).join('');
@@ -626,3 +640,4 @@ window.lotes = {
 
         container.innerHTML = html;
     }
+};

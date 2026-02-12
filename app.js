@@ -38,9 +38,13 @@ window.app = {
         if (window.manejo) window.manejo.init();
         if (window.obras) window.obras.init();
         if (window.funcionarios) window.funcionarios.init();
+        if (window.rebanhoOps) window.rebanhoOps.init();
+        if (window.pastoMgmt) window.pastoMgmt.init();
+        if (window.calendario) window.calendario.init();
+        if (window.contas) window.contas.init();
+        if (window.indicadores) window.indicadores.init();
 
         this.navigate('home');
-        if (window.indicadores) window.indicadores.init();
     },
 
     navigate: function (pageId) {
@@ -66,7 +70,7 @@ window.app = {
         document.querySelectorAll('.bottom-nav .nav-item').forEach(function (btn) {
             btn.classList.remove('active');
         });
-        var navMap = { 'home': 'nav-home', 'lotes': 'nav-lotes', 'manejo': 'nav-manejo', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro', 'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'config': 'nav-config' };
+        var navMap = { 'home': 'nav-home', 'lotes': 'nav-lotes', 'manejo': 'nav-manejo', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro', 'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'calendario': 'nav-manejo', 'contas': 'nav-financeiro', 'config': 'nav-config' };
         var activeNav = navMap[pageId] || 'nav-home';
         var navEl = document.getElementById(activeNav);
         if (navEl) navEl.classList.add('active');
@@ -76,6 +80,7 @@ window.app = {
             case 'home':
                 this.renderKPIs();
                 this.renderAlerts();
+                if (window.contas) window.contas.renderCotacaoRebanho();
                 break;
             case 'rebanho':
                 if (window.rebanho) window.rebanho.renderList();
@@ -121,6 +126,12 @@ window.app = {
                 break;
             case 'balanco':
                 if (window.financeiro) window.financeiro.renderBalanco();
+                break;
+            case 'calendario':
+                if (window.calendario) window.calendario.renderCalendarioSanitario();
+                break;
+            case 'contas':
+                if (window.contas) window.contas.renderContasPagar();
                 break;
         }
     },

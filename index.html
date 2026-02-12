@@ -70,6 +70,30 @@
                 </button>
             </div>
 
+            <!-- Quick Access: Financial & Admin -->
+            <div class="home-grid" style="margin-top:12px;">
+                <button class="home-card" onclick="window.app.navigate('calendario')">
+                    <div class="home-card-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626);">🗓️</div>
+                    <span class="home-card-title">Calendário</span>
+                    <span class="home-card-sub">Sanitário</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('contas')">
+                    <div class="home-card-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">📋</div>
+                    <span class="home-card-title">Contas</span>
+                    <span class="home-card-sub">A pagar</span>
+                </button>
+
+                <button class="home-card" onclick="window.app.navigate('balanco')">
+                    <div class="home-card-icon" style="background: linear-gradient(135deg, #06B6D4, #0891B2);">📊</div>
+                    <span class="home-card-title">Balanço</span>
+                    <span class="home-card-sub">DRE</span>
+                </button>
+            </div>
+
+            <!-- Cotação do Rebanho em Pé -->
+            <div id="cotacao-rebanho" style="margin-top:16px;"></div>
+
             <!-- Alerts Section -->
             <div class="alerts-section">
                 <div class="alerts-title">⚠️ Alertas</div>
@@ -723,6 +747,24 @@
             </div>
         </section>
 
+        <!-- ===================== CALENDÁRIO SANITÁRIO ===================== -->
+        <section id="view-calendario" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>🗓️ Calendário Sanitário</h2>
+            </div>
+            <div id="calendario-content"></div>
+        </section>
+
+        <!-- ===================== CONTAS A PAGAR ===================== -->
+        <section id="view-contas" class="view hidden">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <h2>📋 Contas a Pagar</h2>
+            </div>
+            <div id="contas-pagar-content"></div>
+        </section>
+
     </main>
 
     <!-- ===================== MODAL: TROCAR PASTO ===================== -->
@@ -837,6 +879,10 @@
     <script src="js/financeiro.js?v=20260211r"></script>
     <script src="js/estoque.js?v=20260211r"></script>
     <script src="js/funcionarios.js?v=20260211r"></script>
+    <script src="js/rebanho-ops.js?v=20260211s"></script>
+    <script src="js/pasto-mgmt.js?v=20260211s"></script>
+    <script src="js/calendario.js?v=20260211s"></script>
+    <script src="js/contas.js?v=20260211s"></script>
     <script src="js/indicadores.js?v=20260211s"></script>
     <script src="app.js?v=20260211s"></script>
 
@@ -845,10 +891,7 @@
         (function () {
             var h = new Date().getHours();
 
-            // Auto dark/light mode — dark between 18h and 6h
-            if (h >= 18 || h < 6) {
-                document.body.classList.add('dark-mode');
-            }
+            // Light mode only — no dark mode
 
             // Greeting
             var greetEl = document.getElementById('greeting-text');

@@ -1553,3 +1553,132 @@ textarea {
 .view {
     animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
+
+/* ═══════ MODALS ═══════ */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    background: var(--bg-1);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-3);
+}
+
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-0);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.modal-close:hover { background: var(--bg-4); }
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-body .form-group {
+    margin-bottom: 14px;
+}
+
+.modal-body .submit-btn {
+    margin-top: 16px;
+}
+
+/* ═══════ TIMELINE ═══════ */
+.timeline {
+    position: relative;
+    padding-left: 24px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border-default);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 16px;
+    padding-left: 16px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-1);
+    box-shadow: 0 0 0 2px var(--gold);
+}
+
+.timeline-content {
+    background: var(--bg-3);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.timeline-date {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 600;
+}
+
+.timeline-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-0);
+    margin-top: 2px;
+}
+
+.timeline-detail {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 2px;
+}
+
+/* ═══════ BADGES ═══════ */
+.badge-blue { background: rgba(37, 99, 235, 0.1); color: #1d4ed8; }
+.badge-yellow { background: rgba(245, 158, 11, 0.1); color: #92400e; }
+
+/* ═══════ FADEINS ═══════ */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
