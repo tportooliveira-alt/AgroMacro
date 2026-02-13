@@ -49,6 +49,7 @@ window.app = {
         if (window.rastreabilidade) window.rastreabilidade.init();
         if (window.indicadores) window.indicadores.init();
         if (window.genetica) window.genetica.init();
+        if (window.mascote) window.mascote.init();
 
         this.loadConfig();
         this.navigate('home');
