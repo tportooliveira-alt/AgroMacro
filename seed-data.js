@@ -469,6 +469,91 @@
         date: daysAgo(50)
     });
 
+    // ═══════════════════════════════════════════════════
+    // 16. FICHAS GENÉTICAS (Matrizes + Touros da fazenda)
+    // ═══════════════════════════════════════════════════
+    var fichasGeneticas = [
+        // ── Matrizes (vacas do lote "Matrizes Reprodução") ──
+        {
+            brinco: '1001', nome: 'ANTARES PRINCESA', raca: 'Nelore PO', sexo: 'femea',
+            pai: 'CFM IMPERADOR', mae: 'ANTARES BONANZA', linhagem: 'Karvadi x Godhavari',
+            origem: 'PMGZ', iabcz: 8.5, deca: 2,
+            deps: { PN: 0.3, P210: 10.2, MP210: 6.8, PAC: 7.5, AOL: 1.2, EGS: 0.3, PE: null, IPP: -5.0, P3P: 9.0 },
+            obs: 'Boa mãe, leite excelente. Fraca em AOL — filhos vêm com pouca carcaça.'
+        },
+        {
+            brinco: '1002', nome: 'ANTARES FORMOSA', raca: 'Nelore PO', sexo: 'femea',
+            pai: 'AVATAR DA MATINHA', mae: 'ANTARES ESTRELA', linhagem: 'Supremo x Fabuloso',
+            origem: 'PMGZ', iabcz: 10.2, deca: 1,
+            deps: { PN: 0.1, P210: 13.5, MP210: 7.2, PAC: 8.0, AOL: 3.5, EGS: 0.7, PE: null, IPP: -7.0, P3P: 12.0 },
+            obs: 'Vaca elite. Equilibrada em tudo. Filha do Avatar — leite de sobra.'
+        },
+        {
+            brinco: '1003', nome: 'ANTARES RAINHA', raca: 'Nelore PO', sexo: 'femea',
+            pai: 'REM REMANSO', mae: 'ANTARES LUZ', linhagem: 'Remanso x Karvadi',
+            origem: 'PMGZ', iabcz: 6.0, deca: 3,
+            deps: { PN: 1.2, P210: 8.5, MP210: 3.5, PAC: 4.2, AOL: 0.8, EGS: 0.2, PE: null, IPP: -2.0, P3P: 5.0 },
+            obs: 'Leite fraco e carcaça fraca. Precisa de touro forte em MP210 + AOL pra compensar.'
+        },
+        {
+            brinco: '1004', nome: 'ANTARES JADE', raca: 'Nelore PO', sexo: 'femea',
+            pai: 'LANDAU DA DI GENIO', mae: 'ANTARES PÉROLA', linhagem: 'Karvadi x Taj Mahal',
+            origem: 'PMGZ', iabcz: 12.0, deca: 1,
+            deps: { PN: 1.8, P210: 18.0, MP210: 2.5, PAC: 5.0, AOL: 5.5, EGS: 0.9, PE: null, IPP: -8.5, P3P: 14.0 },
+            obs: 'Filha do Landau — peso e carcaça excelentes, mas LEITE FRACO. Bezerro não desmama bem.'
+        },
+        {
+            brinco: '1005', nome: 'ANTARES SAFIRA', raca: 'Nelore PO', sexo: 'femea',
+            pai: 'BIG BEN STA NICE', mae: 'ANTARES ROSA', linhagem: 'Recanto x Celeiro',
+            origem: 'ANCP', iabcz: null, mgte: 6.5, deca: 2,
+            deps: { PN: -0.5, P210: 11.0, MP210: 5.5, PAC: 6.8, AOL: 2.0, EGS: 0.5, PE: null, IPP: -6.0, P3P: 8.0 },
+            obs: 'Boa pra cria. Equilibrada, sem grandes defeitos mas sem brilho na carcaça.'
+        },
+        {
+            brinco: '1006', nome: 'ANTARES DIAMANTE', raca: 'Nelore PO', sexo: 'femea',
+            pai: 'CFM IMPERADOR', mae: 'ANTARES BONITA', linhagem: 'Karvadi x Godhavari',
+            origem: 'PMGZ', iabcz: 9.0, deca: 2,
+            deps: { PN: 0.0, P210: 12.0, MP210: 6.0, PAC: 7.0, AOL: 2.8, EGS: 0.6, PE: null, IPP: -5.5, P3P: 10.5 },
+            obs: 'Filha do Imperador. Boa produção geral. Pode melhorar AOL com touro de carcaça.'
+        },
+
+        // ── Touros da fazenda (do lote "Touros Elite") ──
+        {
+            brinco: '8001', nome: 'ANTARES TROVÃO', raca: 'Nelore PO', sexo: 'macho',
+            pai: 'CFM IMPERADOR', mae: 'ANTARES LUA', linhagem: 'Karvadi x Godhavari',
+            origem: 'PMGZ', iabcz: 11.0, deca: 1,
+            deps: { PN: 0.5, P210: 13.0, P365: 18.0, P450: 22.0, GPD: 48, MP210: 5.0, PE: 2.5, IPP: -6.0, AOL: 3.0, EGS: 0.55, MS: 0.40 },
+            obs: 'Touro de monta natural — bom equilíbrio. Serve pra todas as vacas.'
+        },
+        {
+            brinco: '8002', nome: 'ANTARES GUERREIRO', raca: 'Nelore PO', sexo: 'macho',
+            pai: 'LANDAU DA DI GENIO', mae: 'ANTARES FORTUNA', linhagem: 'Karvadi x Taj Mahal',
+            origem: 'PMGZ', iabcz: 15.5, deca: 1,
+            deps: { PN: 1.0, P210: 16.5, P365: 23.0, P450: 28.5, GPD: 58, MP210: 3.8, PE: 3.2, IPP: -9.0, AOL: 5.0, EGS: 0.85, MS: 0.50 },
+            obs: 'Filho do Landau — pesado e com carcaça. NÃO usar em novilha (PN alto).'
+        }
+    ];
+
+    fichasGeneticas.forEach(function (f) {
+        saveEv({
+            type: 'FICHA_GENETICA',
+            brinco: f.brinco,
+            nome: f.nome,
+            raca: f.raca,
+            sexo: f.sexo,
+            pai: f.pai,
+            mae: f.mae,
+            linhagem: f.linhagem,
+            origem: f.origem,
+            iabcz: f.iabcz || null,
+            mgte: f.mgte || null,
+            deca: f.deca,
+            deps: f.deps,
+            obs: f.obs,
+            date: daysAgo(200)
+        });
+    });
+
     console.log('✅ SEED COMPLETO! Dados realistas carregados:');
     console.log('   🐄 6 lotes ativos');
     console.log('   🌾 4 pastos');

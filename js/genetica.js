@@ -823,5 +823,219 @@ window.genetica = {
         }
 
         if (window.app) window.app.showToast('📋 Dados do IMPERADOR FIV preenchidos!', 'info');
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // ACASALAMENTO DIRIGIDO — Análise de Compensação
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Analisa o cruzamento entre uma vaca e um touro.
+     * Retorna parecer com compensações, alertas e projeção FrigoGest.
+     */
+    analisarAcasalamento: function (fichaVaca, fichaTouro) {
+        var self = this;
+        var parecer = [];
+
+        // ── Verificação de consanguinidade ──
+        var alerta_consanguinidade = false;
+        if (fichaVaca.pai && fichaTouro.nome && fichaVaca.pai === fichaTouro.nome) {
+            alerta_consanguinidade = true;
+        }
+        if (fichaVaca.linhagem && fichaTouro.linhagem) {
+            var linVaca = fichaVaca.linhagem.toLowerCase().split(' x ');
+            var linTouro = fichaTouro.linhagem.toLowerCase().split(' x ');
+            for (var i = 0; i < linVaca.length; i++) {
+                for (var j = 0; j < linTouro.length; j++) {
+                    if (linVaca[i].trim() === linTouro[j].trim()) {
+                        alerta_consanguinidade = true;
+                    }
+                }
+            }
+        }
+
+        // ── Cabeçalho ──
+        var header = '🧬 <strong>ACASALAMENTO DIRIGIDO</strong><br>';
+        header += '🐄 Vaca: <strong>' + fichaVaca.nome + '</strong> (Brinco ' + fichaVaca.brinco + ')<br>';
+        header += '🐂 Touro: <strong>' + (fichaTouro.nome || 'Catálogo') + '</strong>';
+        if (fichaTouro.registro) header += ' (' + fichaTouro.registro + ')';
+        header += '<br>';
+        if (fichaTouro.centrais && fichaTouro.centrais.length > 0) {
+            var c = fichaTouro.centrais[0];
+            header += '📍 Disponível: <strong>' + c.nome + '</strong> — ' + c.cidade + ' — R$ ' + c.preco.toFixed(2) + '/dose';
+        }
+        parecer.push(header);
+
+        // ── Alerta de consanguinidade ──
+        if (alerta_consanguinidade) {
+            parecer.push('🚨 <strong style="color:#EF4444;">ATENÇÃO — RISCO DE CONSANGUINIDADE!</strong><br>' +
+                'Patrão, essas linhagens se cruzam. Filho de parente dá problema: ' +
+                'bezerro fraco, fertilidade baixa, prejuízo certo. ' +
+                '<strong>Recomendo trocar o touro.</strong>');
+        }
+
+        // ── Análise de compensação por DEP ──
+        var compensacoes = [];
+        var preocupacoes = [];
+        var depsCruzadas = {};
+        var depsVaca = fichaVaca.deps || {};
+        var depsTouro = (fichaTouro.deps || fichaTouro.deps) || {};
+
+        var siglas = ['PN', 'P210', 'MP210', 'PAC', 'AOL', 'EGS', 'GPD', 'P450', 'IPP', 'P3P', 'PE', 'MS', 'PS'];
+        siglas.forEach(function (sigla) {
+            if (self.REFS[sigla]) {
+                var scoreVaca = depsVaca[sigla] !== undefined && depsVaca[sigla] !== null ? self._normalizar(sigla, depsVaca[sigla]) : null;
+                var scoreTouro = depsTouro[sigla] !== undefined && depsTouro[sigla] !== null ? self._normalizar(sigla, depsTouro[sigla]) : null;
+
+                if (scoreVaca !== null && scoreTouro !== null) {
+                    var media = (scoreVaca + scoreTouro) / 2;
+                    depsCruzadas[sigla] = { vaca: scoreVaca, touro: scoreTouro, media: media };
+
+                    if (scoreVaca <= 35 && scoreTouro >= 65) {
+                        compensacoes.push({
+                            sigla: sigla,
+                            nome: self.REFS[sigla].nome,
+                            scoreVaca: scoreVaca,
+                            scoreTouro: scoreTouro
+                        });
+                    } else if (scoreVaca <= 35 && scoreTouro <= 45) {
+                        preocupacoes.push({
+                            sigla: sigla,
+                            nome: self.REFS[sigla].nome,
+                            scoreVaca: scoreVaca,
+                            scoreTouro: scoreTouro
+                        });
+                    }
+                }
+            }
+        });
+
+        // ── Compensações encontradas ──
+        if (compensacoes.length > 0) {
+            var txt = '✅ <strong>COMPENSAÇÕES POSITIVAS:</strong><br>';
+            txt += 'Esse touro corrige os pontos fracos da vaca:<br>';
+            compensacoes.forEach(function (comp) {
+                txt += '• <strong>' + comp.nome + '</strong> — Vaca fraca (' + Math.round(comp.scoreVaca) + '/100) → Touro forte (' + Math.round(comp.scoreTouro) + '/100). ';
+                if (comp.sigla === 'AOL') txt += 'Vai melhorar a carcaça dos filhos pro FrigoGest! 🥩';
+                else if (comp.sigla === 'MP210') txt += 'Filhas vão ser vacas com leite de verdade! 🥛';
+                else if (comp.sigla === 'EGS') txt += 'Acabamento melhor = abate mais cedo = giro rápido! 💰';
+                txt += '<br>';
+            });
+            parecer.push(txt);
+        }
+
+        // ── Preocupações ──
+        if (preocupacoes.length > 0) {
+            var alertTxt = '⚠️ <strong style="color:#F59E0B;">ATENÇÃO — PONTO NÃO CORRIGIDO:</strong><br>';
+            preocupacoes.forEach(function (preo) {
+                alertTxt += '• <strong>' + preo.nome + '</strong> — Vaca fraca E touro também não ajuda (' + Math.round(preo.scoreTouro) + '/100). ';
+                alertTxt += 'Filhos vão herdar essa deficiência.<br>';
+            });
+            alertTxt += 'Considere outro touro se essa característica for prioridade.';
+            parecer.push(alertTxt);
+        }
+
+        // ── Projeção de Filhos ──
+        var projecao = '📊 <strong>PROJEÇÃO DOS FILHOS:</strong><br>';
+        var depsProjeto = {};
+        for (var sig in depsCruzadas) {
+            depsProjeto[sig] = depsCruzadas[sig].media;
+        }
+
+        // Aptidões projetadas
+        var aptCria = depsProjeto.MP210 || 50;
+        var aptEngorda = ((depsProjeto.AOL || 50) + (depsProjeto.GPD || 50) + (depsProjeto.EGS || 50)) / 3;
+        var aptRepo = ((depsProjeto.IPP || 50) + (depsProjeto.P3P || 50) + (depsProjeto.MP210 || 50)) / 3;
+
+        if (aptCria >= 65) projecao += '🐮 <strong>Cria:</strong> Bezerrada boa — filhas vão dar leite e desmamar pesado.<br>';
+        else if (aptCria >= 50) projecao += '🐮 <strong>Cria:</strong> Razoável — não vai ser referência, mas serve.<br>';
+        else projecao += '🐮 <strong>Cria:</strong> Fraco — filhas vão secar cedo. Bezerro desmama leve.<br>';
+
+        if (aptEngorda >= 65) projecao += '🥩 <strong>Engorda (FrigoGest):</strong> Boi vai fechar carcaça rápido com bife largo. Premium no gancho!<br>';
+        else if (aptEngorda >= 50) projecao += '🥩 <strong>Engorda (FrigoGest):</strong> Mediano — vai vender, mas sem prêmio especial.<br>';
+        else projecao += '🥩 <strong>Engorda (FrigoGest):</strong> Fraco — carcaça magra, risco de desconto no frigorifico.<br>';
+
+        if (aptRepo >= 65) projecao += '🔄 <strong>Reposição:</strong> Fêmeas excelentes pra segurar no plantel.';
+        else if (aptRepo >= 50) projecao += '🔄 <strong>Reposição:</strong> Pode segurar algumas, não todas.';
+        else projecao += '🔄 <strong>Reposição:</strong> Melhor vender as fêmeas. Não serve pra reposição.';
+
+        parecer.push(projecao);
+
+        // ── Visão de Negócio FrigoGest ──
+        var visao = '💰 <strong>VISÃO DE NEGÓCIO (2-3 anos):</strong><br>';
+        var aolMedia = depsCruzadas.AOL ? depsCruzadas.AOL.media : 50;
+        var egsMedia = depsCruzadas.EGS ? depsCruzadas.EGS.media : 50;
+        var p450Media = depsCruzadas.P450 ? depsCruzadas.P450.media : 50;
+
+        if (aolMedia >= 65 && egsMedia >= 55) {
+            visao += 'Se usar esse touro nas vacas do plantel, em <strong>2-3 anos</strong> os filhos vão pro abate com:<br>';
+            visao += '• Carcaça acima da média — loin eye area do bom.<br>';
+            visao += '• Acabamento adequado — sem desconto por falta de gordura.<br>';
+            visao += '• Estimativa: <strong>18-20 arrobas</strong> com acabamento uniforme.<br>';
+            visao += '🏆 <strong>Investimento que se paga no gancho!</strong>';
+        } else if (aolMedia >= 50) {
+            visao += 'Resultado esperado: carcaça regular. Vai vender, mas sem prêmio especial. ';
+            visao += 'Pra melhorar o retorno no FrigoGest, considere touro mais forte em AOL e EGS.';
+        } else {
+            visao += 'Patrão, com esse cruzamento a carcaça vai ser fraca. ';
+            visao += 'Risco de desconto no frigorífico. Recomendo repensar o acasalamento.';
+        }
+        parecer.push(visao);
+
+        // ── Veredicto final ──
+        var veredicto = '';
+        if (alerta_consanguinidade) {
+            veredicto = '❌ <strong style="color:#EF4444;">NÃO RECOMENDO.</strong> Risco de consanguinidade. Troque o touro.';
+        } else if (compensacoes.length >= 2 && preocupacoes.length === 0) {
+            veredicto = '✅ <strong style="color:#22C55E;">ACASALAMENTO EXCELENTE!</strong> Touro compensa os pontos fracos da vaca. Manda ver, patrão!';
+        } else if (compensacoes.length >= 1 && preocupacoes.length <= 1) {
+            veredicto = '👍 <strong style="color:#3B82F6;">BOM ACASALAMENTO.</strong> Tem compensação, mas poderia ser melhor. Pode usar com segurança.';
+        } else if (preocupacoes.length >= 2) {
+            veredicto = '⚠️ <strong style="color:#F59E0B;">ACASALAMENTO ARRISCADO.</strong> Touro não corrige os problemas da vaca. Procure outra opção.';
+        } else {
+            veredicto = '🤔 <strong>ACASALAMENTO NEUTRO.</strong> Não prejudica, mas também não brilha. Pra melhor resultado, busque touro mais específico.';
+        }
+        parecer.push(veredicto);
+
+        return {
+            parecer: parecer,
+            compensacoes: compensacoes,
+            preocupacoes: preocupacoes,
+            consanguinidade: alerta_consanguinidade,
+            depsCruzadas: depsCruzadas,
+            aptidoesProjetadas: { cria: aptCria, engorda: aptEngorda, reposicao: aptRepo }
+        };
+    },
+
+    /**
+     * Busca os melhores touros do catálogo para compensar os pontos fracos de uma vaca.
+     */
+    buscarTourosParaVaca: function (fichaVaca) {
+        if (!window.catalogoTouros || !window.catalogoTouros.buscarCompensacao) {
+            return [];
+        }
+        return window.catalogoTouros.buscarCompensacao(fichaVaca.deps || {});
+    },
+
+    /**
+     * Retorna todas as fichas genéticas salvas no sistema.
+     */
+    getFichas: function (sexo) {
+        var fichas = window.data.getByType('FICHA_GENETICA');
+        if (sexo) {
+            return fichas.filter(function (f) { return f.sexo === sexo; });
+        }
+        return fichas;
+    },
+
+    /**
+     * Busca uma ficha genética pelo brinco.
+     */
+    getFichaPorBrinco: function (brinco) {
+        var fichas = window.data.getByType('FICHA_GENETICA');
+        for (var i = 0; i < fichas.length; i++) {
+            if (fichas[i].brinco === brinco) return fichas[i];
+        }
+        return null;
     }
 };
