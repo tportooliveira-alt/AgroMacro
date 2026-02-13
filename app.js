@@ -48,6 +48,7 @@ window.app = {
         if (window.contas) window.contas.init();
         if (window.rastreabilidade) window.rastreabilidade.init();
         if (window.indicadores) window.indicadores.init();
+        if (window.genetica) window.genetica.init();
 
         this.loadConfig();
         this.navigate('home');
@@ -81,6 +82,7 @@ window.app = {
             // Rebanho hub + sub-views
             'rebanho-hub': 'nav-rebanho', 'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
             'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho',
+            'genetica': 'nav-rebanho',
             // Financeiro hub + sub-views
             'financeiro-hub': 'nav-financeiro', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro',
             'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
@@ -160,6 +162,9 @@ window.app = {
                 break;
             case 'config':
                 this.loadConfig();
+                break;
+            case 'genetica':
+                if (window.genetica) window.genetica.render();
                 break;
         }
     },
