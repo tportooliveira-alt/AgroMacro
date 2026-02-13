@@ -299,6 +299,234 @@ window.catalogoTouros = [
         ],
         destaque: 'Brahman manso e rústico. Ideal pra regiões difíceis com calor intenso e carrapato.',
         indicacao: 'RUSTICIDADE + CRIA. Pra quem precisa de gado que aguenta tudo e ainda produz.'
+    },
+
+    // ═══════════════════════════════════════
+    // GUZERÁ — Dupla Aptidão (Corte + Leite)
+    // ═══════════════════════════════════════
+
+    {
+        id: 'T009',
+        nome: 'ESTEIO DA CENTROGEN',
+        registro: 'CTGN-2280',
+        raca: 'Guzerá',
+        programa: 'PMGZ',
+        linhagem: 'Rastro x Imperador GZ',
+        iabcz: 12.8,
+        mgte: null,
+        deca: 1,
+        percentil: 2,
+        deps: {
+            PN: 0.4,
+            P120: 5.8,
+            P210: 11.0,
+            P365: 15.5,
+            P450: 19.0,
+            GPD: 40,
+            MP210: 8.5,
+            PE: 2.0,
+            IPP: -4.5,
+            P3P: 7.8,
+            PAC: 6.5,
+            AOL: 2.2,
+            EGS: 0.40,
+            MS: 0.32
+        },
+        aptidoes: { cria: 88, engorda: 58, reposicao: 82 },
+        selo: 'Elite Cria',
+        centrais: [
+            { nome: 'CRV Lagoa', cidade: 'Uberaba-MG', preco: 20.00, tipo: 'convencional' },
+            { nome: 'Central Bela Vista', cidade: 'Uberaba-MG', preco: 18.50, tipo: 'convencional' }
+        ],
+        destaque: 'Guzerá com habilidade materna excepcional (MP210=8.5). Vaca Guzerá é "mãezona" — leite de sobra pro bezerro.',
+        indicacao: 'CRIA + REPOSIÇÃO. Filhas vão ser as vacas mais leiteiras do rebanho. Ideal pra dupla aptidão.'
+    },
+
+    {
+        id: 'T010',
+        nome: 'AMADO FIV DA SM',
+        registro: 'SMGZ-4150',
+        raca: 'Guzerá',
+        programa: 'PMGZ',
+        linhagem: 'Ônix x Rastro',
+        iabcz: 15.5,
+        mgte: null,
+        deca: 1,
+        percentil: 1,
+        deps: {
+            PN: 0.8,
+            P120: 7.5,
+            P210: 14.2,
+            P365: 19.8,
+            P450: 24.5,
+            GPD: 52,
+            MP210: 6.0,
+            PE: 2.5,
+            IPP: -6.0,
+            P3P: 10.0,
+            PAC: 7.8,
+            AOL: 3.5,
+            EGS: 0.55,
+            MS: 0.42
+        },
+        aptidoes: { cria: 75, engorda: 70, reposicao: 78 },
+        selo: 'Equilibrado',
+        centrais: [
+            { nome: '3A Genética', cidade: 'Uberaba-MG', preco: 22.00, tipo: 'convencional' }
+        ],
+        destaque: 'Guzerá top em iABCZ (15.5). Bom peso E leite — o equilíbrio que poucos Guzerá têm.',
+        indicacao: 'USO GERAL. Guzerá equilibrado entre peso e maternidade. Bom pra cruzamento com Nelore.'
+    },
+
+    // ═══════════════════════════════════════
+    // TABAPUÃ — Precocidade e Carcaça
+    // ═══════════════════════════════════════
+
+    {
+        id: 'T011',
+        nome: 'FATOR DE TRIUNFO',
+        registro: 'TRNF-3320',
+        raca: 'Tabapuã',
+        programa: 'PMGZ',
+        linhagem: 'Rastro TB x Ônix TB',
+        iabcz: 16.0,
+        mgte: null,
+        deca: 1,
+        percentil: 1,
+        deps: {
+            PN: -0.2,
+            P120: 8.0,
+            P210: 15.5,
+            P365: 21.0,
+            P450: 26.0,
+            GPD: 58,
+            MP210: 5.5,
+            PE: 3.0,
+            IPP: -7.5,
+            P3P: 11.0,
+            PAC: 8.5,
+            AOL: 5.8,
+            EGS: 0.95,
+            MS: 0.52,
+            PS: 0.45
+        },
+        aptidoes: { cria: 72, engorda: 88, reposicao: 78 },
+        selo: 'Elite Engorda',
+        centrais: [
+            { nome: 'ABS Pecplan', cidade: 'Uberaba-MG', preco: 26.00, tipo: 'convencional' },
+            { nome: 'Alta Genetics', cidade: 'Uberaba-MG', preco: 24.00, tipo: 'convencional' }
+        ],
+        destaque: 'Tabapuã precoce com AOL de 5.8 — excelente rendimento de carcaça. Mocho e dócil = fácil de manejar.',
+        indicacao: 'ENGORDA e CONFINAMENTO. Tabapuã top de carcaça. Mocho = sem chifre = menos acidente no curral.'
+    },
+
+    {
+        id: 'T012',
+        nome: 'MITO DA SS TABAPUÃ',
+        registro: 'SSTB-1890',
+        raca: 'Tabapuã',
+        programa: 'ANCP',
+        linhagem: 'Fundador TB x Predestinado',
+        iabcz: null,
+        mgte: 18.5,
+        deca: 1,
+        percentil: 3,
+        deps: {
+            PN: 0.1,
+            P120: 6.8,
+            P210: 13.0,
+            P365: 18.0,
+            P450: 22.5,
+            GPD: 48,
+            MP210: 7.0,
+            PE: 2.2,
+            IPP: -5.5,
+            P3P: 9.5,
+            PAC: 7.2,
+            AOL: 3.2,
+            EGS: 0.55,
+            MS: 0.38
+        },
+        aptidoes: { cria: 82, engorda: 68, reposicao: 80 },
+        selo: 'Elite Cria',
+        centrais: [
+            { nome: 'Semex', cidade: 'Londrina-PR', preco: 18.00, tipo: 'convencional' },
+            { nome: 'CRV Lagoa', cidade: 'Uberaba-MG', preco: 20.00, tipo: 'convencional' }
+        ],
+        destaque: 'Tabapuã com habilidade materna de Guzerá (MP210=7.0). Mocho, dócil, filhas com leite. Raro!',
+        indicacao: 'CRIA + REPOSIÇÃO. Tabapuã que faz fêmea boa. Ideal pra segurar as novilhas no plantel.'
+    },
+
+    // ═══════════════════════════════════════
+    // SINDI — Rusticidade Extrema + Dupla Aptidão
+    // ═══════════════════════════════════════
+
+    {
+        id: 'T013',
+        nome: 'MAHARAJA DA BAHIA',
+        registro: 'SNBA-0850',
+        raca: 'Sindi',
+        programa: 'PMGZ',
+        linhagem: 'Karachi x Hyderabad',
+        iabcz: 8.0,
+        mgte: null,
+        deca: 1,
+        percentil: 5,
+        deps: {
+            PN: -0.8,
+            P120: 3.5,
+            P210: 7.0,
+            P365: 10.5,
+            P450: 13.0,
+            GPD: 28,
+            MP210: 6.5,
+            PE: 1.5,
+            IPP: -3.0,
+            AOL: 1.5,
+            EGS: 0.30,
+            MS: 0.25
+        },
+        aptidoes: { cria: 78, engorda: 35, reposicao: 72 },
+        selo: 'Rustico',
+        centrais: [
+            { nome: 'ABS Pecplan', cidade: 'Uberaba-MG', preco: 12.00, tipo: 'convencional' }
+        ],
+        destaque: 'Sindi puro — raça do sertão. Aguenta seca, carrapato, calor de 45°C e continua parindo. Leite gordo!',
+        indicacao: 'SEMIÁRIDO + DUPLA APTIDÃO. Pra quem tem fazenda no Nordeste ou quer cruzar com Nelore pra rústicidade.'
+    },
+
+    {
+        id: 'T014',
+        nome: 'RAJAH FIV CASTILHO',
+        registro: 'SNCS-1120',
+        raca: 'Sindi',
+        programa: 'PMGZ',
+        linhagem: 'Maharaja x Sindh Line',
+        iabcz: 6.5,
+        mgte: null,
+        deca: 2,
+        percentil: 8,
+        deps: {
+            PN: -1.0,
+            P120: 3.0,
+            P210: 6.5,
+            P365: 9.8,
+            P450: 12.0,
+            GPD: 25,
+            MP210: 7.2,
+            PE: 1.2,
+            IPP: -2.5,
+            AOL: 1.2,
+            EGS: 0.28,
+            MS: 0.22
+        },
+        aptidoes: { cria: 80, engorda: 30, reposicao: 75 },
+        selo: 'Rustico',
+        centrais: [
+            { nome: 'Central Bela Vista', cidade: 'Uberaba-MG', preco: 10.00, tipo: 'convencional' }
+        ],
+        destaque: 'Sindi com peso ao nascer NEGATIVO — parto fácil garantido. Leite com 5% de gordura. Vaca boa de sertão.',
+        indicacao: 'SEMIÁRIDO + CRIA. Bezerro nasce pequeno e fácil, cresce no leite gordo da mãe. Ideal pra Nordeste.'
     }
 ];
 
@@ -380,4 +608,4 @@ window.catalogoTouros.buscarCompensacao = function (depsVaca) {
     });
 };
 
-console.log('📚 Catálogo de Touros: ' + window.catalogoTouros.length + ' touros carregados (Nelore, Angus, Brahman)');
+console.log('📚 Catálogo de Touros: ' + window.catalogoTouros.length + ' touros carregados (Nelore, Angus, Brahman, Guzerá, Tabapuã, Sindi)');
