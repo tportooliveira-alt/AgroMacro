@@ -6,6 +6,7 @@ window.genetica = {
 
     init: function () {
         console.log('🧬 Consultor Genético — Ciclo Completo — Ready');
+        this.initAcasalamento();
     },
 
     // ════════════════════════════════════════════════════════
@@ -1037,5 +1038,255 @@ window.genetica = {
             if (fichas[i].brinco === brinco) return fichas[i];
         }
         return null;
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // ACASALAMENTO DIRIGIDO — UI Interaction Layer
+    // ═══════════════════════════════════════════════════════════════
+
+    _touroSelecionadoId: null,
+    _filtroRacaAtual: 'todas',
+
+    initAcasalamento: function () {
+        var self = this;
+
+        // Popula dropdown de vacas
+        var select = document.getElementById('acasal-vaca');
+        if (!select) return;
+
+        var fichas = this.getFichas('femea');
+        fichas.forEach(function (f) {
+            var opt = document.createElement('option');
+            opt.value = f.brinco;
+            opt.textContent = f.nome + ' (Brinco ' + f.brinco + ') — ' + (f.raca || 'Nelore');
+            select.appendChild(opt);
+        });
+
+        // Evento ao selecionar vaca
+        select.addEventListener('change', function () {
+            var brinco = this.value;
+            var infoDiv = document.getElementById('acasal-vaca-info');
+            if (!brinco) {
+                infoDiv.style.display = 'none';
+                return;
+            }
+            var ficha = self.getFichaPorBrinco(brinco);
+            if (ficha) {
+                var html = '<div style="background:#1F2937;border:1px solid #374151;border-radius:10px;padding:12px;">';
+                html += '<strong style="color:#C4B5FD;">' + ficha.nome + '</strong>';
+                html += '<span style="color:#6B7280;font-size:12px;margin-left:8px;">Pai: ' + (ficha.pai || '?') + '</span><br>';
+                if (ficha.obs) html += '<span style="color:#9CA3AF;font-size:12px;">' + ficha.obs + '</span><br>';
+                // Pontos fracos
+                var fracos = [];
+                for (var sig in (ficha.deps || {})) {
+                    if (self.REFS[sig] && ficha.deps[sig] !== null) {
+                        var score = self._normalizar(sig, ficha.deps[sig]);
+                        if (score <= 35) fracos.push(self.REFS[sig].nome);
+                    }
+                }
+                if (fracos.length > 0) {
+                    html += '<span style="color:#F59E0B;font-size:12px;">⚠️ Pontos fracos: ' + fracos.join(', ') + '</span>';
+                }
+                html += '</div>';
+                infoDiv.innerHTML = html;
+                infoDiv.style.display = 'block';
+            }
+        });
+
+        // Renderiza touros
+        this.renderTourosLista();
+    },
+
+    filtrarTouros: function (raca) {
+        this._filtroRacaAtual = raca;
+        this._touroSelecionadoId = null;
+
+        // Update button styles
+        var btns = document.querySelectorAll('.acasal-raca-btn');
+        btns.forEach(function (btn) {
+            btn.style.border = '1px solid #374151';
+            btn.style.background = 'transparent';
+            btn.style.color = '#9CA3AF';
+            btn.classList.remove('acasal-raca-active');
+        });
+        // Find clicked button
+        btns.forEach(function (btn) {
+            var btnRaca = btn.textContent.trim();
+            if ((raca === 'todas' && btnRaca === 'Todas') || btnRaca === raca) {
+                btn.style.border = '1px solid #7C3AED';
+                btn.style.background = '#7C3AED33';
+                btn.style.color = '#C4B5FD';
+                btn.classList.add('acasal-raca-active');
+            }
+        });
+
+        this.renderTourosLista();
+    },
+
+    buscarTouroUI: function (termo) {
+        if (!termo || termo.length < 2) {
+            this.renderTourosLista();
+            return;
+        }
+        var resultados = window.catalogoTouros.buscarPorNome(termo);
+        this._renderCards(resultados);
+    },
+
+    renderTourosLista: function () {
+        var touros = window.catalogoTouros || [];
+        var filtro = this._filtroRacaAtual;
+        if (filtro && filtro !== 'todas') {
+            touros = touros.filter(function (t) { return t.raca === filtro; });
+        }
+        this._renderCards(touros);
+    },
+
+    _renderCards: function (touros) {
+        var container = document.getElementById('acasal-touros-lista');
+        if (!container) return;
+        var self = this;
+
+        if (!touros || touros.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum touro encontrado.</p>';
+            return;
+        }
+
+        var html = '';
+        touros.forEach(function (t) {
+            var selected = self._touroSelecionadoId === t.id;
+            var borderColor = selected ? '#7C3AED' : '#374151';
+            var bgColor = selected ? 'rgba(124,58,237,0.15)' : '#1F2937';
+
+            var seloColor = '#9CA3AF';
+            if (t.selo === 'Elite Engorda') seloColor = '#EF4444';
+            else if (t.selo === 'Elite Cria') seloColor = '#10B981';
+            else if (t.selo === 'Equilibrado') seloColor = '#3B82F6';
+            else if (t.selo === 'Rustico') seloColor = '#F59E0B';
+
+            var precoStr = '';
+            if (t.centrais && t.centrais.length > 0) {
+                precoStr = 'R$ ' + t.centrais[0].preco.toFixed(2) + '/dose — ' + t.centrais[0].nome;
+            }
+
+            html += '<div onclick="window.genetica.selecionarTouro(\'' + t.id + '\')" ';
+            html += 'style="background:' + bgColor + ';border:2px solid ' + borderColor + ';border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+            html += '<strong style="color:#F3F4F6;font-size:14px;">' + t.nome + '</strong>';
+            html += '<span style="background:' + seloColor + '22;color:' + seloColor + ';padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">' + t.selo + '</span>';
+            html += '</div>';
+            html += '<div style="display:flex;gap:12px;margin-top:6px;">';
+            html += '<span style="color:#9CA3AF;font-size:12px;">🐄 ' + t.raca + '</span>';
+            if (t.iabcz) html += '<span style="color:#C4B5FD;font-size:12px;">iABCZ: ' + t.iabcz + '</span>';
+            if (t.mgte) html += '<span style="color:#34D399;font-size:12px;">MGTe: ' + t.mgte + '</span>';
+            html += '</div>';
+            if (precoStr) {
+                html += '<div style="color:#6B7280;font-size:11px;margin-top:4px;">💰 ' + precoStr + '</div>';
+            }
+            html += '<div style="color:#9CA3AF;font-size:12px;margin-top:6px;line-height:1.4;">' + t.destaque + '</div>';
+
+            if (selected) {
+                html += '<div style="margin-top:8px;padding:8px;background:#7C3AED22;border-radius:8px;text-align:center;">';
+                html += '<span style="color:#C4B5FD;font-size:12px;font-weight:600;">✅ SELECIONADO</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+    },
+
+    selecionarTouro: function (touroId) {
+        this._touroSelecionadoId = touroId;
+        this.renderTourosLista();
+        if (window.app) window.app.showToast('Touro selecionado!', 'info');
+    },
+
+    executarAcasalamento: function () {
+        var vacaBrinco = document.getElementById('acasal-vaca').value;
+        var touroId = this._touroSelecionadoId;
+        var resultDiv = document.getElementById('acasal-resultado');
+
+        if (!vacaBrinco) {
+            if (window.app) window.app.showToast('Selecione uma vaca primeiro!', 'error');
+            return;
+        }
+        if (!touroId) {
+            if (window.app) window.app.showToast('Selecione um touro do catálogo!', 'error');
+            return;
+        }
+
+        var fichaVaca = this.getFichaPorBrinco(vacaBrinco);
+        var fichaTouro = null;
+        for (var i = 0; i < window.catalogoTouros.length; i++) {
+            if (window.catalogoTouros[i].id === touroId) {
+                fichaTouro = window.catalogoTouros[i];
+                break;
+            }
+        }
+
+        if (!fichaVaca || !fichaTouro) {
+            if (window.app) window.app.showToast('Erro ao carregar dados!', 'error');
+            return;
+        }
+
+        var resultado = this.analisarAcasalamento(fichaVaca, fichaTouro);
+
+        // Render resultado
+        var html = '';
+        resultado.parecer.forEach(function (secao) {
+            html += '<div style="background:#1F2937;border:1px solid #374151;border-radius:12px;padding:16px;margin-bottom:10px;">';
+            html += '<div style="color:#D1D5DB;font-size:13px;line-height:1.6;">' + secao + '</div>';
+            html += '</div>';
+        });
+
+        resultDiv.innerHTML = html;
+        resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    sugerirTouros: function () {
+        var vacaBrinco = document.getElementById('acasal-vaca').value;
+        var sugDiv = document.getElementById('acasal-sugestoes');
+
+        if (!vacaBrinco) {
+            if (window.app) window.app.showToast('Selecione uma vaca primeiro!', 'error');
+            return;
+        }
+
+        var fichaVaca = this.getFichaPorBrinco(vacaBrinco);
+        if (!fichaVaca) return;
+
+        var sugestoes = this.buscarTourosParaVaca(fichaVaca);
+
+        if (sugestoes.length === 0) {
+            sugDiv.innerHTML = '<div style="background:#1F2937;border:1px solid #374151;border-radius:12px;padding:16px;text-align:center;">' +
+                '<span style="color:#10B981;font-size:14px;">✅ Essa vaca não tem pontos fracos graves! Qualquer touro serve bem.</span></div>';
+            sugDiv.style.display = 'block';
+            return;
+        }
+
+        var html = '<div class="section-title" style="color:#10B981;">💡 Touros Recomendados pra ' + fichaVaca.nome + '</div>';
+        sugestoes.forEach(function (sug, idx) {
+            var t = sug.touro;
+            html += '<div style="background:#1F2937;border:1px solid #10B98144;border-radius:12px;padding:14px;margin-bottom:8px;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+            html += '<strong style="color:#F3F4F6;">#' + (idx + 1) + ' ' + t.nome + '</strong>';
+            html += '<span style="color:#10B981;font-size:12px;">' + t.raca + '</span>';
+            html += '</div>';
+            html += '<div style="color:#34D399;font-size:12px;margin-top:4px;">✅ Compensa: <strong>' + sug.compensacoes.join(', ') + '</strong></div>';
+            if (t.centrais && t.centrais.length > 0) {
+                html += '<div style="color:#6B7280;font-size:11px;margin-top:4px;">💰 ' + t.centrais[0].nome + ' — R$ ' + t.centrais[0].preco.toFixed(2) + '/dose</div>';
+            }
+            html += '<div style="margin-top:8px;">';
+            html += '<button onclick="window.genetica.selecionarTouro(\'' + t.id + '\')" ';
+            html += 'style="width:100%;padding:10px;background:linear-gradient(135deg,#7C3AED,#10B981);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">';
+            html += '🧬 Selecionar e Analisar</button>';
+            html += '</div>';
+            html += '</div>';
+        });
+
+        sugDiv.innerHTML = html;
+        sugDiv.style.display = 'block';
+        sugDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 };
