@@ -145,6 +145,225 @@ window.genetica = {
     },
 
     // ════════════════════════════════════════════════════════
+    // PARECER COMPLETO — Texto detalhado como um consultor
+    // ════════════════════════════════════════════════════════
+    _gerarParecer: function (res) {
+        var deps = res.deps;
+        var notas = res.notas;
+        var self = this;
+        var sexoLabel = res.sexo === 'macho' ? 'touro' : 'matriz';
+        var sexoArtigo = res.sexo === 'macho' ? 'Este' : 'Esta';
+        var sexoPronome = res.sexo === 'macho' ? 'ele' : 'ela';
+        var filhosLabel = res.sexo === 'macho' ? 'seus filhos' : 'suas crias';
+        var paragrafos = [];
+
+        // ── 1. INTRODUÇÃO ──
+        var melhorApt = 'cria';
+        var melhorNota = notas.cria || 0;
+        if ((notas.engorda || 0) > melhorNota) { melhorApt = 'engorda'; melhorNota = notas.engorda; }
+        if ((notas.reposicao || 0) > melhorNota) { melhorApt = 'reposicao'; melhorNota = notas.reposicao; }
+        var melhorTexto = { cria: 'produção de bezerros e matrizes', engorda: 'terminação e abate', reposicao: 'reposição de fêmeas no plantel' };
+
+        paragrafos.push('📝 <strong>PARECER TÉCNICO — ' + res.nome + '</strong><br>'
+            + sexoArtigo + ' ' + sexoLabel + ' da raça <strong>' + res.raca + '</strong> foi avaliado com base nos dados genéticos informados. '
+            + 'De forma geral, ' + sexoPronome + ' se destaca mais para <strong>' + melhorTexto[melhorApt] + '</strong>, '
+            + 'com nota ' + melhorNota + ' de 100 nessa aptidão.');
+
+        // ── 2. CRESCIMENTO ──
+        var temCrescimento = deps.PN !== undefined || deps.P210 !== undefined || deps.P365 !== undefined || deps.P450 !== undefined || deps.GPD !== undefined;
+        if (temCrescimento) {
+            var textoCrescimento = '📏 <strong>Sobre o Crescimento:</strong> ';
+
+            if (deps.PN !== undefined) {
+                var pnScore = self._normalizar('PN', deps.PN);
+                if (pnScore >= 65) {
+                    textoCrescimento += 'O peso ao nascer é favorável — os bezerros vão nascer com tamanho adequado, sem risco de parto difícil. Isso é ótimo pra quem usa ' + sexoPronome + ' em novilhas de primeira cria. ';
+                } else if (pnScore >= 40) {
+                    textoCrescimento += 'O peso ao nascer é mediano. Os bezerros devem nascer num tamanho razoável, mas convém ficar de olho nas novilhas mais jovens. ';
+                } else {
+                    textoCrescimento += '⚠️ Atenção: o peso ao nascer é elevado. Pode dar problema de parto em novilhas. Recomendado usar apenas em vacas já paridas. ';
+                }
+            }
+
+            if (deps.P210 !== undefined) {
+                var p210Score = self._normalizar('P210', deps.P210);
+                if (p210Score >= 65) {
+                    textoCrescimento += 'Na desmama, ' + filhosLabel + ' vão se destacar — bezerros mais pesados que a média, o que significa mais arrobas na hora de vender a desmama. ';
+                } else if (p210Score >= 40) {
+                    textoCrescimento += 'O peso à desmama é razoável, dentro da média da raça. ';
+                } else {
+                    textoCrescimento += 'O peso à desmama pode ficar abaixo da média, então ' + filhosLabel + ' vão precisar de boa nutrição pra compensar. ';
+                }
+            }
+
+            if (deps.P450 !== undefined || deps.P365 !== undefined) {
+                var pesoSobre = deps.P450 !== undefined ? deps.P450 : deps.P365;
+                var siglaUsada = deps.P450 !== undefined ? 'P450' : 'P365';
+                var pesoScore = self._normalizar(siglaUsada, pesoSobre);
+                if (pesoScore >= 65) {
+                    textoCrescimento += 'No sobreano, os animais vão ser pesados — ' + sexoPronome + ' transmite genética forte pra ganho de peso pós-desmama. Vai ter boi grande no pasto. ';
+                } else if (pesoScore < 40) {
+                    textoCrescimento += 'O peso no sobreano fica um pouco atrás da média. Pode precisar de mais tempo no pasto pra atingir peso de abate. ';
+                }
+            }
+
+            if (deps.GPD !== undefined) {
+                var gpdScore = self._normalizar('GPD', deps.GPD);
+                if (gpdScore >= 70) {
+                    textoCrescimento += 'O ganho de peso diário é <strong>excelente</strong> — ' + filhosLabel + ' vão converter pasto e ração em carne de forma eficiente. Menos dias no cocho = menos custo. ';
+                } else if (gpdScore >= 50) {
+                    textoCrescimento += 'O ganho de peso diário é bom, dentro do esperado pra raça. ';
+                } else {
+                    textoCrescimento += 'O ganho de peso pode ser mais lento que o ideal, o que aumenta o custo de produção na engorda. ';
+                }
+            }
+
+            paragrafos.push(textoCrescimento);
+        }
+
+        // ── 3. MATERNIDADE E REPRODUÇÃO ──
+        var temReprod = deps.MP210 !== undefined || deps.PE !== undefined || deps.IPP !== undefined || deps.P3P !== undefined || deps.PAC !== undefined;
+        if (temReprod) {
+            var textoReprod = '🐄 <strong>Sobre Maternidade e Reprodução:</strong> ';
+
+            if (deps.MP210 !== undefined) {
+                var mpScore = self._normalizar('MP210', deps.MP210);
+                if (mpScore >= 70) {
+                    textoReprod += 'A habilidade materna é um ponto forte — as filhas desse ' + sexoLabel + ' vão ser <strong>excelentes mães</strong>, com bastante leite pra criar bezerros pesados. Isso impacta direto no peso da desmama do rebanho. ';
+                } else if (mpScore >= 45) {
+                    textoReprod += 'A habilidade materna é adequada. As filhas vão dar leite suficiente pra criar bezerros no padrão. ';
+                } else {
+                    textoReprod += 'A habilidade materna é um ponto fraco. Se o objetivo é produzir matrizes, considere cruzar com fêmeas que tenham forte herança leiteira. ';
+                }
+            }
+
+            if (deps.PE !== undefined) {
+                var peScore = self._normalizar('PE', deps.PE);
+                if (peScore >= 65) {
+                    textoReprod += 'O perímetro escrotal é acima da média, o que indica boa fertilidade e precocidade sexual. As filhas tendem a emprenhar mais cedo. ';
+                } else if (peScore < 40) {
+                    textoReprod += 'O perímetro escrotal está abaixo do ideal, o que pode indicar menor fertilidade. Vale avaliar junto com exame andrológico. ';
+                }
+            }
+
+            if (deps.IPP !== undefined) {
+                var ippScore = self._normalizar('IPP', deps.IPP);
+                if (ippScore >= 65) {
+                    textoReprod += 'As filhas vão ter tendência a emprenhar cedo — <strong>precocidade sexual acima da média</strong>. Isso significa novilhas entrando na reprodução mais jovens, gerando receita antes. ';
+                } else if (ippScore < 40) {
+                    textoReprod += 'A precocidade sexual das filhas pode ser um pouco tardia. Novilhas podem demorar mais pra pegar cria. ';
+                }
+            }
+
+            if (deps.P3P !== undefined) {
+                var p3pScore = self._normalizar('P3P', deps.P3P);
+                if (p3pScore >= 65) {
+                    textoReprod += 'A probabilidade de parto precoce é alta — ótimo indicador de que as fêmeas vão ser produtivas desde jovens. ';
+                }
+            }
+
+            if (deps.PAC !== undefined) {
+                var pacScore = self._normalizar('PAC', deps.PAC);
+                if (pacScore >= 65) {
+                    textoReprod += 'A produtividade acumulada é excelente — as filhas vão se manter produtivas por muitos anos, desmamando bezerros pesados safra após safra. <strong>Genética de vaca que paga a conta.</strong> ';
+                } else if (pacScore < 40) {
+                    textoReprod += 'A produtividade acumulada está abaixo da média. As fêmeas podem ter intervalos entre partos mais longos. ';
+                }
+            }
+
+            paragrafos.push(textoReprod);
+        }
+
+        // ── 4. CARCAÇA E QUALIDADE DA CARNE ──
+        var temCarcaca = deps.AOL !== undefined || deps.EGS !== undefined || deps.MD !== undefined || deps.MS !== undefined || deps.PS !== undefined;
+        if (temCarcaca) {
+            var textoCarcaca = '🥩 <strong>Sobre a Carcaça e Qualidade da Carne:</strong> ';
+
+            if (deps.AOL !== undefined) {
+                var aolScore = self._normalizar('AOL', deps.AOL);
+                if (aolScore >= 65) {
+                    textoCarcaca += 'A área de olho de lombo é <strong>acima da média</strong> — os filhos vão ter boa musculatura na carcaça. Isso significa mais carne aproveitável e melhor rendimento no frigorífico. Os açougues e frigoríficos pagam mais por esse tipo de carcaça. ';
+                } else if (aolScore >= 40) {
+                    textoCarcaca += 'A musculatura da carcaça está dentro do padrão. Rendimento de carcaça aceitável. ';
+                } else {
+                    textoCarcaca += 'A musculatura da carcaça pode ficar abaixo do ideal. Os animais podem precisar de mais tempo pra desenvolver carne. ';
+                }
+            }
+
+            if (deps.EGS !== undefined) {
+                var egsScore = self._normalizar('EGS', deps.EGS);
+                if (egsScore >= 65) {
+                    textoCarcaca += 'O acabamento de gordura é bom — os animais vão ter capa de gordura adequada na hora do abate. Isso é fundamental pra <strong>evitar desconto no frigorífico</strong> e garantir carne macia e suculenta. A gordura protege a carcaça na câmara fria. ';
+                } else if (egsScore >= 40) {
+                    textoCarcaca += 'O acabamento de gordura é mediano. Pode precisar de uns dias a mais no pasto pra cobrir bem a carcaça. ';
+                } else {
+                    textoCarcaca += '⚠️ O acabamento de gordura é baixo. Os animais podem ir pro abate sem gordura suficiente, o que gera desconto no preço. Considere cruzar com fêmeas de boa deposição de gordura. ';
+                }
+            }
+
+            if (deps.MD !== undefined || deps.MS !== undefined) {
+                var muscScore = deps.MS !== undefined ? self._normalizar('MS', deps.MS) : self._normalizar('MD', deps.MD);
+                if (muscScore >= 65) {
+                    textoCarcaca += 'A musculatura visual é forte — animais com volume muscular acima da média, boa conformação e boa distribuição de carne nos quartos traseiros. ';
+                } else if (muscScore < 40) {
+                    textoCarcaca += 'A musculatura visual fica um pouco abaixo. Os animais podem ter conformação mais estreita. ';
+                }
+            }
+
+            if (deps.PS !== undefined) {
+                var psScore = self._normalizar('PS', deps.PS);
+                if (psScore >= 65) {
+                    textoCarcaca += 'A precocidade de terminação é boa — os animais vão estar prontos pro abate mais cedo, com menos dias no pasto ou no cocho. Isso reduz custo de produção e acelera o giro do capital. ';
+                } else if (psScore < 40) {
+                    textoCarcaca += 'A precocidade de terminação pode ser mais lenta. Os animais podem precisar de mais tempo pra atingir ponto de abate. ';
+                }
+            }
+
+            paragrafos.push(textoCarcaca);
+        }
+
+        // ── 5. RECOMENDAÇÃO FINAL ──
+        var textoFinal = '🎯 <strong>Recomendação Final:</strong> ';
+
+        if (melhorNota >= 80) {
+            textoFinal += sexoArtigo + ' é um <strong>animal excepcional</strong>. ';
+        } else if (melhorNota >= 65) {
+            textoFinal += sexoArtigo + ' é um <strong>bom animal</strong> com genética acima da média. ';
+        } else if (melhorNota >= 50) {
+            textoFinal += sexoArtigo + ' tem genética dentro da média da raça. ';
+        } else {
+            textoFinal += sexoArtigo + ' tem genética abaixo da média em alguns pontos importantes. ';
+        }
+
+        // Recomendação de uso
+        if (melhorApt === 'cria') {
+            textoFinal += 'O melhor uso é como <strong>reprodutor de cria</strong> — cobrir matrizes pra produzir bezerros de qualidade e fêmeas de reposição. ';
+            if (notas.engorda >= 60) textoFinal += 'Também serve bem pra engorda, já que os filhos vão ter boa capacidade de crescimento. ';
+        } else if (melhorApt === 'engorda') {
+            textoFinal += 'O melhor uso é na <strong>produção de boi gordo</strong> — os filhos vão terminar rápido e dar boa carcaça no frigorífico. ';
+            if (notas.cria >= 60) textoFinal += 'As filhas também servem pra reposição, pois têm boa estrutura maternal. ';
+        } else {
+            textoFinal += 'O melhor uso é na <strong>produção de fêmeas de reposição</strong> — vai dar novilhas precoces, férteis e com boa estrutura pro plantel. ';
+        }
+
+        // Dica de acasalamento
+        var pontosFracos = [];
+        if (notas.cria < 50) pontosFracos.push('maternidade');
+        if (notas.engorda < 50) pontosFracos.push('terminação');
+        if (notas.reposicao < 50) pontosFracos.push('fertilidade');
+
+        if (pontosFracos.length > 0) {
+            textoFinal += '<br><br>💡 <strong>Dica de acasalamento:</strong> Pra compensar os pontos mais fracos (' + pontosFracos.join(', ') + '), cruze com fêmeas que se destaquem nessas áreas. A complementaridade genética é a chave pra produzir bezerros equilibrados.';
+        } else {
+            textoFinal += '<br><br>💡 <strong>Dica:</strong> Animal equilibrado em todas as aptidões. Pode ser usado em qualquer categoria de fêmea com bons resultados.';
+        }
+
+        paragrafos.push(textoFinal);
+
+        return paragrafos;
+    },
+
+    // ════════════════════════════════════════════════════════
     // ANÁLISE PRINCIPAL
     // ════════════════════════════════════════════════════════
     analisar: function () {
@@ -264,6 +483,17 @@ window.genetica = {
                 + '<div style="font-size:14px;line-height:1.5;color:#E5E7EB;">' + frase + '</div>'
                 + '</div>';
         });
+
+        // ── PARECER COMPLETO (Texto Detalhado) ──
+        var parecer = self._gerarParecer(res);
+        if (parecer.length > 0) {
+            html += '<div class="card" style="padding:18px;margin-top:12px;border-left:4px solid #7C3AED;">'
+                + '<div style="font-weight:800;font-size:16px;margin-bottom:12px;color:#A78BFA;">📝 Parecer do Consultor</div>';
+            parecer.forEach(function (p) {
+                html += '<div style="font-size:14px;line-height:1.7;color:#E5E7EB;margin-bottom:14px;">' + p + '</div>';
+            });
+            html += '</div>';
+        }
 
         // Detalhes dos DEPs informados
         var depsInfo = Object.keys(res.deps);
