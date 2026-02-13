@@ -1,6 +1,7 @@
 # 🐂 AgroMacro — Mapa de Progresso do Projeto
 
-> **Referência permanente** — Consultar antes de cada implementação.
+
+olhe tot> **Referência permanente** — Consultar antes de cada implementação.
 > Última atualização: 2026-02-12 18:42
 
 ---
