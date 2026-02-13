@@ -1288,5 +1288,234 @@ window.genetica = {
         sugDiv.innerHTML = html;
         sugDiv.style.display = 'block';
         sugDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    // ════════════════════════════════════════════════════════════════
+    // VERIFICAR PARENTESCO — Consanguinidade até 3ª Geração
+    // ════════════════════════════════════════════════════════════════
+    // Analisa campos pai/mae da vaca e do touro para detectar risco
+    // Coeficiente F > 6.25% = ALERTA VERMELHO
+    // Regra: parentesco diminui 50% a cada geração
+    verificarParentesco: function (vaca, touro) {
+        if (!vaca || !touro) return { risco: false, alertas: [], coeficiente: 0 };
+
+        var alertas = [];
+        var maxCoeficiente = 0;
+
+        // Helper: normalizar nome para comparação
+        function norm(nome) {
+            if (!nome) return '';
+            return nome.toLowerCase().trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // Helper: comparar dois nomes (retorna true se iguais e não vazios)
+        function match(a, b) {
+            if (!a || !b) return false;
+            return norm(a) === norm(b);
+        }
+
+        // Extrair genealogia da vaca (3 gerações)
+        var vacaPai = vaca.pai || vaca.sire || '';
+        var vacaMae = vaca.mae || vaca.dam || '';
+        var vacaAvoPat = vaca.avoPat || vaca.paternalGrandsire || '';
+        var vacaAvoMat = vaca.avoMat || vaca.maternalGrandsire || '';
+        var vacaAvoPPat = vaca.bisavoPat || '';
+        var vacaAvoPMat = vaca.bisavoMat || '';
+
+        // Extrair genealogia do touro
+        var touroPai = touro.pai || touro.sire || '';
+        var touroMae = touro.mae || touro.dam || '';
+        var touroAvoPat = touro.avoPat || touro.paternalGrandsire || '';
+        var touroAvoMat = touro.avoMat || touro.maternalGrandsire || '';
+
+        // ════════════════════════════
+        // GERAÇÃO 1: Pai/Mãe diretos
+        // ════════════════════════════
+
+        // Touro É o pai da vaca → F = 25%
+        if (match(touro.nome || touro.id, vacaPai)) {
+            alertas.push({
+                tipo: 'BLOQUEIO',
+                grau: '1ª geração (pai × filha)',
+                coeficiente: 25,
+                msg: '🚫 O touro é o PAI da vaca! F = 25%. PROIBIDO acasalar.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 25);
+        }
+
+        // Pai do touro = Pai da vaca (meio-irmãos paternos) → F = 12.5%
+        if (match(touroPai, vacaPai) && vacaPai) {
+            alertas.push({
+                tipo: 'BLOQUEIO',
+                grau: '1ª geração (meio-irmãos paternos)',
+                coeficiente: 12.5,
+                msg: '🚫 Touro e vaca são MEIO-IRMÃOS (mesmo pai: ' + vacaPai + '). F = 12.5%.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 12.5);
+        }
+
+        // Mãe do touro = Mãe da vaca (meio-irmãos maternos) → F = 12.5%
+        if (match(touroMae, vacaMae) && vacaMae) {
+            alertas.push({
+                tipo: 'ALERTA',
+                grau: '1ª geração (meio-irmãos maternos)',
+                coeficiente: 12.5,
+                msg: '⚠️ Touro e vaca são MEIO-IRMÃOS (mesma mãe: ' + vacaMae + '). F = 12.5%.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 12.5);
+        }
+
+        // Irmãos completos (mesmo pai E mesma mãe) → F = 25%
+        if (match(touroPai, vacaPai) && match(touroMae, vacaMae) && vacaPai && vacaMae) {
+            // Já capturado acima, mas reforça o alerta
+            alertas.push({
+                tipo: 'BLOQUEIO',
+                grau: '1ª geração (irmãos completos)',
+                coeficiente: 25,
+                msg: '🚫 Touro e vaca são IRMÃOS COMPLETOS! F = 25%. PROIBIDO.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 25);
+        }
+
+        // ════════════════════════════
+        // GERAÇÃO 2: Avós
+        // ════════════════════════════
+
+        // Touro é avô paterno da vaca → F = 12.5%
+        if (match(touro.nome || touro.id, vacaAvoPat)) {
+            alertas.push({
+                tipo: 'BLOQUEIO',
+                grau: '2ª geração (avô × neta)',
+                coeficiente: 12.5,
+                msg: '🚫 Touro é o AVÔ PATERNO da vaca! F = 12.5%.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 12.5);
+        }
+
+        // Touro é avô materno da vaca → F = 12.5%
+        if (match(touro.nome || touro.id, vacaAvoMat)) {
+            alertas.push({
+                tipo: 'BLOQUEIO',
+                grau: '2ª geração (avô materno × neta)',
+                coeficiente: 12.5,
+                msg: '🚫 Touro é o AVÔ MATERNO da vaca! F = 12.5%.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 12.5);
+        }
+
+        // Pai do touro = Avô paterno da vaca (primos 1º grau) → F = 6.25%
+        if (match(touroPai, vacaAvoPat) && vacaAvoPat) {
+            alertas.push({
+                tipo: 'ALERTA',
+                grau: '2ª geração (avô paterno em comum)',
+                coeficiente: 6.25,
+                msg: '⚠️ Pai do touro = Avô paterno da vaca (' + vacaAvoPat + '). F = 6.25%. LIMITE!'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 6.25);
+        }
+
+        // Pai do touro = Avô materno da vaca → F = 6.25%
+        if (match(touroPai, vacaAvoMat) && vacaAvoMat) {
+            alertas.push({
+                tipo: 'ALERTA',
+                grau: '2ª geração (avô materno em comum)',
+                coeficiente: 6.25,
+                msg: '⚠️ Pai do touro = Avô materno da vaca (' + vacaAvoMat + '). F = 6.25%. LIMITE!'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 6.25);
+        }
+
+        // Avô do touro = Pai da vaca → F = 6.25%
+        if (match(touroAvoPat, vacaPai) && vacaPai) {
+            alertas.push({
+                tipo: 'ALERTA',
+                grau: '2ª geração (avô do touro = pai da vaca)',
+                coeficiente: 6.25,
+                msg: '⚠️ Avô do touro (' + touroAvoPat + ') = Pai da vaca. F = 6.25%. LIMITE!'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 6.25);
+        }
+
+        // ════════════════════════════
+        // GERAÇÃO 3: Bisavós
+        // ════════════════════════════
+
+        // Touro é bisavô da vaca → F = 6.25%
+        if (match(touro.nome || touro.id, vacaAvoPPat)) {
+            alertas.push({
+                tipo: 'ALERTA',
+                grau: '3ª geração (bisavô × bisneta)',
+                coeficiente: 6.25,
+                msg: '⚠️ Touro é BISAVÔ PATERNO da vaca! F = 6.25%. NO LIMITE!'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 6.25);
+        }
+
+        if (match(touro.nome || touro.id, vacaAvoPMat)) {
+            alertas.push({
+                tipo: 'ALERTA',
+                grau: '3ª geração (bisavô materno × bisneta)',
+                coeficiente: 6.25,
+                msg: '⚠️ Touro é BISAVÔ MATERNO da vaca! F = 6.25%. NO LIMITE!'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 6.25);
+        }
+
+        // Avô paterno do touro = Avô paterno da vaca (primos 2º grau) → F = 3.125%
+        if (match(touroAvoPat, vacaAvoPat) && vacaAvoPat) {
+            alertas.push({
+                tipo: 'INFO',
+                grau: '3ª geração (avô paterno em comum)',
+                coeficiente: 3.125,
+                msg: '🟡 Avô em comum (' + vacaAvoPat + ') — F = 3.125%. Aceitável mas monitorar.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 3.125);
+        }
+
+        // Avô materno do touro = Avô paterno/materno da vaca → F = 3.125%
+        if (match(touroAvoMat, vacaAvoPat) && vacaAvoPat) {
+            alertas.push({
+                tipo: 'INFO',
+                grau: '3ª geração (avô materno touro = avô paterno vaca)',
+                coeficiente: 3.125,
+                msg: '🟡 Avô em comum (' + vacaAvoPat + ') — F = 3.125%. Aceitável.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 3.125);
+        }
+
+        if (match(touroAvoMat, vacaAvoMat) && vacaAvoMat) {
+            alertas.push({
+                tipo: 'INFO',
+                grau: '3ª geração (avô materno em comum)',
+                coeficiente: 3.125,
+                msg: '🟡 Avô materno em comum (' + vacaAvoMat + ') — F = 3.125%.'
+            });
+            maxCoeficiente = Math.max(maxCoeficiente, 3.125);
+        }
+
+        // ════════════════════════════
+        // RESULTADO FINAL
+        // ════════════════════════════
+        var risco = maxCoeficiente >= 6.25;
+        var bloqueio = maxCoeficiente >= 12.5;
+        var nivel = 'SEGURO';
+
+        if (maxCoeficiente >= 25) nivel = 'PROIBIDO';
+        else if (maxCoeficiente >= 12.5) nivel = 'ALTO RISCO';
+        else if (maxCoeficiente >= 6.25) nivel = 'LIMITE';
+        else if (maxCoeficiente >= 3.125) nivel = 'MONITORAR';
+        else nivel = 'SEGURO';
+
+        return {
+            risco: risco,
+            bloqueio: bloqueio,
+            coeficiente: maxCoeficiente,
+            nivel: nivel,
+            alertas: alertas,
+            resumo: alertas.length > 0
+                ? '⚠️ Risco de Consanguinidade: Parentesco detectado! F = ' + maxCoeficiente + '% (' + nivel + ')'
+                : '✅ Sem parentesco detectado até a 3ª geração. Acasalamento seguro.'
+        };
     }
 };
