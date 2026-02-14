@@ -170,6 +170,7 @@ window.app = {
             case 'home':
                 this.renderKPIs();
                 this.renderAlerts();
+                this.renderAtividadeRecente();
                 if (window.contas) window.contas.renderCotacaoRebanho();
                 if (window.graficos) window.graficos.renderGraficosHome();
                 break;
@@ -432,6 +433,60 @@ window.app = {
                 '<span>' + a.msg + '</span>' +
                 '</div>';
         }).join('');
+    },
+
+    // ── Atividade Recente (Feed na Home) ──
+    renderAtividadeRecente: function () {
+        var container = document.getElementById('atividade-recente');
+        if (!container || !window.data) return;
+
+        var events = window.data.events.slice().reverse().slice(0, 8);
+        if (events.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        var typeMap = {
+            'COMPRA': { icon: '🛒', label: 'Compra', color: '#0F766E' },
+            'VENDA': { icon: '💵', label: 'Venda', color: '#059669' },
+            'CABECA': { icon: '🐄', label: 'Animal', color: '#2563EB' },
+            'LOTE': { icon: '🏷️', label: 'Lote', color: '#7C3AED' },
+            'PASTO': { icon: '🌿', label: 'Pasto', color: '#16A34A' },
+            'MANEJO': { icon: '💉', label: 'Manejo', color: '#DC2626' },
+            'MANEJO_SANITARIO': { icon: '💊', label: 'Manejo', color: '#DC2626' },
+            'ESTOQUE_ENTRADA': { icon: '📦', label: 'Estoque', color: '#D97706' },
+            'OBRA_REGISTRO': { icon: '🔨', label: 'Obra', color: '#92400E' },
+            'CONTA_PAGAR': { icon: '📋', label: 'Conta', color: '#EF4444' },
+            'PESAGEM': { icon: '⚖️', label: 'Pesagem', color: '#0EA5E9' },
+            'CHUVA': { icon: '🌧️', label: 'Chuva', color: '#3B82F6' }
+        };
+
+        var fmt = function (d) {
+            if (!d) return '--';
+            var parts = d.split('T')[0].split('-');
+            return parts.length === 3 ? parts[2] + '/' + parts[1] : d;
+        };
+
+        var html = '<div class="kpi-title">Atividade Recente</div>';
+        events.forEach(function (ev) {
+            var info = typeMap[ev.type] || { icon: '📌', label: ev.type, color: '#64748B' };
+            var desc = ev.nome || ev.name || ev.desc || ev.brinco || ev.tipo || '';
+            var val = '';
+            if (ev.value) val = 'R$ ' + parseFloat(ev.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            else if (ev.qty) val = ev.qty + ' ' + (ev.unit || 'un');
+            else if (ev.peso) val = ev.peso + ' kg';
+            else if (ev.cabecas) val = ev.cabecas + ' cab';
+
+            html += '<div class="history-card" style="border-left:3px solid ' + info.color + ';">' +
+                '<div class="history-card-header">' +
+                '<span style="font-size:13px;font-weight:600;">' + info.icon + ' ' + (desc || info.label) + '</span>' +
+                '<span class="date">' + fmt(ev.date) + '</span>' +
+                '</div>' +
+                (val ? '<div class="history-card-body"><span style="font-size:12px;color:var(--text-2);">' + info.label + '</span><strong style="font-size:13px;">' + val + '</strong></div>' : '') +
+                '</div>';
+        });
+
+        container.innerHTML = html;
     },
 
     resetData: function () {
