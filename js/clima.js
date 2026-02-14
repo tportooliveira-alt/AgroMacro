@@ -31,7 +31,7 @@ window.clima = {
     },
 
     getUltimaChuva: function () {
-        var chuvas = window.data.events.filter(ev => ev.type === 'CHUVA_REGISTRO');
+        var chuvas = window.data.events.filter(function (ev) { return ev.type === 'CHUVA_REGISTRO'; });
         if (chuvas.length === 0) return null;
         return chuvas[chuvas.length - 1]; // Last registered
     }

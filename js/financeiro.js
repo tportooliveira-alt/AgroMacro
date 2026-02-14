@@ -190,7 +190,11 @@ window.financeiro = {
         });
 
         if (allTransactions.length === 0) {
-            html += '<div class="empty-state">Nenhuma movimentação registrada.</div>';
+            html += '<div class="empty-state">'
+                + '<span class="empty-state-icon">💰</span>'
+                + '<div class="empty-state-title">Sem Movimentações</div>'
+                + '<div class="empty-state-text">Registre compras e vendas de gado para visualizar o fluxo de caixa.</div>'
+                + '</div>';
         } else {
             allTransactions.slice(0, 30).forEach(function (ev) {
                 var isEntrada = ev.type === 'VENDA';

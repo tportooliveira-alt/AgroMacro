@@ -116,7 +116,11 @@ window.cabecas = {
         }
 
         if (animais.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>Nenhum animal encontrado</p><p style="font-size:12px;color:var(--text-3);margin-top:4px;">Cadastre animais individualmente usando o formulário acima</p></div>';
+            container.innerHTML = '<div class="empty-state">'
+                + '<span class="empty-state-icon">🐄</span>'
+                + '<div class="empty-state-title">Nenhum animal encontrado</div>'
+                + '<div class="empty-state-text">Cadastre animais individuais usando o formulário acima para acompanhar seu rebanho.</div>'
+                + '</div>';
             return;
         }
 
@@ -160,14 +164,59 @@ window.cabecas = {
                 (a.pasto ? '<span class="animal-tag">Pasto: ' + a.pasto + '</span>' : '') +
                 '</div>' +
                 '<div class="animal-card-actions">' +
-                '<button class="btn-sm" onclick="window.cabecas.openFicha(\'' + a.id + '\')">Ficha</button>' +
-                '<button class="btn-sm" onclick="window.cabecas.registrarPesagem(\'' + a.id + '\')">Pesagem</button>' +
-                '<button class="btn-sm danger-btn-sm" onclick="window.cabecas.remover(\'' + a.id + '\')">Remover</button>' +
+                '<button class="btn-sm" onclick="window.cabecas.openFicha(\'' + a.id + '\')">📋 Ficha</button>' +
+                '<button class="btn-sm" onclick="window.cabecas.registrarPesagem(\'' + a.id + '\')">⚖️ Pesagem</button>' +
+                '<button class="btn-sm" onclick="window.cabecas.editCabeca(\'' + a.id + '\')">✏️ Editar</button>' +
+                '<button class="danger-btn-sm" onclick="window.cabecas.remover(\'' + a.id + '\')">🗑️ Remover</button>' +
                 '</div>' +
                 '</div>';
         });
 
         container.innerHTML = html;
+    },
+
+    // ── Edit animal (pre-fill form) ──
+    editCabeca: function (animalId) {
+        var animal = window.data.events.find(function (e) { return e.id === animalId; });
+        if (!animal) return;
+
+        // Pre-fill form fields
+        var fields = {
+            'cab-brinco': animal.brinco || '',
+            'cab-nome': animal.nome || '',
+            'cab-sexo': animal.sexo || 'macho',
+            'cab-raca': animal.raca || '',
+            'cab-peso': animal.peso || '',
+            'cab-nascimento': animal.dataNasc || '',
+            'cab-lote': animal.lote || '',
+            'cab-pasto': animal.pasto || '',
+            'cab-obs': animal.obs || ''
+        };
+
+        for (var key in fields) {
+            var el = document.getElementById(key);
+            if (el) el.value = fields[key];
+        }
+
+        // Show photo preview if exists
+        if (animal.foto) {
+            this._fotoBase64 = animal.foto;
+            var preview = document.getElementById('cab-foto-preview');
+            if (preview) {
+                preview.src = animal.foto;
+                preview.style.display = 'block';
+            }
+        }
+
+        // Remove old animal so re-save won't duplicate
+        animal.status = 'removido';
+        window.data.save();
+
+        // Scroll to form
+        var form = document.getElementById('form-cabeca');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        window.app.showToast('✏️ Editando ' + animal.brinco + ' — altere e salve.', 'info');
     },
 
     // ── Open detailed ficha (inline expand) ──

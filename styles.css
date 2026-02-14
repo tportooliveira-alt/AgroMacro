@@ -1,70 +1,73 @@
 /* ══════════════════════════════════════════════════════════════════
-   AGROMACRO — GESTÃO FINANCEIRA PECUÁRIA
-   Professional Financial Management Interface
-   Light theme only — Clean, modern, administrative
+   AGROMACRO — GESTÃO PECUÁRIA INTELIGENTE
+   iOS-Inspired Premium Mobile Interface
    ══════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
-/* ═══════ DESIGN TOKENS ═══════ */
+/* ═══════ DESIGN TOKENS — iOS STYLE ═══════ */
 :root {
-    /* Primary — Deep teal/emerald for trust & finance */
-    --primary: #0F766E;
-    --primary-light: #14B8A6;
-    --primary-dark: #0D5D56;
-    --primary-surface: rgba(15, 118, 110, 0.06);
-    --primary-glow: rgba(15, 118, 110, 0.12);
+    /* Primary — Teal */
+    --primary: #0A9B8F;
+    --primary-light: #2DD4BF;
+    --primary-dark: #0D7D74;
+    --primary-surface: rgba(10, 155, 143, 0.08);
+    --primary-glow: rgba(10, 155, 143, 0.15);
 
-    /* Accents */
-    --green: #059669;
-    --green-surface: rgba(5, 150, 105, 0.08);
-    --red: #DC2626;
-    --red-surface: rgba(220, 38, 38, 0.06);
-    --blue: #2563EB;
-    --blue-surface: rgba(37, 99, 235, 0.06);
-    --amber: #D97706;
-    --amber-surface: rgba(217, 119, 6, 0.06);
-    --purple: #7C3AED;
-    --purple-surface: rgba(124, 58, 237, 0.06);
+    /* Accents — iOS System Colors */
+    --green: #34C759;
+    --green-surface: rgba(52, 199, 89, 0.1);
+    --red: #FF3B30;
+    --red-surface: rgba(255, 59, 48, 0.08);
+    --blue: #007AFF;
+    --blue-surface: rgba(0, 122, 255, 0.08);
+    --amber: #FF9500;
+    --amber-surface: rgba(255, 149, 0, 0.08);
+    --purple: #AF52DE;
+    --purple-surface: rgba(175, 82, 222, 0.08);
 
-    /* Backgrounds — Ultra clean white */
-    --bg-0: #F8FAFC;
+    /* Backgrounds — iOS Grouped Table */
+    --bg-0: #F2F2F7;
     --bg-1: #FFFFFF;
     --bg-2: #FFFFFF;
-    --bg-3: #F1F5F9;
-    --bg-4: #E2E8F0;
+    --bg-3: #F2F2F7;
+    --bg-4: #E5E5EA;
 
-    /* Typography */
-    --text-0: #0F172A;
-    --text-1: #334155;
-    --text-2: #64748B;
-    --text-3: #94A3B8;
+    /* Typography — iOS System */
+    --text-0: #1C1C1E;
+    --text-1: #3A3A3C;
+    --text-2: #636366;
+    --text-3: #AEAEB2;
 
-    /* Borders */
-    --border-subtle: #F1F5F9;
-    --border-default: #E2E8F0;
-    --border-emphasis: rgba(15, 118, 110, 0.30);
+    /* Borders — iOS Separator */
+    --border-subtle: rgba(60, 60, 67, 0.06);
+    --border-default: rgba(60, 60, 67, 0.12);
+    --border-emphasis: rgba(10, 155, 143, 0.35);
 
-    /* Shadows (soft) */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
-    --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    --shadow-xl: 0 20px 50px -10px rgba(0, 0, 0, 0.08);
+    /* Shadows — iOS Soft */
+    --shadow-xs: 0 0.5px 1px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
 
-    /* Header & Nav */
-    --header-bg: rgba(255, 255, 255, 0.92);
-    --nav-bg: rgba(255, 255, 255, 0.95);
-    --card-gradient: linear-gradient(145deg, #FFFFFF, #F8FAFC);
+    /* Header & Nav — iOS Glassmorphism */
+    --header-bg: rgba(242, 242, 247, 0.8);
+    --nav-bg: rgba(249, 249, 249, 0.94);
+    --card-gradient: linear-gradient(180deg, #FFFFFF, #FAFAFA);
 
-    /* Radius */
-    --radius-xs: 6px;
-    --radius-sm: 10px;
-    --radius: 14px;
-    --radius-lg: 18px;
-    --radius-xl: 22px;
+    /* Radius — iOS Rounded */
+    --radius-xs: 8px;
+    --radius-sm: 12px;
+    --radius: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 26px;
 
-    /* Keep gold variable for backwards compatibility */
+    /* iOS Spring Transition */
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Back compat */
     --gold: var(--primary);
     --gold-bright: var(--primary-light);
     --gold-dim: var(--primary-dark);
@@ -88,17 +91,19 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
     background: var(--bg-0);
     color: var(--text-0);
     line-height: 1.5;
     min-height: 100vh;
-    padding-bottom: 90px;
+    min-height: 100dvh;
+    padding-bottom: max(90px, calc(80px + env(safe-area-inset-bottom)));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: contain;
 }
 
-/* ═══════ TOP HEADER BAR ═══════ */
+/* ═══════ TOP HEADER BAR — iOS Nav Bar ═══════ */
 .top-header {
     position: fixed;
     top: 0;
@@ -106,11 +111,12 @@ body {
     right: 0;
     z-index: 1000;
     background: var(--header-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border-subtle);
+    backdrop-filter: blur(24px) saturate(190%);
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.1);
     padding: 0 20px;
-    height: 56px;
+    padding-top: env(safe-area-inset-top);
+    height: calc(52px + env(safe-area-inset-top));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -127,39 +133,39 @@ body {
 }
 
 .brand-name {
-    font-size: 18px;
-    font-weight: 800;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--primary);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
 }
 
 .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
 }
 
 .header-action-btn {
-    background: var(--bg-3);
+    background: rgba(120, 120, 128, 0.08);
     border: none;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s var(--ease-out);
 }
 
-.header-action-btn:hover {
-    background: var(--bg-4);
-    transform: scale(1.05);
+.header-action-btn:active {
+    background: rgba(120, 120, 128, 0.16);
+    transform: scale(0.92);
 }
 
 /* ═══════ MAIN CONTENT ═══════ */
 main {
-    margin-top: 56px;
+    margin-top: calc(52px + env(safe-area-inset-top));
     padding: 16px;
     max-width: 640px;
     margin-left: auto;
@@ -196,105 +202,123 @@ main {
 }
 
 .back-btn {
-    background: var(--bg-3);
-    border: 1px solid var(--border-default);
+    background: rgba(120, 120, 128, 0.08);
+    border: none;
     border-radius: 10px;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     font-size: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--text-1);
-    transition: all 0.2s ease;
+    color: var(--primary);
+    transition: all 0.15s ease;
 }
 
-.back-btn:hover {
-    background: var(--bg-4);
+.back-btn:active {
+    background: rgba(120, 120, 128, 0.16);
+    transform: scale(0.92);
 }
 
-/* ═══════ HERO GREETING ═══════ */
+/* ═══════ HERO GREETING — iOS Large Title ═══════ */
 .hero-greeting {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(160deg, #0A9B8F 0%, #2DD4BF 100%);
     border-radius: var(--radius-lg);
-    padding: 24px 24px 20px;
+    padding: 24px 20px 20px;
     margin-bottom: 20px;
     color: white;
     position: relative;
     overflow: hidden;
 }
 
+.hero-greeting::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
 .hero-greeting::after {
-    content: '📊';
+    content: '🐄';
     position: absolute;
     right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 48px;
-    opacity: 0.2;
+    bottom: 16px;
+    font-size: 36px;
+    opacity: 0.12;
+    pointer-events: none;
 }
 
 .greeting-text {
     font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
     color: white;
+    line-height: 1.2;
 }
 
 .greeting-sub {
     font-size: 13px;
     color: rgba(255, 255, 255, 0.8);
     margin-top: 4px;
-    font-weight: 500;
+    font-weight: 400;
 }
 
-/* ═══════ KPI SECTION ═══════ */
+/* ═══════ KPI SECTION — iOS Grouped ═══════ */
 .kpi-section {
     margin-bottom: 20px;
 }
 
 .kpi-title {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-2);
-    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
+    margin-bottom: 10px;
+    padding-left: 4px;
 }
 
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 1px;
+    background: var(--border-default);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
 }
 
 .kpi-card {
     background: var(--bg-1);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius);
-    padding: 14px 16px;
+    border: none;
+    border-radius: 0;
+    padding: 16px;
     text-align: center;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease;
 }
 
-.kpi-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-md);
+.kpi-card:active {
+    background: var(--bg-3);
 }
 
 .kpi-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.4px;
     color: var(--text-3);
     margin-bottom: 6px;
 }
 
 .kpi-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 22px;
+    font-family: -apple-system, 'SF Pro Rounded', 'JetBrains Mono', monospace;
+    font-size: 24px;
     font-weight: 700;
     color: var(--text-0);
     letter-spacing: -0.5px;
@@ -308,48 +332,49 @@ main {
     color: var(--red);
 }
 
-/* ═══════ HOME GRID (Navigation Cards) ═══════ */
+/* ═══════ HOME GRID — iOS Grouped Cards ═══════ */
 .home-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 16px;
 }
 
 .home-card {
     background: var(--bg-1);
-    border: 1px solid var(--border-default);
+    border: none;
     border-radius: var(--radius);
-    padding: 20px 16px 16px;
+    padding: 18px 14px 14px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: all 0.2s ease;
     text-align: center;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
 .home-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
+    background: #F8F8FA;
 }
 
 .home-card:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
+    background: #F0F0F5;
+    transition: all 0.1s ease;
 }
 
 .home-card-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 22px;
     color: white;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 .home-card-icon svg {
@@ -361,8 +386,9 @@ main {
 
 .home-card-title {
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-0);
+    letter-spacing: -0.2px;
 }
 
 .home-card-sub {
@@ -371,21 +397,22 @@ main {
     font-weight: 500;
 }
 
-/* ═══════ ALERTS ═══════ */
+/* ═══════ ALERTS — iOS Grouped ═══════ */
 .alerts-section {
     background: var(--bg-1);
-    border: 1px solid var(--border-default);
+    border: none;
     border-radius: var(--radius);
     padding: 16px;
     margin-top: 16px;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
 .alerts-title {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-2);
+    letter-spacing: 0.5px;
+    color: var(--text-3);
     margin-bottom: 12px;
 }
 
@@ -394,7 +421,7 @@ main {
     align-items: flex-start;
     gap: 10px;
     padding: 10px 0;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 0.5px solid var(--border-default);
     font-size: 13px;
     color: var(--text-1);
     line-height: 1.4;
@@ -409,24 +436,25 @@ main {
     font-size: 16px;
 }
 
-/* ═══════ FORM CARDS ═══════ */
+/* ═══════ FORM CARDS — iOS Inset Grouped ═══════ */
 .card-form {
     background: var(--bg-1);
-    border: 1px solid var(--border-default);
+    border: none;
     border-radius: var(--radius);
     padding: 20px;
     margin-bottom: 16px;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
 .section-title {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-2);
+    letter-spacing: 0.5px;
+    color: var(--text-3);
     margin-bottom: 14px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 0.5px solid var(--border-default);
 }
 
 .form-group {
@@ -447,21 +475,22 @@ main {
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 10px 14px;
-    border: 1px solid var(--border-default);
+    padding: 12px 16px;
+    border: none;
     border-radius: var(--radius-sm);
-    font-size: 14px;
+    font-size: 16px;
     font-family: inherit;
     background: var(--bg-0);
     color: var(--text-0);
     transition: all 0.2s ease;
     outline: none;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-surface);
     background: var(--bg-1);
 }
@@ -473,54 +502,54 @@ main {
 /* ═══════ BUTTONS ═══════ */
 .submit-btn {
     width: 100%;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    padding: 14px 20px;
+    background: var(--primary);
     color: white;
     border: none;
     border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.25s ease;
-    letter-spacing: 0.2px;
+    transition: all 0.2s var(--ease-out);
+    letter-spacing: -0.1px;
 }
 
 .submit-btn:hover {
-    box-shadow: 0 4px 16px var(--primary-glow);
-    transform: translateY(-1px);
+    filter: brightness(1.05);
 }
 
 .submit-btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+    filter: brightness(0.95);
+    transition: transform 0.1s ease;
 }
 
 .danger-btn {
-    background: linear-gradient(135deg, var(--red), #B91C1C) !important;
+    background: var(--red) !important;
 }
 
 .btn-sm {
-    padding: 6px 12px;
-    font-size: 11px;
+    padding: 7px 14px;
+    font-size: 12px;
     font-weight: 600;
-    border: 1px solid var(--border-default);
+    border: none;
     border-radius: var(--radius-xs);
-    background: var(--bg-0);
-    color: var(--text-1);
+    background: rgba(120, 120, 128, 0.08);
+    color: var(--primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s var(--ease-out);
     font-family: inherit;
     white-space: nowrap;
 }
 
 .btn-sm:hover {
     background: var(--primary-surface);
-    border-color: var(--primary);
-    color: var(--primary);
 }
 
 .btn-sm:active {
-    transform: scale(0.96);
+    transform: scale(0.94);
+    transition: transform 0.1s ease;
 }
 
 /* ═══════ BOTTOM NAVIGATION ═══════ */
@@ -531,12 +560,12 @@ main {
     right: 0;
     z-index: 1000;
     background: var(--nav-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 1px solid var(--border-subtle);
+    backdrop-filter: blur(24px) saturate(190%);
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    border-top: 0.5px solid rgba(60, 60, 67, 0.12);
     display: flex;
     justify-content: space-around;
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom));
     max-width: 640px;
     margin: 0 auto;
 }
@@ -545,23 +574,23 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     background: none;
     border: none;
-    color: var(--text-3);
+    color: #8E8E93;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     padding: 4px 12px;
     border-radius: var(--radius-xs);
-    transition: all 0.2s ease;
-    letter-spacing: 0.3px;
+    transition: color 0.2s ease;
+    letter-spacing: 0;
 }
 
 .nav-icon {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -570,8 +599,8 @@ main {
 }
 
 .nav-icon svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
 }
 
 .nav-item.active {
@@ -579,7 +608,7 @@ main {
 }
 
 .nav-item.active .nav-icon {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 /* SVG icon utility */
@@ -599,26 +628,25 @@ main {
     color: var(--primary);
 }
 
-/* ═══════ LOT CARDS — PREMIUM ═══════ */
+/* ═══════ LOT CARDS — iOS Inset Card ═══════ */
 .lot-card {
     background: var(--bg-1);
-    border: 1px solid var(--border-default);
+    border: none;
     border-radius: var(--radius-lg);
     padding: 0;
-    margin-bottom: 14px;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
 .lot-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .lot-card:active {
     transform: scale(0.985);
+    transition: transform 0.1s ease;
 }
 
 .lot-card-header {
@@ -729,7 +757,7 @@ main {
     flex-wrap: wrap;
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid var(--border-subtle);
+    border-top: 0.5px solid var(--border-default);
 }
 
 /* ═══════ HISTORY CARDS ═══════ */
@@ -819,19 +847,19 @@ main {
 /* ═══════ FAB ═══════ */
 .fab {
     position: fixed;
-    bottom: 80px;
+    bottom: max(80px, calc(70px + env(safe-area-inset-bottom)));
     right: 20px;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background: var(--primary);
     color: white;
     border: none;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 300;
     cursor: pointer;
-    box-shadow: 0 6px 20px var(--primary-glow);
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 2px 12px rgba(10, 155, 143, 0.3), 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s var(--ease-out);
     z-index: 100;
     display: flex;
     align-items: center;
@@ -839,36 +867,556 @@ main {
 }
 
 .fab:hover {
-    transform: scale(1.08);
-    box-shadow: 0 8px 30px var(--primary-glow);
+    transform: scale(1.06);
 }
 
 .fab:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
+    transition: transform 0.1s ease;
+}
+
+/* ═══════ FORM VALIDATION ═══════ */
+.form-group input:invalid:not(:placeholder-shown),
+.form-group input.invalid {
+    box-shadow: 0 0 0 3px var(--red-surface);
+    background: rgba(255, 59, 48, 0.04);
+}
+
+.form-group .field-error {
+    font-size: 11px;
+    color: var(--red);
+    margin-top: 4px;
+    font-weight: 500;
+    display: none;
+}
+
+.form-group .field-error.visible {
+    display: block;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ═══════ EMPTY STATES ═══════ */
 .empty-state {
     text-align: center;
-    padding: 40px 20px;
+    padding: 48px 20px;
     color: var(--text-3);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 400;
 }
 
-/* ═══════ PASTO LIST ═══════ */
-.pasto-card {
-    background: var(--bg-1);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 10px;
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+    display: block;
+}
+
+.empty-state-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-2);
+    margin-bottom: 6px;
+}
+
+.empty-state-text {
+    font-size: 13px;
+    color: var(--text-3);
+    line-height: 1.5;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.empty-state-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.pasto-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-md);
+.empty-state-btn:active {
+    transform: scale(0.95);
+}
+
+/* ═══════ ANIMAL CARDS — iOS Style ═══════ */
+.animal-card {
+    background: var(--bg-1);
+    border: none;
+    border-radius: var(--radius);
+    padding: 0;
+    margin-bottom: 10px;
+    overflow: hidden;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+
+.animal-card:active {
+    transform: scale(0.985);
+    transition: transform 0.1s ease;
+}
+
+.animal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 0.5px solid var(--border-default);
+}
+
+.animal-id {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brinco-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    background: var(--primary-surface);
+    color: var(--primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    margin-right: 6px;
+}
+
+.sexo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.sexo-badge.macho {
+    background: var(--blue-surface);
+    color: var(--blue);
+}
+
+.sexo-badge.femea {
+    background: rgba(255, 45, 85, 0.1);
+    color: #FF2D55;
+}
+
+.animal-card-body {
+    padding: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.animal-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: var(--bg-3);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+}
+
+.animal-card-actions {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-top: 0.5px solid var(--border-default);
+    flex-wrap: wrap;
+}
+
+/* ═══════ DANGER BUTTON SMALL ═══════ */
+.danger-btn-sm {
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-xs);
+    background: var(--red-surface);
+    color: var(--red);
+    cursor: pointer;
+    transition: all 0.2s var(--ease-out);
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.danger-btn-sm:active {
+    transform: scale(0.94);
+    background: rgba(255, 59, 48, 0.15);
+}
+
+/* ═══════ FILTER BAR ═══════ */
+.filter-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.filter-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    border-radius: 20px;
+    background: var(--bg-3);
+    color: var(--text-2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.filter-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.filter-btn:active {
+    transform: scale(0.94);
+}
+
+/* ═══════ STAT ROW — iOS Grouped Stats ═══════ */
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border-default);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-xs);
+}
+
+.stat-item {
+    background: var(--bg-1);
+    padding: 12px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-3);
+}
+
+/* ═══════ FICHA MODAL ═══════ */
+.ficha-modal {
+    background: var(--bg-1);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    margin-top: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(10, 155, 143, 0.15);
+    animation: slideDown 0.3s ease-out;
+}
+
+.ficha-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--primary-surface);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.ficha-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.ficha-body {
+    padding: 16px;
+}
+
+.ficha-info p {
+    font-size: 14px;
+    color: var(--text-1);
+    padding: 6px 0;
+    border-bottom: 0.5px solid var(--border-default);
+}
+
+.ficha-info p:last-child {
+    border-bottom: none;
+}
+
+.ficha-info strong {
+    color: var(--text-0);
+    font-weight: 600;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    background: var(--bg-3);
+    border-radius: var(--radius-xs);
+    font-size: 13px;
+}
+
+/* ═══════ DRE STYLES ═══════ */
+.dre-section {
+    background: var(--bg-1);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+
+.dre-table {
+    padding: 12px 16px;
+}
+
+.dre-header {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
+    padding: 8px 0 6px;
+    border-bottom: 0.5px solid var(--border-default);
+}
+
+.dre-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--text-1);
+    border-bottom: 0.5px solid var(--border-default);
+}
+
+.dre-row:last-child {
+    border-bottom: none;
+}
+
+.dre-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    font-style: italic;
+}
+
+.dre-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-0);
+    border-top: 1px solid var(--border-default);
+    margin-top: 4px;
+}
+
+.dre-resultado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    margin-top: 8px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.dre-resultado.positivo {
+    background: var(--green-surface);
+    color: var(--green);
+}
+
+.dre-resultado.negativo {
+    background: var(--red-surface);
+    color: var(--red);
+}
+
+/* ═══════ MATERIAL ITEMS ═══════ */
+.material-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border-default);
+}
+
+.material-item:last-child {
+    border-bottom: none;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-1);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+}
+
+.qty-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.qty-input input {
+    width: 60px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xs);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+    background: var(--bg-0);
+    color: var(--text-0);
+}
+
+.qty-input span {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 500;
+}
+
+/* ═══════ MODAL OVERLAY ═══════ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: var(--bg-1);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 0;
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s var(--ease-out);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 0.5px solid var(--border-default);
+}
+
+.modal-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-0);
+}
+
+.modal-close {
+    background: rgba(120, 120, 128, 0.08);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-2);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* ═══════ PASTO LIST — iOS ═══════ */
+.pasto-card {
+    background: var(--bg-1);
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: background 0.15s ease;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+
+.pasto-card:active {
+    background: var(--bg-3);
 }
 
 .pasto-card-header {
@@ -895,18 +1443,19 @@ main {
 
 .finance-card {
     background: var(--bg-1);
-    border: 1px solid var(--border-default);
+    border: none;
     border-radius: var(--radius);
     padding: 16px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
-.finance-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+.finance-card:active {
+    background: var(--bg-3);
+    transform: scale(0.97);
+    transition: all 0.1s ease;
 }
 
 .finance-card-icon {
@@ -953,10 +1502,12 @@ main {
     right: 0;
     bottom: 0;
     z-index: 10000;
-    background: rgba(0, 0, 0, 0.5);
-    align-items: center;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: flex-end;
     justify-content: center;
-    padding: 20px;
+    padding: 0;
 }
 
 .agro-modal.active {
@@ -964,12 +1515,14 @@ main {
 }
 
 .agro-modal-content {
-    background: var(--bg-1);
-    border-radius: var(--radius);
+    background: var(--bg-0);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     padding: 24px;
+    padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
     width: 100%;
-    max-width: 440px;
-    box-shadow: var(--shadow-xl);
+    max-width: 640px;
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.12);
+    animation: sheetUp 0.35s var(--ease-out);
 }
 
 /* ═══════ MODALS (New) ═══════ */
@@ -979,33 +1532,51 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 10000;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    padding: 16px;
+    padding: 0;
     animation: fadeIn 0.2s ease;
 }
 
 .modal-content {
-    background: var(--bg-1);
-    border-radius: var(--radius-lg);
+    background: var(--bg-0);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     width: 100%;
-    max-width: 440px;
-    box-shadow: var(--shadow-xl);
+    max-width: 640px;
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.12);
     overflow: hidden;
-    animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    animation: sheetUp 0.35s var(--ease-out);
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--border-default);
-    background: var(--bg-3);
+    padding: 16px 20px;
+    border-bottom: 0.5px solid var(--border-default);
+    background: transparent;
+}
+
+/* iOS-style sheet handle */
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--bg-4);
+}
+
+.modal-content {
+    position: relative;
 }
 
 .modal-header h3 {
@@ -1186,6 +1757,16 @@ input[type="radio"] {
 
     to {
         opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sheetUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
         transform: translateY(0);
     }
 }

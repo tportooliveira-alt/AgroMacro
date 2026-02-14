@@ -125,7 +125,10 @@ window.contas = {
                     + '<span class="date">' + (c.vencimento || 'Sem data') + '</span></div>'
                     + '<div class="history-card-body">'
                     + '<strong class="text-red">' + fmt(c.value) + '</strong>'
+                    + '<div style="display:flex;gap:6px;">'
                     + '<button class="btn-sm" onclick="window.contas.pagarConta(\'' + c.id + '\')">✅ Pagar</button>'
+                    + '<button class="danger-btn-sm" onclick="window.contas.excluirConta(\'' + c.id + '\')">🗑️</button>'
+                    + '</div>'
                     + '</div></div>';
             });
         }
@@ -213,6 +216,17 @@ window.contas = {
             + '</div></div>';
 
         container.innerHTML = html;
+    },
+
+    excluirConta: function (contaId) {
+        if (!confirm('Excluir esta conta?')) return;
+        if (!window.data) return;
+        window.data.events = window.data.events.filter(function (ev) {
+            return !(ev.id === contaId && ev.type === 'CONTA_PAGAR');
+        });
+        window.data.save();
+        window.app.showToast('🗑️ Conta excluída.');
+        this.renderContasPagar();
     },
 
     fecharModal: function (id) {

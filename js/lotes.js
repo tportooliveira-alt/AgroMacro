@@ -628,6 +628,51 @@ window.lotes = {
         };
     },
 
+    // ====== EDITAR LOTE ======
+    editLote: function (loteNome) {
+        var lote = this.getLoteByNome(loteNome);
+        if (!lote) return;
+
+        // Scroll to form and fill fields
+        window.app.navigate('lotes');
+
+        setTimeout(function () {
+            var el = function (id) { return document.getElementById(id); };
+            if (el('lote-nome')) el('lote-nome').value = lote.nome || '';
+            if (el('lote-categoria')) el('lote-categoria').value = lote.categoria || '';
+            if (el('lote-raca')) el('lote-raca').value = lote.raca || '';
+            if (el('lote-qtd')) el('lote-qtd').value = lote.qtdAnimais || '';
+            if (el('lote-peso-medio')) el('lote-peso-medio').value = lote.pesoMedio || '';
+            if (el('lote-pasto')) el('lote-pasto').value = lote.pasto || '';
+            if (el('lote-data-entrada')) el('lote-data-entrada').value = lote.dataEntrada || '';
+            if (el('lote-sal')) el('lote-sal').value = lote.salMineral || '';
+            if (el('lote-sal-consumo')) el('lote-sal-consumo').value = lote.salConsumo || '';
+            if (el('lote-racao')) el('lote-racao').value = lote.racao || '';
+            if (el('lote-racao-consumo')) el('lote-racao-consumo').value = lote.racaoConsumo || '';
+            if (el('lote-obs')) el('lote-obs').value = lote.obs || '';
+
+            // Scroll to form
+            var form = document.getElementById('form-lote');
+            if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            window.app.showToast('📝 Editando lote: ' + loteNome + '. Altere e clique em Cadastrar.');
+        }, 200);
+    },
+
+    // ====== EXCLUIR / INATIVAR LOTE ======
+    excluirLote: function (loteNome) {
+        if (!confirm('Tem certeza que deseja inativar o lote "' + loteNome + '"?\n\nOs dados históricos serão mantidos.')) return;
+
+        var lote = this.getLoteByNome(loteNome);
+        if (!lote) return;
+
+        lote.status = 'INATIVO';
+        window.data.save();
+
+        window.app.showToast('🗑️ Lote "' + loteNome + '" inativado.');
+        this.renderList();
+    },
+
     // ====== RENDER LIST ======
     renderList: function () {
         var container = document.getElementById('lotes-list');
@@ -753,6 +798,7 @@ window.lotes = {
                 + '<div class="lot-badges">'
                 + badge
                 + '<span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;">' + (l.qtdAnimais || 0) + ' cab</span>'
+                + (window.fotos ? window.fotos.badge(l.nome) : '')
                 + '</div>'
                 + '</div>'
                 + '<div class="lot-card-body">'
@@ -777,6 +823,9 @@ window.lotes = {
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Hist.</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.registrarProtocolo(\'' + l.nome + '\')">🐄 Reprod.</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.renderFichaSanitaria(\'' + l.nome + '\')">📋 Ficha</button>'
+                + (window.fotos ? '<button class="btn-sm" onclick="event.stopPropagation(); window.fotos.abrirCaptura(\'' + l.nome + '\', \'lote\', \'' + (l.nome || '').replace(/'/g, "\\'") + '\')">📸 Foto</button>' : '')
+                + '<button class="btn-sm" style="background:#2563EB;" onclick="event.stopPropagation(); window.lotes.editLote(\'' + l.nome + '\')">✏️ Editar</button>'
+                + '<button class="btn-sm" style="background:#DC2626;" onclick="event.stopPropagation(); window.lotes.excluirLote(\'' + l.nome + '\')">🗑️ Excluir</button>'
                 + '</div>'
                 + '</div>'
                 + '</div>';

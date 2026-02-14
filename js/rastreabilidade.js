@@ -18,9 +18,9 @@ window.rastreabilidade = {
         if (!container) return;
 
         var lotes = window.lotes.getLotes();
-        var totalAnimais = lotes.reduce((acc, l) => acc + (l.qtdAnimais || 0), 0);
+        var totalAnimais = lotes.reduce(function (acc, l) { return acc + (l.qtdAnimais || 0); }, 0);
         var identificados = 0; // Simulação: 80% identificados
-        var brincos = window.data.events.filter(ev => ev.type === 'BRINCO_SISBOV');
+        var brincos = window.data.events.filter(function (ev) { return ev.type === 'BRINCO_SISBOV'; });
         identificados = brincos.length > 0 ? brincos.length : Math.round(totalAnimais * 0.8);
 
         var html = '<div class="kpi-section">'
@@ -43,7 +43,7 @@ window.rastreabilidade = {
         html += '<div class="section-title" style="margin-top:24px;">Histórico de GTAs Emitidas</div>'
             + '<div id="gta-history" style="margin-top:12px;">';
 
-        var gtas = window.data.events.filter(ev => ev.type === 'GTA_EMITIDA').reverse();
+        var gtas = window.data.events.filter(function (ev) { return ev.type === 'GTA_EMITIDA'; }).reverse();
 
         if (gtas.length === 0) {
             html += '<div class="empty-state">Nenhuma GTA emitida recentemente</div>';
@@ -74,7 +74,7 @@ window.rastreabilidade = {
         if (brinco && window.safebeef) {
             window.safebeef.gerarPassaporte(brinco);
         } else if (!window.safebeef) {
-            alert("Módulo Blockchain não carregado.");
+            window.app.showToast('Módulo Blockchain não carregado.', 'error');
         }
     },
 
@@ -96,6 +96,6 @@ window.rastreabilidade = {
 
         window.data.saveEvent(gta);
         window.rastreabilidade.render();
-        alert("✅ e-GTA Simulada emitida com sucesso!\nSérie: " + gta.serie);
+        window.app.showToast('✅ e-GTA Simulada emitida! Série: ' + gta.serie);
     }
 };

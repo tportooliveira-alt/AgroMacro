@@ -204,8 +204,12 @@ window.estoque = {
             });
         }
         if (items.length === 0) {
-            var catName = categoryFilter === 'remedios' ? ' (Remédios/Vacinas)' : categoryFilter === 'obras' ? ' (Obras)' : '';
-            container.innerHTML = '<div class="empty-state">Nenhum material' + catName + ' no estoque.</div>';
+            var catName = categoryFilter === 'remedios' ? 'Remédios/Vacinas' : categoryFilter === 'obras' ? 'Materiais de Obra' : 'Materiais';
+            container.innerHTML = '<div class="empty-state">'
+                + '<span class="empty-state-icon">📦</span>'
+                + '<div class="empty-state-title">Nenhum ' + catName + ' no Estoque</div>'
+                + '<div class="empty-state-text">Registre uma entrada de insumos para disponibilizar materiais aqui.</div>'
+                + '</div>';
             return;
         }
         var html = items.map(function (item) {
@@ -401,8 +405,12 @@ window.estoque = {
         }
 
         if (keys.length === 0) {
-            var filterMsg = currentFilter !== 'todos' ? ' nesta categoria' : '';
-            container.innerHTML = '<div class="empty-state">Nenhum insumo' + filterMsg + '. Use o formulário para registrar.</div>';
+            var filterName = currentFilter === 'racao_sal' ? 'de Ração/Sal' : currentFilter === 'remedios' ? 'de Remédios' : currentFilter === 'obras' ? 'de Obras' : '';
+            container.innerHTML = '<div class="empty-state">'
+                + '<span class="empty-state-icon">📦</span>'
+                + '<div class="empty-state-title">Nenhum Insumo ' + filterName + '</div>'
+                + '<div class="empty-state-text">Use o formulário acima para registrar entradas de estoque.</div>'
+                + '</div>';
             return;
         }
 

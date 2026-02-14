@@ -48,12 +48,82 @@ window.app = {
         if (window.contas) window.contas.init();
         if (window.rastreabilidade) window.rastreabilidade.init();
         if (window.indicadores) window.indicadores.init();
-        if (window.genetica) window.genetica.init();
-        if (window.mascote) window.mascote.init();
+        if (window.graficos) window.graficos.init();
+        if (window.fotos) window.fotos.init();
+
 
         this.loadConfig();
         this.navigate('home');
+
+        // ══ PWA: Registrar Service Worker ══
+        this.registerServiceWorker();
+
+        // ══ PWA: Capturar prompt de instalação ══
+        var self = this;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            self._installPrompt = e;
+            self.showInstallBanner();
+        });
     },
+
+    // ══ PWA — Service Worker Registration ══
+    registerServiceWorker: function () {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').then(function (reg) {
+                console.log('✅ Service Worker registrado:', reg.scope);
+            }).catch(function (err) {
+                console.warn('⚠️ SW falhou:', err);
+            });
+        }
+    },
+
+    // ══ PWA — Install Banner ══
+    showInstallBanner: function () {
+        // Não mostrar se já foi descartado recentemente
+        var dismissed = localStorage.getItem('agromacro_install_dismissed');
+        if (dismissed) {
+            var diasDesde = (Date.now() - parseInt(dismissed)) / (1000 * 60 * 60 * 24);
+            if (diasDesde < 7) return;
+        }
+
+        var banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.style.cssText = 'position:fixed;bottom:70px;left:12px;right:12px;z-index:9990;'
+            + 'background:linear-gradient(135deg,#0F766E,#115E59);border-radius:16px;padding:16px 18px;'
+            + 'box-shadow:0 8px 32px rgba(0,0,0,0.3);display:flex;align-items:center;gap:14px;'
+            + 'animation:slideUpBanner 0.4s ease;';
+
+        banner.innerHTML = '<div style="font-size:32px;">📲</div>'
+            + '<div style="flex:1;">'
+            + '<div style="color:#fff;font-weight:700;font-size:14px;">Instalar AgroMacro</div>'
+            + '<div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">Acesse offline, direto da tela inicial</div>'
+            + '</div>'
+            + '<button id="pwa-install-btn" style="background:#fff;color:#0F766E;border:none;border-radius:10px;'
+            + 'padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;">Instalar</button>'
+            + '<button id="pwa-dismiss-btn" style="background:none;border:none;color:rgba(255,255,255,0.6);'
+            + 'font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>';
+
+        document.body.appendChild(banner);
+
+        var self = this;
+        document.getElementById('pwa-install-btn').addEventListener('click', function () {
+            if (self._installPrompt) {
+                self._installPrompt.prompt();
+                self._installPrompt.userChoice.then(function (result) {
+                    console.log('PWA install:', result.outcome);
+                    self._installPrompt = null;
+                });
+            }
+            banner.remove();
+        });
+
+        document.getElementById('pwa-dismiss-btn').addEventListener('click', function () {
+            localStorage.setItem('agromacro_install_dismissed', Date.now().toString());
+            banner.remove();
+        });
+    },
+
 
     navigate: function (pageId) {
         // Hide all views
@@ -83,7 +153,6 @@ window.app = {
             // Rebanho hub + sub-views
             'rebanho-hub': 'nav-rebanho', 'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
             'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho',
-            'genetica': 'nav-rebanho',
             // Financeiro hub + sub-views
             'financeiro-hub': 'nav-financeiro', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro',
             'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
@@ -140,6 +209,7 @@ window.app = {
                 if (window.lotes) window.lotes.populateSelect('venda-lote');
                 break;
             case 'obras':
+                if (window.obras) window.obras.renderHistory();
                 if (window.estoque) window.estoque.renderMaterialCheckboxes('obra-materials-list', 'obras');
                 if (window.funcionarios) window.funcionarios.renderWorkersForObra();
                 break;
@@ -163,9 +233,6 @@ window.app = {
                 break;
             case 'config':
                 this.loadConfig();
-                break;
-            case 'genetica':
-                if (window.genetica) window.genetica.render();
                 break;
         }
     },

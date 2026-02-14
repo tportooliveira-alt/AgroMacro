@@ -54,7 +54,7 @@ window.balanca = {
         // Simulação: Busca um animal aleatório
         var animais = window.cabecas ? window.cabecas.getAll() : [];
         if (animais.length === 0) {
-            alert("Nenhum animal cadastrado para simular leitura.");
+            window.app.showToast('Nenhum animal cadastrado para simular leitura.', 'error');
             return;
         }
 
@@ -103,7 +103,7 @@ window.balanca = {
 
     conectarBluetooth: function () {
         if (!navigator.bluetooth) {
-            alert('Seu navegador não suporta Web Bluetooth API (Use Chrome/Edge).');
+            window.app.showToast('Seu navegador não suporta Web Bluetooth API (Use Chrome/Edge).', 'error');
             return;
         }
 
@@ -111,12 +111,12 @@ window.balanca = {
             acceptAllDevices: true,
             optionalServices: ['battery_service', '00001800-0000-1000-8000-00805f9b34fb']
         })
-            .then(device => {
+            .then(function (device) {
                 console.log('Dispositivo selecionado:', device.name);
                 window.balanca.device = device;
                 return device.gatt.connect();
             })
-            .then(server => {
+            .then(function (server) {
                 window.balanca.server = server;
                 window.app.showToast('✅ Conectado: ' + (window.balanca.device.name || 'Dispositivo'));
                 var btn = document.getElementById('btn-bluetooth');
@@ -128,9 +128,9 @@ window.balanca = {
 
                 window.balanca.iniciarLeituraContínua();
             })
-            .catch(error => {
+            .catch(function (error) {
                 console.error('Erro Bluetooth:', error);
-                alert('Erro na conexão: ' + error);
+                window.app.showToast('Erro na conexão: ' + error, 'error');
             });
     },
 

@@ -24,7 +24,7 @@ window.pastos = {
         var obs = document.getElementById('pasto-obs').value;
 
         if (!nome) {
-            alert('Informe o nome do pasto.');
+            window.app.showToast('Informe o nome do pasto.', 'error');
             return;
         }
 
@@ -41,7 +41,7 @@ window.pastos = {
         };
 
         window.data.saveEvent(pasto);
-        alert('Pasto cadastrado com sucesso!');
+        window.app.showToast('✅ Pasto ' + nome + ' cadastrado!');
         document.getElementById('form-pasto').reset();
         this.renderList();
     },
@@ -190,6 +190,8 @@ window.pastos = {
                 + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;display:flex;gap:6px;flex-wrap:wrap;">'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.pastoMgmt.abrirAvaliacao(\'' + p.nome + '\')">🌿 Avaliar</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto && window.lotes.trocarPasto(\'' + (p.nome) + '\')">🔄 Rotacionar</button>'
+                + '<button class="btn-sm" style="background:#2563EB;" onclick="event.stopPropagation(); window.pastos.editPasto(\'' + p.nome + '\')">✏️ Editar</button>'
+                + '<button class="btn-sm" style="background:#DC2626;" onclick="event.stopPropagation(); window.pastos.excluirPasto(\'' + p.nome + '\')">🗑️ Excluir</button>'
                 + '</div>'
                 + '</div>'
                 + '</div>';
@@ -210,5 +212,46 @@ window.pastos = {
         return window.data.events.filter(function (ev) {
             return ev.type === 'PASTO';
         });
+    },
+
+    // ====== EDITAR PASTO ======
+    editPasto: function (pastoNome) {
+        var pastos = this.getPastos();
+        var pasto = null;
+        for (var i = pastos.length - 1; i >= 0; i--) {
+            if (pastos[i].nome === pastoNome) { pasto = pastos[i]; break; }
+        }
+        if (!pasto) return;
+
+        window.app.navigate('pastos');
+
+        setTimeout(function () {
+            var el = function (id) { return document.getElementById(id); };
+            if (el('pasto-nome')) el('pasto-nome').value = pasto.nome || '';
+            if (el('pasto-area')) el('pasto-area').value = pasto.area || '';
+            if (el('pasto-capacidade')) el('pasto-capacidade').value = pasto.capacidade || '';
+            if (el('pasto-tipo')) el('pasto-tipo').value = pasto.tipoPasto || '';
+            if (el('pasto-status')) el('pasto-status').value = pasto.statusPasto || '';
+            if (el('pasto-obs')) el('pasto-obs').value = pasto.obs || '';
+
+            var form = document.getElementById('form-pasto');
+            if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            window.app.showToast('📝 Editando pasto: ' + pastoNome + '. Altere e clique em Cadastrar.');
+        }, 200);
+    },
+
+    // ====== EXCLUIR PASTO ======
+    excluirPasto: function (pastoNome) {
+        if (!confirm('Excluir o pasto "' + pastoNome + '"?\n\nDados serão removidos.')) return;
+
+        // Remove all PASTO events with this name
+        window.data.events = window.data.events.filter(function (ev) {
+            return !(ev.type === 'PASTO' && ev.nome === pastoNome);
+        });
+        window.data.save();
+
+        window.app.showToast('🗑️ Pasto "' + pastoNome + '" excluído.');
+        this.renderList();
     }
 };
