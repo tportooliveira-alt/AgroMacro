@@ -1,6 +1,7 @@
 // ====== APP.JS — AgroMacro Controller ======
 window.app = {
     currentPage: 'home',
+    PERFIL_KEY: 'agromacro_perfil',
 
     // Toast notification system
     showToast: function (msg, type) {
@@ -53,6 +54,7 @@ window.app = {
 
 
         this.loadConfig();
+        this.applyPerfil();
         this.navigate('home');
 
         // ══ PWA: Registrar Service Worker ══
@@ -164,6 +166,13 @@ window.app = {
         var activeNav = navMap[pageId] || 'nav-home';
         var navEl = document.getElementById(activeNav);
         if (navEl) navEl.classList.add('active');
+
+        // Block financial views for campo profile
+        var blockedForCampo = ['compra', 'venda', 'fluxo', 'balanco', 'contas', 'financeiro', 'financeiro-hub'];
+        if (this.getPerfil() === 'campo' && blockedForCampo.indexOf(pageId) >= 0) {
+            this.showToast('Acesso restrito à Gerência', 'warning');
+            return;
+        }
 
         // Render data-driven views
         switch (pageId) {
@@ -497,6 +506,53 @@ window.app = {
                 location.reload();
             }
         }
+    },
+
+    // ══ PERFIL DE ACESSO (Gerência / Campo) ══
+    getPerfil: function () {
+        try {
+            return localStorage.getItem(this.PERFIL_KEY) || 'gerencia';
+        } catch (e) { return 'gerencia'; }
+    },
+
+    setPerfil: function (perfil) {
+        try {
+            localStorage.setItem(this.PERFIL_KEY, perfil);
+        } catch (e) { /* ignore */ }
+        this.applyPerfil();
+        this.navigate('home');
+        this.showToast(perfil === 'campo' ? '🤠 Modo Campo ativado' : '👔 Modo Gerência ativado');
+    },
+
+    applyPerfil: function () {
+        var perfil = this.getPerfil();
+        var body = document.body;
+
+        // Body class
+        body.classList.remove('perfil-gerencia', 'perfil-campo');
+        body.classList.add('perfil-' + perfil);
+
+        // Home sections
+        var homeCampo = document.getElementById('home-campo');
+        var homeGerencia = document.getElementById('home-gerencia');
+        if (homeCampo) homeCampo.style.display = perfil === 'campo' ? 'block' : 'none';
+        if (homeGerencia) homeGerencia.style.display = perfil === 'gerencia' ? 'block' : 'none';
+
+        // Elements with gerencia-only / campo-only classes
+        document.querySelectorAll('.gerencia-only').forEach(function (el) {
+            if (el.id === 'home-gerencia') return; // already handled
+            el.style.display = perfil === 'gerencia' ? '' : 'none';
+        });
+        document.querySelectorAll('.campo-only').forEach(function (el) {
+            if (el.id === 'home-campo') return; // already handled
+            el.style.display = perfil === 'campo' ? '' : 'none';
+        });
+
+        // Config buttons
+        var btnG = document.getElementById('btn-perfil-gerencia');
+        var btnC = document.getElementById('btn-perfil-campo');
+        if (btnG) btnG.classList.toggle('active', perfil === 'gerencia');
+        if (btnC) btnC.classList.toggle('active', perfil === 'campo');
     },
 
     // ── Config persistence ──

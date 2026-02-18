@@ -2441,3 +2441,114 @@ input[type="radio"] {
         background: white;
     }
 }
+
+/* ═══════ PERFIL DE ACESSO ═══════ */
+
+/* ── Seletor de Perfil (Config) ── */
+.perfil-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.perfil-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px;
+    border-radius: var(--radius);
+    border: 2px solid var(--bg-4);
+    background: var(--bg-1);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.perfil-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-surface);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.perfil-btn-icon {
+    font-size: 32px;
+    margin-bottom: 6px;
+}
+
+.perfil-btn-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-0);
+}
+
+.perfil-btn-desc {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+}
+
+/* ── Campo Grid (Home Peão) ── */
+.campo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 4px;
+}
+
+.campo-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-1);
+    border: none;
+    border-radius: 16px;
+    padding: 24px 12px;
+    min-height: 130px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+
+.campo-card:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.campo-card-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    line-height: 1;
+}
+
+.campo-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-0);
+    text-align: center;
+}
+
+.campo-card-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 3px;
+    text-align: center;
+}
+
+/* ── Modo Campo: Esconder valores financeiros ── */
+body.perfil-campo #manejo-custo,
+body.perfil-campo label[for="manejo-custo"],
+body.perfil-campo #obra-custo,
+body.perfil-campo label[for="obra-custo"] {
+    display: none !important;
+}
+
+/* Esconde campos de diária nos workers */
+body.perfil-campo .worker-diaria,
+body.perfil-campo .valor-field {
+    display: none !important;
+}
+
+/* Esconde quaisquer elementos marcados explicitamente */
+body.perfil-campo .gerencia-only {
+    display: none !important;
+}
