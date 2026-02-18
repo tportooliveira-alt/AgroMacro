@@ -1,5 +1,5 @@
 // ====== SERVICE WORKER — AgroMacro PWA Offline ======
-var CACHE_NAME = 'agromacro-v9';
+var CACHE_NAME = 'agromacro-v10';
 var ASSETS = [
     '/',
     '/index.html',
@@ -30,6 +30,7 @@ var ASSETS = [
     '/js/blockchain.js',
     '/js/rastreabilidade.js',
     '/js/fotos.js',
+    '/js/mapa.js',
     '/seed-data.js'
 ];
 

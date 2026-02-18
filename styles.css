@@ -2552,3 +2552,236 @@ body.perfil-campo .valor-field {
 body.perfil-campo .gerencia-only {
     display: none !important;
 }
+
+/* ═══════ MAPA INTERATIVO DE PASTOS ═══════ */
+
+/* Container do mapa — ocupa toda a tela */
+#view-mapa {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+}
+
+#mapa-container {
+    flex: 1;
+    width: 100%;
+    min-height: 400px;
+    z-index: 1;
+}
+
+/* Header do mapa */
+.mapa-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 10;
+}
+
+.mapa-back-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--primary, #2e7d32);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.mapa-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text, #1a1a2e);
+}
+
+/* Toolbar flutuante inferior */
+.mapa-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 10;
+    flex-wrap: wrap;
+}
+
+.mapa-tool-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--primary, #2e7d32);
+    background: white;
+    color: var(--primary, #2e7d32);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mapa-tool-btn:active {
+    background: var(--primary, #2e7d32);
+    color: white;
+    transform: scale(0.95);
+}
+
+/* Legenda de cores */
+.mapa-legenda {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+    font-size: 12px;
+    color: #555;
+}
+
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legenda-cor {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* Popup personalizado do Leaflet */
+.mapa-popup-container .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 0;
+}
+
+.mapa-popup-container .leaflet-popup-content {
+    margin: 0;
+    min-width: 200px;
+}
+
+.mapa-popup {
+    padding: 12px 16px;
+}
+
+.mapa-popup-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.mapa-popup-area {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.mapa-popup-stat {
+    font-size: 14px;
+    padding: 4px 0;
+    font-weight: 500;
+}
+
+.mapa-popup-stat.ok {
+    color: #2e7d32;
+}
+
+.mapa-popup-stat.empty {
+    color: #999;
+}
+
+.mapa-popup-stat.obra {
+    color: #e65100;
+}
+
+.mapa-popup-detail {
+    font-size: 12px;
+    color: #777;
+    padding: 2px 0;
+}
+
+.mapa-popup-valor {
+    font-size: 13px;
+    color: #1b5e20;
+    font-weight: 600;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #eee;
+}
+
+/* Botão destaque mapa na home gerência */
+.mapa-home-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border: 2px solid #a5d6a7;
+    border-radius: 14px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+.mapa-home-btn:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+}
+
+.mapa-home-icon {
+    font-size: 32px;
+}
+
+.mapa-home-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.mapa-home-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1b5e20;
+}
+
+.mapa-home-sub {
+    font-size: 12px;
+    color: #4caf50;
+}
+
+.mapa-home-arrow {
+    margin-left: auto;
+    font-size: 20px;
+    color: #2e7d32;
+}
+
+/* Leaflet draw toolbar em PT-BR — overrides visuais */
+.leaflet-draw-toolbar a {
+    background-color: white !important;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-polygon {
+    background-position: -2px -2px !important;
+}
+
+/* Responsivo — mobile */
+@media (max-width: 480px) {
+    .mapa-legenda {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 4px;
+        justify-content: center;
+    }
+
+    .mapa-toolbar {
+        justify-content: center;
+    }
+}

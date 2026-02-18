@@ -241,6 +241,9 @@ window.app = {
                 if (window.lotes) window.lotes.populateSelect('cab-lote');
                 this.populatePastosSelect('cab-pasto');
                 break;
+            case 'mapa':
+                if (window.mapa) window.mapa.renderMap();
+                break;
             case 'config':
                 this.loadConfig();
                 break;
