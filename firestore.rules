@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Fazendas: any authenticated user can create, members can read/write
+    match /fazendas/{fazendaId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null &&
+        request.auth.uid in resource.data.membros;
+
+      // Events within a farm: only members can access
+      match /events/{eventId} {
+        allow read, write: if request.auth != null &&
+          get(/databases/$(database)/documents/fazendas/$(fazendaId)).data.membros.hasAny([request.auth.uid]);
+      }
+    }
+
+    // Users: each user can only read/write their own profile
+    match /usuarios/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Farm lookup by code: anyone authenticated can read
+    match /codigos/{codigo} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only via server/admin
+    }
+  }
+}

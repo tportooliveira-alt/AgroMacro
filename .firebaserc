@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "fazenda-antares"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

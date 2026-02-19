@@ -70,6 +70,10 @@ window.app = {
             self._installPrompt = e;
             self.showInstallBanner();
         });
+        // Init Firebase Sync
+        if (window.firebaseSync) {
+            window.firebaseSync.init();
+        }
     },
 
     // ══ PWA — Service Worker Registration ══
@@ -265,6 +269,7 @@ window.app = {
                 break;
             case 'config':
                 this.loadConfig();
+                if (window.firebaseSync) window.firebaseSync.renderSyncUI('sync-container');
                 break;
         }
     },
