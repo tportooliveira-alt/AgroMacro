@@ -210,7 +210,7 @@ window.iaConsultor = {
             });
         });
 
-        var model = 'gemini-2.5-flash-preview-05-20';
+        var model = 'gemini-2.0-flash-lite';
         var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + this.API_KEY;
 
         fetch(url, {
