@@ -52,6 +52,7 @@ window.app = {
         if (window.graficos) window.graficos.init();
         if (window.fotos) window.fotos.init();
         if (window.iaConsultor) window.iaConsultor.init();
+        if (window.uxHelpers) window.uxHelpers.init();
 
 
         this.loadConfig();

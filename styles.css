@@ -3637,3 +3637,257 @@ body.perfil-campo .gerencia-only {
     font-size: 14px;
     color: #3A3A3C;
 }
+
+/* ═══════════════════════════════════════════════════
+   UX HELPERS — Onboarding, Empty States, Confirmation
+   ═══════════════════════════════════════════════════ */
+
+/* Onboarding Overlay */
+.ux-onboarding {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: ux-fadein 0.3s ease;
+}
+
+@keyframes ux-fadein {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.ux-fadeout {
+    animation: ux-fadeout 0.3s ease forwards !important;
+}
+
+@keyframes ux-fadeout {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.ux-onboarding-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 32px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: ux-slideup 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes ux-slideup {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.ux-onboarding-icon {
+    font-size: 64px;
+    margin-bottom: 12px;
+}
+
+.ux-onboarding-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1C1C1E;
+    margin-bottom: 8px;
+}
+
+.ux-onboarding-text {
+    font-size: 15px;
+    color: #636366;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.ux-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.ux-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #E5E5EA;
+    transition: all 0.2s;
+}
+
+.ux-dot.active {
+    background: #2563EB;
+    width: 24px;
+    border-radius: 4px;
+}
+
+.ux-onboarding-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ux-btn-primary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
+    transition: transform 0.15s;
+}
+
+.ux-btn-primary:active {
+    transform: scale(0.96);
+}
+
+.ux-btn-secondary {
+    padding: 12px 24px;
+    border: 1.5px solid #E5E5EA;
+    border-radius: 12px;
+    background: #fff;
+    color: #636366;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ux-btn-danger {
+    background: linear-gradient(135deg, #DC2626, #EF4444) !important;
+}
+
+.ux-skip {
+    display: block;
+    margin: 16px auto 0;
+    background: none;
+    border: none;
+    color: #AEAEB2;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Empty States */
+.ux-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #AEAEB2;
+}
+
+.ux-empty-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+}
+
+.ux-empty-msg {
+    font-size: 16px;
+    font-weight: 700;
+    color: #8E8E93;
+    margin-bottom: 4px;
+}
+
+.ux-empty-action {
+    font-size: 13px;
+    color: #AEAEB2;
+    line-height: 1.4;
+}
+
+/* Form field validation help */
+.ux-field-help {
+    font-size: 11px;
+    color: #EF4444;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+/* Submit success animation */
+.ux-btn-success {
+    background: #10B981 !important;
+    animation: ux-pulse-success 0.5s ease;
+}
+
+@keyframes ux-pulse-success {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Confirm Dialog */
+.ux-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 20001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: ux-fadein 0.2s ease;
+}
+
+.ux-confirm-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 24px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.ux-confirm-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+}
+
+.ux-confirm-msg {
+    font-size: 16px;
+    color: #1C1C1E;
+    font-weight: 600;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.ux-confirm-actions {
+    display: flex;
+    gap: 12px;
+}

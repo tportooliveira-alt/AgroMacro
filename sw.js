@@ -1,5 +1,5 @@
 // ====== SERVICE WORKER — AgroMacro PWA Offline ======
-var CACHE_NAME = 'agromacro-v14';
+var CACHE_NAME = 'agromacro-v15';
 var TILE_CACHE = 'agromacro-tiles-v1';
 var ASSETS = [
     '/',
@@ -33,7 +33,8 @@ var ASSETS = [
     '/js/fotos.js',
     '/js/fazenda-data.js',
     '/js/mapa.js',
-    '/js/ia-consultor.js'
+    '/js/ia-consultor.js',
+    '/js/ux-helpers.js'
 ];
 
 // Domínios de tiles para cachear offline
@@ -44,7 +45,7 @@ var TILE_DOMAINS = [
 
 // Install — cache all assets
 self.addEventListener('install', function (event) {
-    console.log('[SW] Installing v14...');
+    console.log('[SW] Installing v15...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
             console.log('[SW] Caching assets');
