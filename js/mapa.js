@@ -114,7 +114,7 @@ window.mapa = {
                 stats.vazios++;
             }
             // Somar hectares de cada polígono
-            var area = self.calcArea(layer);
+            var area = parseFloat(self.calcArea(layer)) || 0;
             stats.totalHectares += area;
         });
         return stats;
@@ -687,14 +687,14 @@ window.mapa = {
     calcArea: function (layer) {
         try {
             var latlngs = layer.getLatLngs()[0];
-            if (!latlngs || latlngs.length < 3) return '0.00';
+            if (!latlngs || latlngs.length < 3) return 0;
             var area = L.GeometryUtil ? L.GeometryUtil.geodesicArea(latlngs) : 0;
             if (!area) {
                 area = this.geodesicArea(latlngs);
             }
-            return (area / 10000).toFixed(2);
+            return parseFloat((area / 10000).toFixed(2));
         } catch (e) {
-            return '0.00';
+            return 0;
         }
     },
 

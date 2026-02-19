@@ -4,6 +4,8 @@ window.cabecas = {
     // ── Save individual animal ──
     save: function () {
         var brinco = document.getElementById('cab-brinco').value.trim();
+        var chip = document.getElementById('cab-chip') ? document.getElementById('cab-chip').value.trim() : '';
+        var tipoId = document.getElementById('cab-tipo-id') ? document.getElementById('cab-tipo-id').value : 'brinco';
         var nome = document.getElementById('cab-nome').value.trim();
         var sexo = document.getElementById('cab-sexo').value;
         var raca = document.getElementById('cab-raca').value.trim();
@@ -32,6 +34,8 @@ window.cabecas = {
         var ev = {
             type: 'CABECA',
             brinco: brinco,
+            chip: chip,
+            tipoIdentificacao: tipoId,
             nome: nome || ('Animal ' + brinco),
             sexo: sexo,
             raca: raca,

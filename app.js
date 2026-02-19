@@ -159,10 +159,10 @@ window.app = {
             'rebanho-hub': 'nav-rebanho', 'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
             'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho', 'mapa': 'nav-rebanho',
             // Financeiro hub + sub-views
-            'financeiro-hub': 'nav-financeiro', 'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro',
+            'financeiro-hub': 'nav-financeiro', 'compra': 'nav-financeiro',
             'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
             // Operações hub + sub-views
-            'operacoes-hub': 'nav-operacoes', 'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes',
+            'operacoes-hub': 'nav-operacoes', 'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes', 'rastreabilidade': 'nav-operacoes',
             // Config
             'config': 'nav-config'
         };
@@ -214,6 +214,7 @@ window.app = {
             case 'manejo':
                 if (window.manejo) window.manejo.renderHistory();
                 if (window.lotes) window.lotes.populateSelect('manejo-lote');
+                this.populatePastosSelect('manejo-pasto');
                 if (window.estoque) window.estoque.renderMaterialCheckboxes('manejo-materials-list', 'remedios');
                 if (window.estoque) window.estoque.populateManejoProducts();
                 break;

@@ -7,7 +7,7 @@ window.iaConsultor = {
     // Opção 1: URL do Cloudflare Worker (produção — API key protegida)
     // Opção 2: API key direto (desenvolvimento/teste local)
     WORKER_URL: '', // Preencher após deploy: 'https://agromacro-ia.SEU-USUARIO.workers.dev'
-    API_KEY: '',    // Apenas para teste local — NÃO usar em produção
+    API_KEY: 'AIzaSyAirnrS2vQYd4KLGx-7TFJUb0iMOSg9cHc',
 
     CACHE_KEY: 'agromacro_ia_historico',
     MAX_HISTORICO: 20,
@@ -154,8 +154,12 @@ window.iaConsultor = {
             // Via Cloudflare Worker (produção)
             this._chamarWorker(mensagensRecentes, contexto);
         } else if (this.API_KEY) {
-            // Via API direta (teste local)
+            // Via API direta
             this._chamarGeminiDireto(mensagensRecentes, contexto);
+        } else {
+            this._mostrarDigitando(false);
+            this.historico.push({ role: 'model', content: '⚙️ IA não configurada. Vá em Configurações e insira sua chave do Google AI Studio.', time: Date.now() });
+            this._renderMensagens();
         }
     },
 
@@ -184,8 +188,10 @@ window.iaConsultor = {
             });
     },
 
-    _chamarGeminiDireto: function (messages, context) {
+    _chamarGeminiDireto: function (messages, context, modelOverride) {
         var self = this;
+        var models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+        var model = modelOverride || models[0];
 
         var systemPrompt = 'Você é um consultor pecuário especialista em bovinocultura de corte no Brasil (Bahia).\n'
             + 'Seu nome é AgroIA. Você trabalha para o app AgroMacro.\n\n'
@@ -197,6 +203,14 @@ window.iaConsultor = {
             + '5. Para diagnósticos de saúde animal, SEMPRE recomende consultar um veterinário presencial\n'
             + '6. Formate respostas com emojis e tópicos curtos para fácil leitura no celular\n'
             + '7. Mantenha respostas com no máximo 300 palavras\n\n'
+            + 'ESPECIALIDADES DE MERCADO:\n'
+            + '- Análise de preço da arroba do boi gordo (CEPEA/B3)\n'
+            + '- Melhores momentos para compra e venda de gado\n'
+            + '- Tendências sazonais do mercado pecuário brasileiro\n'
+            + '- Custo de produção x preço de venda (ponto de equilíbrio)\n'
+            + '- Mercado regional da Bahia e Nordeste\n'
+            + '- Estratégias de negociação com frigoríficos\n'
+            + '- Impacto do câmbio e exportações na arroba\n\n'
             + 'DADOS ATUAIS DA FAZENDA:\n' + context;
 
         var contents = [];
@@ -210,7 +224,6 @@ window.iaConsultor = {
             });
         });
 
-        var model = 'gemini-2.0-flash'; // Free tier: 15 RPM, 1M tokens/dia
         var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + this.API_KEY;
 
         fetch(url, {
@@ -227,20 +240,45 @@ window.iaConsultor = {
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                self._mostrarDigitando(false);
                 var reply = '';
                 if (data.candidates && data.candidates[0] && data.candidates[0].content) {
                     reply = data.candidates[0].content.parts[0].text;
                 } else if (data.error) {
-                    reply = '⚠️ Erro da API: ' + data.error.message;
+                    var errMsg = data.error.message || '';
+                    var errStatus = (data.error.status || '').toUpperCase();
+
+                    // Se falhou com rate limit, tenta o modelo alternativo
+                    var isRateLimit = errMsg.indexOf('quota') >= 0 || errMsg.indexOf('rate') >= 0 || errMsg.indexOf('exceeded') >= 0 || errStatus === 'RESOURCE_EXHAUSTED';
+                    var fallbackModel = models[1];
+                    if (isRateLimit && model !== fallbackModel) {
+                        console.log('IA: Rate limit em ' + model + ', tentando ' + fallbackModel + '...');
+                        self._chamarGeminiDireto(messages, context, fallbackModel);
+                        return; // Não continua — o fallback vai lidar
+                    }
+
+                    if (errMsg.indexOf('API key not valid') >= 0 || errStatus === 'PERMISSION_DENIED') {
+                        reply = '🔑 Chave API inválida. Vá em Configurações e insira uma chave válida do Google AI Studio (aistudio.google.com/apikey).';
+                    } else if (isRateLimit) {
+                        reply = '🕐 Limite temporário atingido em ambos os modelos. Aguarde 1 minuto.\n\n💡 Plano gratuito: ~15 consultas por minuto.';
+                    } else {
+                        reply = '⚠️ Erro da API: ' + errMsg;
+                    }
                 } else {
                     reply = '⚠️ Resposta inesperada da IA.';
                 }
+                self._mostrarDigitando(false);
                 self.historico.push({ role: 'model', content: reply, time: Date.now() });
                 self._salvarHistorico();
                 self._renderMensagens();
             })
             .catch(function (err) {
+                // Se deu erro de rede no modelo principal, tenta fallback
+                var fallbackModel = models[1];
+                if (model !== fallbackModel) {
+                    console.log('IA: Erro de rede em ' + model + ', tentando ' + fallbackModel + '...');
+                    self._chamarGeminiDireto(messages, context, fallbackModel);
+                    return;
+                }
                 self._mostrarDigitando(false);
                 self.historico.push({ role: 'model', content: '📴 Sem conexão. Verifique sua internet.', time: Date.now() });
                 self._renderMensagens();

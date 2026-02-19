@@ -158,49 +158,7 @@
 
         </section>
 
-        <!-- ===================== FINANCEIRO HUB ===================== -->
-        <section id="view-financeiro" class="view hidden">
-            <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('financeiro-hub')">←</button>
-                <h2>Financeiro</h2>
-            </div>
-
-            <div class="home-grid">
-                <button class="home-card" onclick="window.app.navigate('compra')">
-                    <div class="home-card-icon" data-icon="compra"
-                        style="background: linear-gradient(135deg, #0F766E, #115E59);"></div>
-                    <span class="home-card-title">Compra de Gado</span>
-                    <span class="home-card-sub">Registrar entrada</span>
-                </button>
-
-                <button class="home-card" onclick="window.app.navigate('venda')">
-                    <div class="home-card-icon" data-icon="venda"
-                        style="background: linear-gradient(135deg, #14532D, #166534);"></div>
-                    <span class="home-card-title">Venda de Gado</span>
-                    <span class="home-card-sub">Registrar saída</span>
-                </button>
-
-                <button class="home-card" onclick="window.app.navigate('fluxo')">
-                    <div class="home-card-icon" data-icon="fluxo"
-                        style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);"></div>
-                    <span class="home-card-title">Fluxo de Caixa</span>
-                    <span class="home-card-sub">Entradas e saídas</span>
-                </button>
-
-                <button class="home-card" onclick="window.app.navigate('balanco')">
-                    <div class="home-card-icon" data-icon="balanco"
-                        style="background: linear-gradient(135deg, #155E75, #164E63);"></div>
-                    <span class="home-card-title">Balanço / DRE</span>
-                    <span class="home-card-sub">Resultado operacional</span>
-                </button>
-            </div>
-
-            <!-- Quick links -->
-            <div class="tertiary-actions" style="margin-top: 8px;">
-                <button class="action-btn" onclick="window.app.navigate('obras')">Obras</button>
-                <button class="action-btn" onclick="window.app.navigate('funcionarios')">Funcionários</button>
-            </div>
-        </section>
+        <!-- view-financeiro REMOVIDO — duplicava view-financeiro-hub -->
 
         <!-- ===================== COMPRA DE GADO ===================== -->
         <section id="view-compra" class="view hidden">
@@ -699,11 +657,19 @@
                         <option value="outro">📝 Outro</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Lote</label>
-                    <select id="manejo-lote">
-                        <option value="">Selecionar Lote...</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pasto</label>
+                        <select id="manejo-pasto">
+                            <option value="">Selecionar Pasto...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Lote</label>
+                        <select id="manejo-lote">
+                            <option value="">Selecionar Lote...</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Produto / Descrição</label>
@@ -744,24 +710,13 @@
 
         <!-- ===================== OBRAS ===================== -->
         <section id="view-rastreabilidade" class="view hidden">
-            <header class="top-header">
-                <button class="nav-icon" onclick="window.app.toggleMenu()">
-                    <svg viewBox="0 0 24 24" fill="none" class="icon-svg">
-                        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        </path>
-                    </svg>
-                </button>
-                <h1>Rastreabilidade SISBOV</h1>
-                <button class="nav-icon" onclick="window.app.showSection('view-operacoes-hub')">
-                    <svg viewBox="0 0 24 24" fill="none" class="icon-svg">
-                        <path d="M19 12H5m0 0l7 7m-7-7l7-7" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                </button>
-            </header>
-            <main class="page-content" id="rastreabilidade-content">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigate('operacoes-hub')">←</button>
+                <h2>Rastreabilidade SISBOV</h2>
+            </div>
+            <div id="rastreabilidade-content">
                 <!-- Rendered by JS -->
-            </main>
+            </div>
         </section>
 
         <section id="view-obras" class="view hidden">
@@ -1180,8 +1135,24 @@
                         <input type="text" id="cab-brinco" placeholder="Ex: 0123" required>
                     </div>
                     <div class="form-group">
+                        <label>Chip / RFID / Cód. Barras</label>
+                        <input type="text" id="cab-chip" placeholder="Ex: 982000...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label>Nome / Apelido</label>
                         <input type="text" id="cab-nome" placeholder="Opcional">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Identificação</label>
+                        <select id="cab-tipo-id">
+                            <option value="brinco">Brinco</option>
+                            <option value="chip">Chip Eletrônico</option>
+                            <option value="rfid">RFID</option>
+                            <option value="barras">Código de Barras</option>
+                            <option value="brinco_chip">Brinco + Chip</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">

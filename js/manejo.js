@@ -24,6 +24,7 @@ window.manejo = {
 
     save: function () {
         var tipo = document.getElementById('manejo-tipo').value;
+        var pasto = document.getElementById('manejo-pasto') ? document.getElementById('manejo-pasto').value : '';
         var lote = document.getElementById('manejo-lote') ? document.getElementById('manejo-lote').value : '';
         var produtoSelect = document.getElementById('manejo-produto');
         var produtoVal = produtoSelect ? produtoSelect.value : '';
@@ -57,6 +58,7 @@ window.manejo = {
         var ev = {
             type: 'MANEJO',
             tipoManejo: tipo,
+            pasto: pasto,
             lote: lote,
             desc: desc,
             qtdAnimais: qtd,
@@ -156,6 +158,7 @@ window.manejo = {
                 + '<div style="' + descStyle + '">' + (ev.desc || '--') + '</div>'
                 + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'
                 + (ev.qtdAnimais ? '<span style="' + detailStyle + '">🐄 ' + ev.qtdAnimais + ' cab</span>' : '')
+                + (ev.pasto ? '<span style="' + detailStyle + '">🌿 ' + ev.pasto + '</span>' : '')
                 + (ev.lote ? '<span style="' + detailStyle + '">📋 ' + ev.lote + '</span>' : '')
                 + '</div>'
                 + (ev.cost ? '<div style="' + costStyle + '">💰 R$ ' + ev.cost.toFixed(2) + '</div>' : '')
