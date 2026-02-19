@@ -436,6 +436,57 @@ window.lotes = {
         select.innerHTML = html;
     },
 
+    // ====== POPULATE PASTO SELECT ======
+    populatePastoSelect: function (selectId) {
+        var select = document.getElementById(selectId);
+        if (!select) return;
+
+        var pastos = [];
+        var seen = {};
+
+        // 1. Pastos do mapa (FAZENDA_PASTOS do KML)
+        if (window.FAZENDA_PASTOS && Array.isArray(window.FAZENDA_PASTOS)) {
+            window.FAZENDA_PASTOS.forEach(function (p) {
+                var nome = p.nome || '';
+                if (nome && !seen[nome.toLowerCase()]) {
+                    pastos.push(nome);
+                    seen[nome.toLowerCase()] = true;
+                }
+            });
+        }
+
+        // 2. Pastos de lotes existentes (caso tenha algum não mapeado)
+        var lotes = this.getLotes();
+        lotes.forEach(function (l) {
+            var pasto = l.pasto || '';
+            if (pasto && !seen[pasto.toLowerCase()]) {
+                pastos.push(pasto);
+                seen[pasto.toLowerCase()] = true;
+            }
+        });
+
+        // 3. Pastos manuais (localStorage)
+        try {
+            var manuais = JSON.parse(localStorage.getItem('agromacro_pastos_manuais') || '[]');
+            manuais.forEach(function (p) {
+                if (p && !seen[p.toLowerCase()]) {
+                    pastos.push(p);
+                    seen[p.toLowerCase()] = true;
+                }
+            });
+        } catch (e) { }
+
+        // Ordenar
+        pastos.sort();
+
+        var html = '<option value="">Selecionar Pasto...</option>';
+        pastos.forEach(function (p) {
+            html += '<option value="' + p + '">' + p + '</option>';
+        });
+        html += '<option value="__novo__">➕ Novo pasto...</option>';
+        select.innerHTML = html;
+    },
+
     // ====== GMD — Ganho Médio Diário ======
     calcGMD: function (lote) {
         if (!window.data) return null;

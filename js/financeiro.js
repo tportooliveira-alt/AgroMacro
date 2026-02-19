@@ -32,6 +32,21 @@ window.financeiro = {
         var fornecedor = document.getElementById('compra-fornecedor').value;
         var lote = document.getElementById('compra-lote').value;
         var data = document.getElementById('compra-data').value;
+        var pasto = '';
+        var pastoSelect = document.getElementById('compra-pasto');
+        if (pastoSelect) {
+            pasto = pastoSelect.value;
+            if (pasto === '__novo__') {
+                pasto = prompt('Nome do novo pasto:') || '';
+                if (pasto) {
+                    try {
+                        var manuais = JSON.parse(localStorage.getItem('agromacro_pastos_manuais') || '[]');
+                        manuais.push(pasto);
+                        localStorage.setItem('agromacro_pastos_manuais', JSON.stringify(manuais));
+                    } catch (e) { }
+                }
+            }
+        }
 
         if (!qty || !valor) {
             window.app.showToast('Preencha quantidade e valor.', 'error');
@@ -52,6 +67,7 @@ window.financeiro = {
             nome: desc || (qty + ' cabeças compradas'),
             fornecedor: fornecedor,
             lote: lote,
+            pasto: pasto,
             custoCabeca: custoCabeca,
             custoArroba: custoArroba,
             date: data || new Date().toISOString().split('T')[0]
@@ -68,16 +84,16 @@ window.financeiro = {
                     type: 'LOTE', nome: lote, categoria: loteExistente.categoria, raca: loteExistente.raca,
                     qtdAnimais: (loteExistente.qtdAnimais || 0) + qty,
                     pesoMedio: peso || loteExistente.pesoMedio,
-                    pasto: loteExistente.pasto, status: 'ATIVO',
+                    pasto: pasto || loteExistente.pasto, status: 'ATIVO',
                     dataEntrada: loteExistente.dataEntrada,
                     salMineral: loteExistente.salMineral, salConsumo: loteExistente.salConsumo
                 });
-                window.app.showToast('✅ Compra registrada! +' + qty + ' cab em ' + lote + ' | R$ ' + custoCabeca.toFixed(2) + '/cab');
+                window.app.showToast('✅ Compra registrada! +' + qty + ' cab em ' + lote + (pasto ? ' → ' + pasto : '') + ' | R$ ' + custoCabeca.toFixed(2) + '/cab');
             } else {
                 // Criar novo lote
                 window.data.saveEvent({
                     type: 'LOTE', nome: lote, categoria: 'engorda', raca: '',
-                    qtdAnimais: qty, pesoMedio: peso, pasto: '', status: 'ATIVO',
+                    qtdAnimais: qty, pesoMedio: peso, pasto: pasto, status: 'ATIVO',
                     dataEntrada: data || new Date().toISOString().split('T')[0]
                 });
                 window.app.showToast('✅ Compra + Novo lote: ' + lote + ' (' + qty + ' cab) | R$ ' + custoCabeca.toFixed(2) + '/cab');

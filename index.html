@@ -111,18 +111,7 @@
                 <!-- Quick Actions — Atalhos Rápidos -->
                 <div class="kpi-title" style="margin-top:4px;">Ações Rápidas</div>
                 <div class="home-grid">
-                    <button class="home-card" onclick="window.app.navigate('compra')">
-                        <div class="home-card-icon" data-icon="compraRapida"
-                            style="background: linear-gradient(135deg, #0F766E, #115E59);"></div>
-                        <span class="home-card-title">Compra</span>
-                        <span class="home-card-sub">Registrar compra</span>
-                    </button>
-                    <button class="home-card" onclick="window.app.navigate('venda')">
-                        <div class="home-card-icon" data-icon="vendaRapida"
-                            style="background: linear-gradient(135deg, #14532D, #166534);"></div>
-                        <span class="home-card-title">Venda</span>
-                        <span class="home-card-sub">Registrar venda</span>
-                    </button>
+
                     <button class="home-card" onclick="window.app.navigate('manejo')">
                         <div class="home-card-icon" data-icon="manejoRapido"
                             style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);"></div>
@@ -191,6 +180,12 @@
                     <label>Lote de Destino</label>
                     <select id="compra-lote">
                         <option value="">Selecionar Lote...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🌿 Pasto de Destino</label>
+                    <select id="compra-pasto">
+                        <option value="">Selecionar Pasto...</option>
                     </select>
                 </div>
                 <div class="form-group">

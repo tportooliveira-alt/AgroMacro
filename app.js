@@ -229,7 +229,10 @@ window.app = {
                 if (window.estoque) window.estoque.populateManejoProducts();
                 break;
             case 'compra':
-                if (window.lotes) window.lotes.populateSelect('compra-lote');
+                if (window.lotes) {
+                    window.lotes.populateSelect('compra-lote');
+                    window.lotes.populatePastoSelect('compra-pasto');
+                }
                 break;
             case 'venda':
                 if (window.lotes) window.lotes.populateSelect('venda-lote');
