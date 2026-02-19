@@ -534,8 +534,8 @@ window.lotes = {
         var gmdData = this.calcGMD(lote);
         var custoArrobaProduzida = 0;
         if (gmdData && gmdData.gmd > 0 && lote.qtdAnimais > 0) {
-            // Arrobas produzidas por dia (total do lote): GMD × qtd / 15
-            var arrobasDia = (gmdData.gmd * lote.qtdAnimais) / 15;
+            // Arrobas produzidas por dia (total do lote): GMD × qtd / 30 (1@ vivo = 30kg)
+            var arrobasDia = (gmdData.gmd * lote.qtdAnimais) / 30;
             custoArrobaProduzida = arrobasDia > 0 ? custoDiaTotal / arrobasDia : 0;
         }
 
@@ -608,7 +608,7 @@ window.lotes = {
         var custoPorArroba = 0;
         var gmdData = this.calcGMD(lote);
         if (gmdData && gmdData.ganhoTotal > 0 && lote.qtdAnimais > 0) {
-            var arrobasProduzidas = (gmdData.ganhoTotal * lote.qtdAnimais) / 15;
+            var arrobasProduzidas = (gmdData.ganhoTotal * lote.qtdAnimais) / 30;
             custoPorArroba = arrobasProduzidas > 0 ? custoTotal / arrobasProduzidas : 0;
         }
 

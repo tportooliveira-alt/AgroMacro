@@ -301,6 +301,8 @@ window.app = {
         }
 
         var pesoMedio = pesados > 0 ? (pesoTotal / pesados).toFixed(0) : '--';
+        // 1@ vivo = 30 kg (15 kg só após abate)
+        var pesoArrobas = pesados > 0 ? (pesoTotal / pesados / 30).toFixed(1) : '--';
 
         // Get projeção summary
         var projStr = '';
@@ -318,7 +320,7 @@ window.app = {
             + '<div class="kpi-card"><div class="kpi-label">Rebanho</div><div class="kpi-value positive">' + totalAnimais + ' cab</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value">' + totalLotes + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Pastos</div><div class="kpi-value">' + totalPastos + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div><div style="font-size:11px;color:var(--text-2,#6B7280);font-weight:600;margin-top:2px;">@ ' + pesoArrobas + '</div></div>'
             + projStr;
     },
 

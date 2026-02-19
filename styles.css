@@ -2553,7 +2553,7 @@ body.perfil-campo .gerencia-only {
     display: none !important;
 }
 
-/* ═══════ MAPA INTERATIVO DE PASTOS ═══════ */
+/* ═══════ MAPA INTERATIVO DE PASTOS v2 ═══════ */
 
 /* Container do mapa — ocupa toda a tela */
 #view-mapa {
@@ -2561,6 +2561,409 @@ body.perfil-campo .gerencia-only {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 60px);
+}
+
+#mapa-container {
+    flex: 1;
+    width: 100%;
+    min-height: 300px;
+    z-index: 1;
+}
+
+/* Header do mapa */
+.mapa-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 10;
+}
+
+.mapa-back-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--primary, #0A9B8F);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.mapa-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-0, #1a1a2e);
+}
+
+/* ── Mini-Dashboard ── */
+.mapa-dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 10;
+}
+
+.mapa-dash-card {
+    background: linear-gradient(135deg, #F0F4FF, #E8EDFF);
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.mapa-dash-card.mapa-dash-green {
+    background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+    border-color: rgba(16, 185, 129, 0.15);
+}
+
+.mapa-dash-card.mapa-dash-blue {
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+    border-color: rgba(59, 130, 246, 0.15);
+}
+
+.mapa-dash-card.mapa-dash-gray {
+    background: linear-gradient(135deg, #F9FAFB, #F3F4F6);
+    border-color: rgba(107, 114, 128, 0.1);
+}
+
+.mapa-dash-num {
+    display: block;
+    font-size: 20px;
+    font-weight: 900;
+    color: #1E293B;
+    line-height: 1.1;
+}
+
+.mapa-dash-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* ── Filtros + Busca ── */
+.mapa-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 10;
+    flex-wrap: wrap;
+}
+
+.mapa-filters {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    overflow-x: auto;
+}
+
+.mapa-filter-btn {
+    white-space: nowrap;
+    padding: 5px 10px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 16px;
+    background: #fff;
+    color: #6B7280;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mapa-filter-btn:active {
+    transform: scale(0.95);
+}
+
+.mapa-filter-btn.active {
+    background: linear-gradient(135deg, #0A9B8F, #2DD4BF);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(10, 155, 143, 0.3);
+}
+
+.mapa-search {
+    min-width: 120px;
+}
+
+.mapa-search input {
+    width: 100%;
+    padding: 6px 12px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 16px;
+    font-size: 12px;
+    font-family: inherit;
+    background: #F9FAFB;
+    color: #1E293B;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.mapa-search input:focus {
+    border-color: var(--primary, #0A9B8F);
+    box-shadow: 0 0 0 3px rgba(10, 155, 143, 0.12);
+}
+
+/* ── Toolbar inferior ── */
+.mapa-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 10;
+    flex-wrap: wrap;
+}
+
+.mapa-tool-btn {
+    padding: 6px 12px;
+    border-radius: 16px;
+    border: 1.5px solid var(--primary, #0A9B8F);
+    background: white;
+    color: var(--primary, #0A9B8F);
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mapa-tool-btn:active {
+    background: var(--primary, #0A9B8F);
+    color: white;
+    transform: scale(0.95);
+}
+
+/* ── Legenda ── */
+.mapa-legenda {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+    font-size: 10px;
+    color: #6B7280;
+    flex-wrap: wrap;
+}
+
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+.legenda-cor {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* ── Tabela de Pastos (planilha) ── */
+.mapa-table-container {
+    flex: 1;
+    overflow: auto;
+    background: #F9FAFB;
+}
+
+.mapa-table-wrap {
+    padding: 8px;
+    min-height: 100%;
+}
+
+.mapa-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.mapa-table thead {
+    background: linear-gradient(135deg, #1E293B, #334155);
+}
+
+.mapa-table th {
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    color: #E2E8F0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.mapa-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #F1F5F9;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.mapa-table tbody tr:hover {
+    background: #F0F9FF;
+}
+
+.mapa-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Labels dos pastos — GRANDES e VISÍVEIS ── */
+.mapa-pasto-label {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.mapa-pasto-label span {
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.95),
+        0 0 6px rgba(0, 0, 0, 0.7),
+        0 0 12px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+    overflow: visible;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+}
+
+/* ── Popup premium ── */
+.mapa-popup-premium .leaflet-popup-content-wrapper {
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+    padding: 0;
+}
+
+.mapa-popup-premium .leaflet-popup-content {
+    margin: 8px;
+    min-width: 220px;
+}
+
+.mapa-popup-premium .leaflet-popup-tip {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Botão mapa na home ── */
+.mapa-home-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border: 2px solid #a5d6a7;
+    border-radius: 14px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+.mapa-home-btn:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+}
+
+.mapa-home-icon {
+    font-size: 32px;
+}
+
+.mapa-home-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.mapa-home-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1b5e20;
+}
+
+.mapa-home-sub {
+    font-size: 12px;
+    color: #4caf50;
+}
+
+.mapa-home-arrow {
+    margin-left: auto;
+    font-size: 20px;
+    color: #2e7d32;
+}
+
+/* Leaflet draw toolbar */
+.leaflet-draw-toolbar a {
+    background-color: white !important;
+}
+
+/* ── Responsivo mobile ── */
+@media (max-width: 480px) {
+    .mapa-dashboard {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 6px 8px;
+    }
+
+    .mapa-dash-num {
+        font-size: 16px;
+    }
+
+    .mapa-dash-label {
+        font-size: 8px;
+    }
+
+    .mapa-dashboard .mapa-dash-card {
+        padding: 6px 4px;
+    }
+
+    .mapa-legenda {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 4px;
+        justify-content: center;
+    }
+
+    .mapa-toolbar {
+        justify-content: center;
+    }
+
+    .mapa-controls {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .mapa-search {
+        width: 100%;
+    }
+
+    .mapa-table {
+        font-size: 11px;
+    }
+
+    .mapa-table th,
+    .mapa-table td {
+        padding: 8px 5px;
+    }
 }
 
 #mapa-container {
