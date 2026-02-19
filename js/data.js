@@ -12,6 +12,20 @@ window.data = {
         try {
             var raw = localStorage.getItem(this.STORAGE_KEY);
             this.events = raw ? JSON.parse(raw) : [];
+            // Auto-deduplicate: remove exact duplicates by id or content
+            var seen = {};
+            var before = this.events.length;
+            this.events = this.events.filter(function (ev) {
+                // Use id if available, otherwise hash by content
+                var key = ev.id || JSON.stringify({ t: ev.type, n: ev.nome, d: ev.date, v: ev.value });
+                if (seen[key]) return false;
+                seen[key] = true;
+                return true;
+            });
+            if (this.events.length < before) {
+                console.log('🧹 Removidos ' + (before - this.events.length) + ' eventos duplicados');
+                this.save();
+            }
         } catch (e) {
             console.error('Erro ao carregar dados:', e);
             this.events = [];

@@ -572,7 +572,20 @@ window.mapa = {
                     '</div>';
             }
 
-            if (info.lotes.length > 0) {
+            if (info.loteDetails && info.loteDetails.length > 0) {
+                html += '<div style="background:#F5F3FF;border-radius:8px;padding:8px;margin-bottom:6px;">' +
+                    '<div style="font-size:10px;color:#7C3AED;font-weight:700;margin-bottom:4px;">🏷️ LOTES NESTE PASTO</div>';
+                info.loteDetails.forEach(function (ld) {
+                    var catEmoji = { 'cria': '🐣', 'recria': '🐄', 'engorda': '🥩', 'matrizes': '👸', 'touros': '🐂' }[ld.categoria] || '🐄';
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;margin-bottom:2px;background:rgba(124,58,237,0.08);border-radius:6px;">' +
+                        '<div style="font-size:12px;font-weight:600;color:#374151;">' + catEmoji + ' ' + ld.nome + '</div>' +
+                        '<div style="font-size:11px;text-align:right;">' +
+                        '<span style="font-weight:700;color:#059669;">' + ld.qtd + ' cab</span>' +
+                        (ld.pesoMedio > 0 ? ' · <span style="font-weight:600;color:#1E40AF;">' + ld.pesoMedio + ' kg</span>' : '') +
+                        '</div></div>';
+                });
+                html += '</div>';
+            } else if (info.lotes.length > 0) {
                 html += '<div style="background:#F5F3FF;border-radius:8px;padding:8px;margin-bottom:6px;">' +
                     '<div style="font-size:10px;color:#7C3AED;font-weight:700;">🏷️ LOTES</div>' +
                     '<div style="font-size:12px;color:#374151;font-weight:500;margin-top:2px;">' + info.lotes.join(', ') + '</div>' +
@@ -720,6 +733,7 @@ window.mapa = {
         var info = {
             totalAnimais: 0,
             lotes: [],
+            loteDetails: [],
             emObra: false,
             obraNome: '',
             ultimaObra: '',
@@ -745,6 +759,13 @@ window.mapa = {
                     var qtd = lt.qtdAnimais || lt.quantidade || lt.cabecas || 0;
                     info.totalAnimais += qtd;
                     info.lotes.push(loteNome);
+                    info.loteDetails.push({
+                        nome: loteNome,
+                        qtd: qtd,
+                        pesoMedio: lt.pesoMedio || 0,
+                        categoria: lt.categoria || 'Não definida',
+                        raca: lt.raca || ''
+                    });
                 }
             }
 
