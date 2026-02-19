@@ -229,7 +229,7 @@ window.app = {
                 if (window.manejo) window.manejo.renderHistory();
                 if (window.lotes) window.lotes.populateSelect('manejo-lote');
                 this.populatePastosSelect('manejo-pasto');
-                if (window.estoque) window.estoque.renderMaterialCheckboxes('manejo-materials-list', 'remedios');
+                if (window.estoque) window.estoque.renderMaterialCheckboxes('manejo-materials-list', null);
                 if (window.estoque) window.estoque.populateManejoProducts();
                 break;
             case 'compra':

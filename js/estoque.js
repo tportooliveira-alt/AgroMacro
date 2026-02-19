@@ -136,14 +136,15 @@ window.estoque = {
         return items.sort(function (a, b) { return a.name.localeCompare(b.name); });
     },
 
-    // Populates the manejo-produto dropdown with remedios from stock
+    // Populates the manejo-produto dropdown with ALL items from stock
     populateManejoProducts: function () {
         var select = document.getElementById('manejo-produto');
         if (!select) return;
-        var items = this.getStockByCategory('remedios');
+        var items = this.getStockItems(); // ALL items, no filter
         var html = '<option value="">Selecionar do Estoque...</option>';
         items.forEach(function (item) {
-            html += '<option value="' + item.name + '">💊 ' + item.name + ' (' + item.qty + ' ' + item.unit + ')</option>';
+            var catIcon = item.category === 'racao_sal' ? '🧂' : item.category === 'remedios' ? '💊' : item.category === 'obras' ? '🔨' : '📦';
+            html += '<option value="' + item.name + '">' + catIcon + ' ' + item.name + ' (' + item.qty + ' ' + item.unit + ')</option>';
         });
         html += '<option value="__outro__">📝 Outro (digitar)</option>';
         select.innerHTML = html;
