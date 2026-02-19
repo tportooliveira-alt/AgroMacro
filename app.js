@@ -243,7 +243,7 @@ window.app = {
                 break;
             case 'obras':
                 if (window.obras) window.obras.renderHistory();
-                if (window.estoque) window.estoque.renderMaterialCheckboxes('obra-materials-list', 'obras');
+                if (window.estoque) window.estoque.renderMaterialCheckboxes('obra-materials-list', null);
                 if (window.funcionarios) window.funcionarios.renderWorkersForObra();
                 break;
             case 'funcionarios':
@@ -339,8 +339,8 @@ window.app = {
             try {
                 var proj = window.indicadores.calcProjecaoReceita();
                 if (proj.totalReceita > 0) {
-                    projStr = '<div class="kpi-card"><div class="kpi-label">📈 Receita Proj.</div><div class="kpi-value positive">R$ ' + (proj.totalReceita / 1000).toFixed(0) + 'k</div></div>'
-                        + '<div class="kpi-card"><div class="kpi-label">' + (proj.totalLucro >= 0 ? '✅' : '🚨') + ' Lucro Proj.</div><div class="kpi-value ' + (proj.totalLucro >= 0 ? 'positive' : 'negative') + '">R$ ' + (proj.totalLucro / 1000).toFixed(0) + 'k</div></div>';
+                    projStr = '<div class="kpi-card"><div class="kpi-label">📈 Receita Proj.</div><div class="kpi-value positive">R$ ' + proj.totalReceita.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div></div>'
+                        + '<div class="kpi-card"><div class="kpi-label">' + (proj.totalLucro >= 0 ? '✅' : '🚨') + ' Lucro Proj.</div><div class="kpi-value ' + (proj.totalLucro >= 0 ? 'positive' : 'negative') + '">R$ ' + proj.totalLucro.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div></div>';
                 }
             } catch (e) { /* ignore */ }
         }
@@ -351,7 +351,7 @@ window.app = {
             + '<div class="kpi-card"><div class="kpi-label">Pastos</div><div class="kpi-value">' + totalPastos + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div><div style="font-size:11px;color:var(--text-2,#6B7280);font-weight:600;margin-top:2px;">@ ' + pesoArrobas + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">@ Total Rebanho</div><div class="kpi-value">' + totalArrobas.toFixed(0) + ' @</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">💰 Valor em Pé</div><div class="kpi-value ' + (valorRebanho > 0 ? 'positive' : '') + '">' + (valorRebanho > 0 ? 'R$ ' + (valorRebanho / 1000).toFixed(0) + 'k' : 'Definir @') + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">💰 Valor Rebanho</div><div class="kpi-value ' + (valorRebanho > 0 ? 'positive' : '') + '">' + (valorRebanho > 0 ? 'R$ ' + valorRebanho.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 'Definir @ em Config') + '</div></div>'
             + projStr;
     },
 

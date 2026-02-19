@@ -762,7 +762,7 @@ window.lotes = {
 
         // Lot cards
         html += allLotes.slice().reverse().map(function (l) {
-            var pastoAtual = l.pastoAtual || 'Sem pasto';
+            var pastoAtual = l.pasto || 'Sem pasto';
             var categoria = l.categoria || 'Não definida';
 
             // Category emoji
@@ -854,7 +854,7 @@ window.lotes = {
                 + '</div>'
                 + '<div class="lot-card-body">'
                 + '<div class="lot-info-grid">'
-                + '<div><span class="label">Pasto</span><span class="value">' + (l.pastoAtual || 'Sem pasto') + '</span></div>'
+                + '<div><span class="label">Pasto</span><span class="value">' + (l.pasto || 'Sem pasto') + '</span></div>'
                 + '<div><span class="label">Peso Médio</span><span class="value">' + (l.pesoMedio || 0) + ' kg</span></div>'
                 + '<div><span class="label">GMD</span><span class="value text-green">' + gmdText + '</span></div>'
                 + '<div><span class="label">R$/cab</span><span class="value">' + custoCabText + '</span></div>'
@@ -864,7 +864,7 @@ window.lotes = {
                 + resultadoHtml
                 + leituraHtml
                 + '<div class="lot-actions">'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirManejo(\'' + l.nome + '\')">💉 Manejo</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.manejoRapido(\'' + l.nome + '\', \'vacinacao\')">💉 Manejo</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🔄 Mover</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.nutricao.abrirLeitura(\'' + l.nome + '\')">🍽️ Cocho</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
