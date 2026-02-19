@@ -1,5 +1,5 @@
 // ====== SERVICE WORKER — AgroMacro PWA Offline ======
-var CACHE_NAME = 'agromacro-v16';
+var CACHE_NAME = 'agromacro-v20';
 var TILE_CACHE = 'agromacro-tiles-v1';
 var ASSETS = [
     '/',
@@ -46,7 +46,7 @@ var TILE_DOMAINS = [
 
 // Install — cache all assets
 self.addEventListener('install', function (event) {
-    console.log('[SW] Installing v16...');
+    console.log('[SW] Installing v20...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
             console.log('[SW] Caching assets');
@@ -59,7 +59,7 @@ self.addEventListener('install', function (event) {
 
 // Activate — clean old caches (keep tile cache)
 self.addEventListener('activate', function (event) {
-    console.log('[SW] Activating v13...');
+    console.log('[SW] Activating v20...');
     event.waitUntil(
         caches.keys().then(function (keys) {
             return Promise.all(
@@ -126,23 +126,23 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    // ══ Local assets: Cache-first ══
+    // ══ Local assets: Network-first, cache fallback ══
     event.respondWith(
-        caches.match(event.request).then(function (cached) {
-            if (cached) return cached;
-            return fetch(event.request).then(function (response) {
-                if (response.status === 200) {
-                    var clone = response.clone();
-                    caches.open(CACHE_NAME).then(function (cache) {
-                        cache.put(event.request, clone);
-                    });
-                }
-                return response;
-            });
-        }).catch(function () {
-            if (event.request.mode === 'navigate') {
-                return caches.match('/index.html');
+        fetch(event.request).then(function (response) {
+            if (response.status === 200) {
+                var clone = response.clone();
+                caches.open(CACHE_NAME).then(function (cache) {
+                    cache.put(event.request, clone);
+                });
             }
+            return response;
+        }).catch(function () {
+            return caches.match(event.request).then(function (cached) {
+                if (cached) return cached;
+                if (event.request.mode === 'navigate') {
+                    return caches.match('/index.html');
+                }
+            });
         })
     );
 });
