@@ -76,7 +76,12 @@ window.financeiro = {
         window.data.saveEvent(ev);
 
         // ══ AUTO-CRIAR / ATUALIZAR LOTE ══
-        if (lote && window.lotes) {
+        // Se não selecionou lote, criar um automaticamente
+        if (!lote) {
+            lote = desc || ('Compra ' + data);
+        }
+
+        if (window.lotes) {
             var loteExistente = window.lotes.getLoteByNome(lote);
             if (loteExistente) {
                 // Incrementar quantidade no lote existente
@@ -96,7 +101,7 @@ window.financeiro = {
                     qtdAnimais: qty, pesoMedio: peso, pasto: pasto, status: 'ATIVO',
                     dataEntrada: data || new Date().toISOString().split('T')[0]
                 });
-                window.app.showToast('✅ Compra + Novo lote: ' + lote + ' (' + qty + ' cab) | R$ ' + custoCabeca.toFixed(2) + '/cab');
+                window.app.showToast('✅ Compra + Novo lote: ' + lote + ' (' + qty + ' cab)' + (pasto ? ' → ' + pasto : '') + ' | R$ ' + custoCabeca.toFixed(2) + '/cab');
             }
         } else {
             window.app.showToast('✅ Compra registrada! R$ ' + custoCabeca.toFixed(2) + '/cab');
