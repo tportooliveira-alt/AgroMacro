@@ -6,8 +6,8 @@ window.iaConsultor = {
     // ══ CONFIGURAÇÃO ══
     // Opção 1: URL do Cloudflare Worker (produção — API key protegida)
     // Opção 2: API key direto (desenvolvimento/teste local)
-    WORKER_URL: '', // Preencher após deploy: 'https://agromacro-ia.SEU-USUARIO.workers.dev'
-    API_KEY: 'AIzaSyAirnrS2vQYd4KLGx-7TFJUb0iMOSg9cHc',
+    WORKER_URL: '',
+    API_KEY: '',
 
     CACHE_KEY: 'agromacro_ia_historico',
     MAX_HISTORICO: 20,
@@ -27,10 +27,60 @@ window.iaConsultor = {
         } catch (e) { }
 
         console.log('IA Consultor Ready' + (this._temConexao() ? ' (conectada)' : ' (sem config)'));
+
+        // Populate config field if key exists
+        var configField = document.getElementById('config-api-key');
+        if (configField && this.API_KEY) {
+            configField.value = this.API_KEY;
+        }
     },
 
     _temConexao: function () {
         return !!(this.WORKER_URL || this.API_KEY);
+    },
+
+    // ══ Salvar chave da tela de configuração ══
+    salvarChaveConfig: function () {
+        var key = (document.getElementById('config-api-key').value || '').trim();
+        this.API_KEY = key;
+        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key }));
+        if (key) {
+            window.app.showToast('🔑 Chave API salva!', 'success');
+        }
+    },
+
+    // ══ Testar conexão IA ══
+    testarChave: function () {
+        var key = (document.getElementById('config-api-key').value || '').trim();
+        if (!key) {
+            window.app.showToast('Cole sua chave API primeiro.', 'error');
+            return;
+        }
+        this.API_KEY = key;
+        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key }));
+
+        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
+        window.app.showToast('🧪 Testando conexão...', 'success');
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: 'Diga apenas: OK' }] }],
+                generationConfig: { maxOutputTokens: 10 }
+            })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.candidates) {
+                    window.app.showToast('✅ IA conectada com sucesso!', 'success');
+                } else if (data.error) {
+                    window.app.showToast('❌ Erro: ' + (data.error.message || 'Chave inválida'), 'error');
+                }
+            })
+            .catch(function () {
+                window.app.showToast('📴 Sem conexão com a internet.', 'error');
+            });
     },
 
     // ══ COLETA CONTEXTO REAL DA FAZENDA ══
