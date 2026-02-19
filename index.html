@@ -1101,11 +1101,12 @@
                     <span class="mapa-dash-num" id="dash-total-cabecas">0</span>
                     <span class="mapa-dash-label">Cabeças</span>
                 </div>
-                <div class="mapa-dash-card mapa-dash-blue">
+                <div class="mapa-dash-card mapa-dash-blue" onclick="window.mapa.showOcupados()" style="cursor:pointer;">
                     <span class="mapa-dash-num" id="dash-ocupados">0</span>
                     <span class="mapa-dash-label">Ocupados</span>
                 </div>
-                <div class="mapa-dash-card mapa-dash-gray">
+                <div class="mapa-dash-card mapa-dash-gray" onclick="window.mapa.filterMap('vazio', this)"
+                    style="cursor:pointer;">
                     <span class="mapa-dash-num" id="dash-vazios">0</span>
                     <span class="mapa-dash-label">Vazios</span>
                 </div>

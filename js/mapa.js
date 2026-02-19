@@ -131,6 +131,94 @@ window.mapa = {
     },
 
     // ══════════════════════════════════════════════
+    //  OCUPADOS — Mostrar cards dos lotes ocupados
+    // ══════════════════════════════════════════════
+    showOcupados: function () {
+        // Filtrar mapa para mostrar só ocupados
+        this.filterMap('gado', null);
+
+        // Identificar lotes em pastos ocupados
+        var self = this;
+        var lotesOcupados = [];
+        var seen = {};
+
+        if (this.drawnItems) {
+            this.drawnItems.eachLayer(function (layer) {
+                if (!layer.pastoNome) return;
+                var info = self.getPastoInfo(layer.pastoNome);
+                if (info.totalAnimais > 0) {
+                    info.lotes.forEach(function (loteNome) {
+                        if (!seen[loteNome]) {
+                            seen[loteNome] = true;
+                            // Buscar dados completos do lote
+                            var loteData = null;
+                            if (window.lotes && window.lotes.getLotes) {
+                                window.lotes.getLotes().forEach(function (l) {
+                                    if (l.nome === loteNome) loteData = l;
+                                });
+                            }
+                            lotesOcupados.push({
+                                nome: loteNome,
+                                pasto: layer.pastoNome,
+                                animais: loteData ? loteData.qtdAnimais : info.totalAnimais,
+                                categoria: loteData ? (loteData.categoria || 'Geral') : 'Geral',
+                                pesoMedio: loteData ? (loteData.pesoMedio || 0) : 0
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Remover painel anterior se existir
+        var old = document.getElementById('ocupados-panel');
+        if (old) { old.remove(); return; } // toggle
+
+        // Criar painel com cards
+        var panel = document.createElement('div');
+        panel.id = 'ocupados-panel';
+        panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;'
+            + 'background:#fff;border-radius:20px 20px 0 0;padding:16px;'
+            + 'box-shadow:0 -8px 32px rgba(0,0,0,0.2);max-height:60vh;overflow-y:auto;'
+            + 'animation:slideUpBanner 0.3s ease;';
+
+        var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+            + '<h3 style="margin:0;color:#1E3A5F;font-size:16px;">🐂 Pastos Ocupados (' + lotesOcupados.length + ' lotes)</h3>'
+            + '<button onclick="document.getElementById(\'ocupados-panel\').remove();window.mapa.filterMap(\'todos\',null);" '
+            + 'style="background:none;border:none;font-size:22px;cursor:pointer;color:#666;">✕</button>'
+            + '</div>';
+
+        if (lotesOcupados.length === 0) {
+            html += '<p style="color:#666;text-align:center;padding:20px;">Nenhum pasto ocupado</p>';
+        } else {
+            lotesOcupados.forEach(function (l) {
+                var catColors = {
+                    'Cria': '#0F766E', 'Recria': '#1E40AF', 'Engorda': '#92400E',
+                    'Bezerros': '#15803D', 'Matrizes': '#7F1D1D', 'Geral': '#475569'
+                };
+                var cor = catColors[l.categoria] || '#475569';
+
+                html += '<div style="background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:8px;'
+                    + 'border-left:4px solid ' + cor + ';display:flex;justify-content:space-between;align-items:center;'
+                    + 'cursor:pointer;" onclick="document.getElementById(\'ocupados-panel\').remove();window.lotes.abrirDetalhes(\'' + l.nome + '\');">'
+                    + '<div>'
+                    + '<div style="font-weight:700;color:#1E293B;font-size:14px;">' + l.nome + '</div>'
+                    + '<div style="color:#64748B;font-size:12px;">📍 ' + l.pasto + ' • ' + l.categoria + '</div>'
+                    + '</div>'
+                    + '<div style="text-align:right;">'
+                    + '<div style="font-weight:700;color:' + cor + ';font-size:18px;">' + l.animais + '</div>'
+                    + '<div style="color:#94A3B8;font-size:11px;">cabeças</div>'
+                    + '</div>'
+                    + '</div>';
+            });
+        }
+
+        panel.innerHTML = html;
+        document.body.appendChild(panel);
+    },
+
+
+    // ══════════════════════════════════════════════
     //  FILTROS — Mostrar/esconder polígonos por status
     // ══════════════════════════════════════════════
     filterMap: function (tipo, btn) {
