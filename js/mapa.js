@@ -115,14 +115,18 @@ window.mapa = {
         this.loadPolygons();
 
         // ── Tentar geolocalização se sem polígonos ──
-        if (!savedCenter && this.polygons.length === 0) {
+        if (!savedCenter && this.drawnItems.getLayers().length === 0) {
             this.geolocate();
         }
 
-        // Fix rendering issue
+        // Fix rendering issue + garantir centralização nos pastos
         setTimeout(function () {
-            if (self.map) self.map.invalidateSize();
-        }, 300);
+            if (self.map) {
+                self.map.invalidateSize();
+                // Sempre centraliza nos polígonos (prioridade sobre savedCenter)
+                self.fitBounds();
+            }
+        }, 400);
     },
 
     // ── Geolocalização GPS ──
@@ -175,22 +179,41 @@ window.mapa = {
         var nome = layer.pastoNome || '';
         var info = this.getPastoInfo(nome);
 
-        var color = '#6B7280'; // cinza = vazio
-        var fillOpacity = 0.2;
+        var color = '#8B95A5'; // cinza azulado = vazio
+        var fillColor = '#9CA3AF';
+        var fillOpacity = 0.15;
+        var weight = 2;
+        var dashArray = '5, 5';
 
-        if (info.emObra) {
-            color = '#FF9500'; // amarelo = em obra
-            fillOpacity = 0.3;
+        if (info.emObra && info.totalAnimais > 0) {
+            // Laranja forte = obra + gado
+            color = '#F59E0B';
+            fillColor = '#FBBF24';
+            fillOpacity = 0.35;
+            weight = 3;
+            dashArray = null;
+        } else if (info.emObra) {
+            // Laranja = em obra
+            color = '#F97316';
+            fillColor = '#FB923C';
+            fillOpacity = 0.30;
+            weight = 3;
+            dashArray = '8, 4';
         } else if (info.totalAnimais > 0) {
-            color = '#34C759'; // verde = com gado
-            fillOpacity = 0.25;
+            // Verde vibrante = com gado
+            color = '#16A34A';
+            fillColor = '#22C55E';
+            fillOpacity = 0.30;
+            weight = 3;
+            dashArray = null;
         }
 
         layer.setStyle({
             color: color,
-            weight: 3,
-            fillColor: color,
-            fillOpacity: fillOpacity
+            weight: weight,
+            fillColor: fillColor,
+            fillOpacity: fillOpacity,
+            dashArray: dashArray
         });
     },
 
@@ -200,40 +223,186 @@ window.mapa = {
         layer.on('click', function () {
             var nome = layer.pastoNome || 'Sem nome';
             var info = self.getPastoInfo(nome);
-            var perfil = window.app.getPerfil();
-
+            var perfil = window.app ? window.app.getPerfil() : 'gerencia';
             var area = self.calcArea(layer);
 
-            var html = '<div class="mapa-popup">';
-            html += '<div class="mapa-popup-title">🌿 ' + nome + '</div>';
-            html += '<div class="mapa-popup-area">' + area + ' ha</div>';
-
-            if (info.totalAnimais > 0) {
-                html += '<div class="mapa-popup-stat ok">🐄 ' + info.totalAnimais + ' cabeças</div>';
-                if (info.lotes.length > 0) {
-                    html += '<div class="mapa-popup-detail">Lotes: ' + info.lotes.join(', ') + '</div>';
-                }
+            // Status badge
+            var statusBadge = '';
+            var statusColor = '';
+            if (info.emObra && info.totalAnimais > 0) {
+                statusBadge = '🔨🐄 Obra + Gado';
+                statusColor = '#F59E0B';
+            } else if (info.emObra) {
+                statusBadge = '🔨 Em Obra';
+                statusColor = '#F97316';
+            } else if (info.totalAnimais > 0) {
+                statusBadge = '🐄 Com Gado';
+                statusColor = '#16A34A';
             } else {
-                html += '<div class="mapa-popup-stat empty">Sem gado</div>';
+                statusBadge = '🌿 Vazio / Descanso';
+                statusColor = '#8B95A5';
+            }
+
+            var nomeDisplay = self.capitalize(nome);
+
+            var html = '<div style="min-width:240px;max-width:300px;font-family:system-ui,-apple-system,sans-serif;">' +
+                '<div style="padding-bottom:8px;border-bottom:2px solid ' + statusColor + ';margin-bottom:8px;">' +
+                '<div style="font-weight:800;font-size:16px;color:#1a1a2e;line-height:1.2;">' + nomeDisplay + '</div>' +
+                '<div style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;color:white;background:' + statusColor + ';">' + statusBadge + '</div>' +
+                '</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">' +
+                '<div style="background:#F0F4FF;border-radius:8px;padding:8px;text-align:center;">' +
+                '<div style="font-size:10px;color:#6B7280;font-weight:600;">📐 ÁREA</div>' +
+                '<div style="font-size:14px;font-weight:800;color:#1E40AF;">' + area + ' ha</div>' +
+                '</div>' +
+                '<div style="background:' + (info.totalAnimais > 0 ? '#ECFDF5' : '#F9FAFB') + ';border-radius:8px;padding:8px;text-align:center;">' +
+                '<div style="font-size:10px;color:#6B7280;font-weight:600;">🐄 ANIMAIS</div>' +
+                '<div style="font-size:14px;font-weight:800;color:' + (info.totalAnimais > 0 ? '#059669' : '#9CA3AF') + ';">' + info.totalAnimais + ' cab</div>' +
+                '</div>' +
+                '</div>';
+
+            if (info.lotes.length > 0) {
+                html += '<div style="background:#F5F3FF;border-radius:8px;padding:8px;margin-bottom:6px;">' +
+                    '<div style="font-size:10px;color:#7C3AED;font-weight:700;">🏷️ LOTES</div>' +
+                    '<div style="font-size:12px;color:#374151;font-weight:500;margin-top:2px;">' + info.lotes.join(', ') + '</div>' +
+                    '</div>';
             }
 
             if (info.emObra) {
-                html += '<div class="mapa-popup-stat obra">🔨 Em obra: ' + info.obraNome + '</div>';
+                html += '<div style="background:#FFF7ED;border-radius:8px;padding:8px;margin-bottom:6px;border:1px solid #FED7AA;">' +
+                    '<div style="font-size:10px;color:#EA580C;font-weight:700;">🔨 OBRA EM ANDAMENTO</div>' +
+                    '<div style="font-size:12px;color:#374151;font-weight:600;margin-top:2px;">' + info.obraNome + '</div>' +
+                    '</div>';
             }
 
-            if (info.ultimaObra && !info.emObra) {
-                html += '<div class="mapa-popup-detail">Última obra: ' + info.ultimaObra + '</div>';
-            }
-
-            // Valores financeiros só para gerência
             if (perfil === 'gerencia' && info.custoTotal > 0) {
-                html += '<div class="mapa-popup-valor">💰 Custo total: R$ ' + info.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>';
+                html += '<div style="background:#FEF2F2;border-radius:8px;padding:8px;margin-bottom:6px;">' +
+                    '<div style="font-size:10px;color:#DC2626;font-weight:700;">💰 CUSTOS ACUMULADOS</div>' +
+                    '<div style="font-size:13px;color:#991B1B;font-weight:800;margin-top:2px;">R$ ' + info.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>' +
+                    '</div>';
             }
+
+            // ── Botões de ação ──
+            var layerId = L.stamp(layer);
+            html += '<div style="display:flex;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid #E5E7EB;">' +
+                '<button onclick="window.mapa.renamePasto(' + layerId + ')" style="flex:1;padding:6px;border:none;border-radius:6px;background:#3B82F6;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">✏️ Renomear</button>' +
+                '<button onclick="window.mapa.editShape(' + layerId + ')" style="flex:1;padding:6px;border:none;border-radius:6px;background:#8B5CF6;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">🔧 Editar</button>' +
+                '<button onclick="window.mapa.deletePasto(' + layerId + ')" style="flex:1;padding:6px;border:none;border-radius:6px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">🗑️ Excluir</button>' +
+                '</div>';
 
             html += '</div>';
-
-            layer.bindPopup(html, { className: 'mapa-popup-container', maxWidth: 260 }).openPopup();
+            layer.bindPopup(html, { maxWidth: 320, className: 'mapa-popup-premium' }).openPopup();
         });
+    },
+
+    // ── Renomear pasto ──
+    renamePasto: function (layerId) {
+        var layer = this.drawnItems.getLayer(layerId);
+        if (!layer) return;
+        var nomeAtual = layer.pastoNome || 'Sem nome';
+        var novoNome = prompt('Novo nome para o pasto:', nomeAtual);
+        if (!novoNome || novoNome.trim() === '' || novoNome === nomeAtual) return;
+
+        layer.pastoNome = novoNome.trim();
+        this.map.closePopup();
+
+        // Atualizar label
+        var self = this;
+        this.drawnItems.eachLayer(function (l) {
+            if (l instanceof L.Marker && l.options && l.options.icon &&
+                l.options.icon.options && l.options.icon.options.html &&
+                l.options.icon.options.html.indexOf(self.capitalize(nomeAtual)) >= 0) {
+                self.drawnItems.removeLayer(l);
+            }
+        });
+        this.addLabel(layer);
+        this.stylePolygon(layer);
+        this.saveAllPolygons();
+
+        // Atualizar pasto no sistema
+        if (window.data && window.data.events) {
+            window.data.events.forEach(function (e) {
+                if (e.type === 'PASTO' && e.nome && e.nome.toLowerCase() === nomeAtual.toLowerCase()) {
+                    e.nome = novoNome.trim();
+                }
+            });
+            window.data.save();
+        }
+
+        if (window.app && window.app.showToast) {
+            window.app.showToast('✅ Pasto renomeado: ' + novoNome.trim());
+        }
+    },
+
+    // ── Editar forma do pasto (ativar edição) ──
+    editShape: function (layerId) {
+        var layer = this.drawnItems.getLayer(layerId);
+        if (!layer || !layer.editing) return;
+
+        this.map.closePopup();
+        var self = this;
+
+        if (layer.editing._enabled) {
+            // Desativar edição
+            layer.editing.disable();
+            this.saveAllPolygons();
+            if (window.app && window.app.showToast) {
+                window.app.showToast('✅ Forma salva');
+            }
+        } else {
+            // Ativar edição
+            layer.editing.enable();
+            if (window.app && window.app.showToast) {
+                window.app.showToast('🔧 Arraste os vértices para ajustar. Clique novamente em EDITAR para salvar.');
+            }
+
+            // Auto-salvar ao finalizar edição
+            layer.on('edit', function () {
+                self.saveAllPolygons();
+                // Reposicionar label
+                self.drawnItems.eachLayer(function (l) {
+                    if (l instanceof L.Marker && l.options && l.options.icon &&
+                        l.options.icon.options && l.options.icon.options.html &&
+                        l.options.icon.options.html.indexOf(self.capitalize(layer.pastoNome || '')) >= 0) {
+                        self.drawnItems.removeLayer(l);
+                    }
+                });
+                self.addLabel(layer);
+            });
+        }
+    },
+
+    // ── Excluir pasto ──
+    deletePasto: function (layerId) {
+        var layer = this.drawnItems.getLayer(layerId);
+        if (!layer) return;
+        var nome = layer.pastoNome || 'Sem nome';
+
+        if (!confirm('⚠️ Excluir o pasto "' + nome + '"?\n\nIsso removerá o polígono do mapa.\nDados de gado e obras NÃO serão excluídos.')) return;
+
+        this.map.closePopup();
+        var self = this;
+
+        // Remover label
+        this.drawnItems.eachLayer(function (l) {
+            if (l instanceof L.Marker && l.options && l.options.icon &&
+                l.options.icon.options && l.options.icon.options.html &&
+                l.options.icon.options.html.indexOf(self.capitalize(nome)) >= 0) {
+                self.drawnItems.removeLayer(l);
+            }
+        });
+
+        this.drawnItems.removeLayer(layer);
+        this.saveAllPolygons();
+
+        if (window.app && window.app.showToast) {
+            window.app.showToast('🗑️ Pasto "' + nome + '" excluído do mapa');
+        }
+    },
+
+    // ── Capitalizar nome ──
+    capitalize: function (str) {
+        return str.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
     },
 
     // ── Calcular área do polígono em hectares ──
@@ -283,51 +452,51 @@ window.mapa = {
         try {
             var data = window.data;
             if (!data) return info;
+            var nomeLower = nomePasto.toLowerCase().trim();
 
-            // Buscar lotes neste pasto
-            var lotes = (data.events || []).filter(function (e) {
-                return e.type === 'LOTE' && e.pasto && e.pasto.toLowerCase() === nomePasto.toLowerCase();
-            });
-
+            // Buscar lotes neste pasto (pegar o mais recente por nome)
             var lotesMap = {};
-            lotes.forEach(function (lt) {
-                lotesMap[lt.nome] = lt;
-                info.totalAnimais += (lt.quantidade || 0);
-                info.lotes.push(lt.nome);
-            });
-
-            // Cabeças individuais neste pasto
-            var cabecas = (data.events || []).filter(function (e) {
-                return e.type === 'CABECA' && e.pasto && e.pasto.toLowerCase() === nomePasto.toLowerCase();
-            });
-            info.totalAnimais += cabecas.length;
-
-            // Obras neste pasto
-            var obras = (data.events || []).filter(function (e) {
-                return e.type === 'OBRA';
-            });
-
-            obras.forEach(function (obra) {
-                var obraNome = (obra.nome || '').toLowerCase();
-                var obsText = (obra.obs || '').toLowerCase();
-                if (obraNome.indexOf(nomePasto.toLowerCase()) >= 0 || obsText.indexOf(nomePasto.toLowerCase()) >= 0) {
-                    if (!obra.dataFim || obra.dataFim === '') {
-                        info.emObra = true;
-                        info.obraNome = obra.nome;
-                    }
-                    info.ultimaObra = obra.nome;
-                    info.custoTotal += (obra.custo || 0);
+            (data.events || []).forEach(function (e) {
+                if (e.type === 'LOTE' && e.pasto && e.pasto.toLowerCase().trim() === nomeLower) {
+                    lotesMap[e.nome] = e; // último evento prevalece
                 }
             });
 
-            // Manejos neste pasto
-            var manejos = (data.events || []).filter(function (e) {
-                return e.type === 'MANEJO' && e.custo;
+            for (var loteNome in lotesMap) {
+                var lt = lotesMap[loteNome];
+                if (lt.status === 'ATIVO') {
+                    var qtd = lt.qtdAnimais || lt.quantidade || lt.cabecas || 0;
+                    info.totalAnimais += qtd;
+                    info.lotes.push(loteNome);
+                }
+            }
+
+            // Cabeças individuais neste pasto
+            var cabecas = (data.events || []).filter(function (e) {
+                return e.type === 'CABECA' && e.pasto && e.pasto.toLowerCase().trim() === nomeLower && e.status !== 'VENDIDO';
             });
-            // custos de manejo podem ser associados a lotes neste pasto
-            manejos.forEach(function (m) {
-                if (lotesMap[m.lote]) {
-                    info.custoTotal += (m.custo || 0);
+            info.totalAnimais += cabecas.length;
+
+            // Obras neste pasto (buscar por nome e obs)
+            (data.events || []).forEach(function (e) {
+                if (e.type !== 'OBRA_REGISTRO' && e.type !== 'OBRA') return;
+                var obraNome = (e.nome || '').toLowerCase();
+                var obsText = (e.obs || '').toLowerCase();
+                var obraPasto = (e.pasto || '').toLowerCase().trim();
+                if (obraPasto === nomeLower || obraNome.indexOf(nomeLower) >= 0 || obsText.indexOf(nomeLower) >= 0) {
+                    if (!e.dataFim || e.dataFim === '') {
+                        info.emObra = true;
+                        info.obraNome = e.nome || 'Obra';
+                    }
+                    info.ultimaObra = e.nome || '';
+                    info.custoTotal += parseFloat(e.custo || e.value || 0);
+                }
+            });
+
+            // Manejos (custos associados a lotes neste pasto)
+            (data.events || []).forEach(function (e) {
+                if ((e.type === 'MANEJO' || e.type === 'MANEJO_SANITARIO') && e.custo && lotesMap[e.lote]) {
+                    info.custoTotal += parseFloat(e.custo || 0);
                 }
             });
 
@@ -366,11 +535,20 @@ window.mapa = {
 
     // ── Parser KML simples ──
     parseKML: function (kmlText) {
+        // Coletar nomes existentes para evitar duplicidade
+        var existingNames = {};
+        this.drawnItems.eachLayer(function (layer) {
+            if (layer.pastoNome) {
+                existingNames[layer.pastoNome.toLowerCase()] = true;
+            }
+        });
+
         var parser = new DOMParser();
         var doc = parser.parseFromString(kmlText, 'text/xml');
         var placemarks = doc.querySelectorAll('Placemark');
         var self = this;
         var count = 0;
+        var skipped = 0;
 
         placemarks.forEach(function (pm) {
             var name = pm.querySelector('name');
@@ -379,6 +557,13 @@ window.mapa = {
 
             var nome = name ? name.textContent.trim() : 'Pasto ' + (self.drawnItems.getLayers().length + 1);
             var coordText = coords.textContent.trim();
+
+            // Verificar duplicidade por nome
+            if (existingNames[nome.toLowerCase()]) {
+                skipped++;
+                return;
+            }
+
             var latlngs = [];
 
             coordText.split(/\s+/).forEach(function (pair) {
@@ -398,14 +583,19 @@ window.mapa = {
                 self.drawnItems.addLayer(polygon);
                 self.bindPopup(polygon);
                 self.stylePolygon(polygon);
+                self.addLabel(polygon);
                 count++;
             }
         });
 
         if (count > 0) {
             this.saveAllPolygons();
+            this.syncPastosToApp();
             this.fitBounds();
             window.app.showToast('✅ ' + count + ' pasto(s) importado(s) do KML');
+        }
+        if (skipped > 0) {
+            window.app.showToast('⚠️ ' + skipped + ' pasto(s) já existentes foram ignorados', 'warning');
         }
     },
 
@@ -439,27 +629,115 @@ window.mapa = {
 
     // ── Carregar polígonos salvos ──
     loadPolygons: function () {
+        var self = this;
+        var loaded = false;
+
+        // 1. Tentar carregar do localStorage primeiro
         try {
             var raw = localStorage.getItem(this.STORAGE_KEY);
-            if (!raw) return;
-            var data = JSON.parse(raw);
-            var self = this;
+            if (raw) {
+                var data = JSON.parse(raw);
+                if (data && data.length > 0) {
+                    data.forEach(function (p) {
+                        if (p.coords && p.coords.length >= 3) {
+                            var polygon = L.polygon(p.coords);
+                            polygon.pastoNome = p.nome;
+                            self.drawnItems.addLayer(polygon);
+                            self.bindPopup(polygon);
+                            self.stylePolygon(polygon);
+                            self.addLabel(polygon);
+                        }
+                    });
+                    loaded = true;
+                }
+            }
+        } catch (e) {
+            console.error('Erro ao carregar polígonos salvos:', e);
+        }
 
-            data.forEach(function (p) {
+        // 2. Se não tem dados salvos, carregar os embutidos do KML
+        if (!loaded && window.FAZENDA_PASTOS && window.FAZENDA_PASTOS.length > 0) {
+            console.log('🗺️ Carregando ' + window.FAZENDA_PASTOS.length + ' pastos embutidos da fazenda...');
+            window.FAZENDA_PASTOS.forEach(function (p) {
                 if (p.coords && p.coords.length >= 3) {
                     var polygon = L.polygon(p.coords);
                     polygon.pastoNome = p.nome;
                     self.drawnItems.addLayer(polygon);
                     self.bindPopup(polygon);
                     self.stylePolygon(polygon);
+                    self.addLabel(polygon);
                 }
             });
+            // Salvar no localStorage para próximas vezes
+            this.saveAllPolygons();
+            // Registrar pastos no sistema do app
+            this.syncPastosToApp();
+            loaded = true;
+        }
 
-            if (data.length > 0) {
-                this.fitBounds();
-            }
-        } catch (e) {
-            console.error('Erro ao carregar polígonos:', e);
+        if (loaded) {
+            this.fitBounds();
+        }
+    },
+
+    // ── Adicionar label com nome do pasto no centro do polígono ──
+    addLabel: function (layer) {
+        try {
+            var center = layer.getBounds().getCenter();
+            var nome = layer.pastoNome || '';
+            if (!nome) return;
+
+            var nomeDisplay = this.capitalize(nome);
+            var info = this.getPastoInfo(nome);
+            var badge = info.totalAnimais > 0 ? ' <span style="background:#16A34A;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800;">' + info.totalAnimais + '🐄</span>' : '';
+
+            var label = L.divIcon({
+                className: 'mapa-pasto-label',
+                html: '<span>' + nomeDisplay + badge + '</span>',
+                iconSize: [160, 28],
+                iconAnchor: [80, 14]
+            });
+            var marker = L.marker(center, { icon: label, interactive: false });
+            this.drawnItems.addLayer(marker);
+        } catch (e) { /* ignore label error */ }
+    },
+
+    // ── Sincronizar pastos do KML com o sistema de pastos do app ──
+    syncPastosToApp: function () {
+        if (!window.data || !window.data.events) return;
+
+        var existingPastos = {};
+        window.data.events.forEach(function (ev) {
+            if (ev.type === 'PASTO') existingPastos[ev.nome.toLowerCase()] = true;
+        });
+
+        var count = 0;
+        var self = this;
+        this.drawnItems.eachLayer(function (layer) {
+            if (!layer.pastoNome) return;
+            var nome = layer.pastoNome;
+            if (existingPastos[nome.toLowerCase()]) return;
+
+            // Calcular área
+            var area = self.calcArea(layer);
+
+            // Registrar pasto no sistema
+            window.data.events.push({
+                type: 'PASTO',
+                nome: nome,
+                area: parseFloat(area) || 0,
+                capacidade: '',
+                tipoPasto: 'nativo',
+                statusPasto: 'ativo',
+                obs: 'Importado do mapa KML',
+                date: new Date().toISOString()
+            });
+            count++;
+        });
+
+        if (count > 0) {
+            window.data.save();
+            console.log('✅ ' + count + ' pastos registrados no sistema');
         }
     },
 
@@ -474,7 +752,7 @@ window.mapa = {
     refreshStyles: function () {
         var self = this;
         this.drawnItems.eachLayer(function (layer) {
-            self.stylePolygon(layer);
+            if (layer.setStyle) self.stylePolygon(layer);
         });
     }
 };

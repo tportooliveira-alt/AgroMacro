@@ -2785,3 +2785,25 @@ body.perfil-campo .gerencia-only {
         justify-content: center;
     }
 }
+
+/* Labels dos pastos no mapa */
+.mapa-pasto-label {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.mapa-pasto-label span {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+}
