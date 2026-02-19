@@ -69,7 +69,7 @@ window.iaConsultor = {
         this.API_KEY = key;
         localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key }));
 
-        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
+        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + key;
         window.app.showToast('🧪 Testando conexão...', 'success');
 
         fetch(url, {
@@ -250,7 +250,7 @@ window.iaConsultor = {
 
     _chamarGeminiDireto: function (messages, context, modelOverride) {
         var self = this;
-        var models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+        var models = ['gemini-2.0-flash-lite', 'gemini-2.0-flash'];
         var model = modelOverride || models[0];
 
         var systemPrompt = 'Você é o AgroIA — o MELHOR analista de mercado pecuário do Brasil. '
