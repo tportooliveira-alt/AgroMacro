@@ -902,20 +902,76 @@
             </div>
 
             <div class="card-form" style="margin-top:16px;">
-                <div class="section-title">🤖 IA Consultor</div>
+                <div class="section-title">🤖 IA Consultor — Multi-Provedor</div>
+                <p style="font-size:11px; color:var(--text-2); margin-bottom:12px;">
+                    Configure 1 ou mais IAs gratuitas. O sistema tenta cada uma em cascata até obter resposta.
+                </p>
+                <div id="ia-providers-status" style="margin-bottom:12px;"></div>
+
+                <!-- Gemini -->
                 <div class="form-group">
-                    <label>Chave API do Google (Gemini)</label>
+                    <label>🔵 Google Gemini <span style="font-size:10px;color:#059669;">(30 req/min
+                            grátis)</span></label>
                     <div style="display:flex; gap:8px;">
                         <input type="password" id="config-api-key" placeholder="Cole sua chave AIza..." style="flex:1;"
-                            onchange="window.iaConsultor.salvarChaveConfig()">
+                            onchange="window.iaConsultor.salvarTodasChaves()">
                         <button type="button" class="btn-sm" style="white-space:nowrap; background:#2563EB;"
                             onclick="var el=document.getElementById('config-api-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
                     </div>
-                    <p class="info-note" style="margin-top:8px; font-size:11px;">
-                        Crie sua chave grátis em <a href="https://aistudio.google.com/apikey" target="_blank"
-                            style="color:#2563EB; font-weight:600;">aistudio.google.com/apikey</a>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://aistudio.google.com/apikey" target="_blank"
+                            style="color:#2563EB;">aistudio.google.com/apikey</a>
                     </p>
                 </div>
+
+                <!-- Groq -->
+                <div class="form-group">
+                    <label>🟠 Groq (Llama 3.3) <span style="font-size:10px;color:#059669;">(14.400 req/dia
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-groq-key" placeholder="Cole sua chave gsk_..." style="flex:1;"
+                            onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#D97706;"
+                            onclick="var el=document.getElementById('config-groq-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://console.groq.com/keys" target="_blank"
+                            style="color:#D97706;">console.groq.com/keys</a>
+                    </p>
+                </div>
+
+                <!-- Cerebras -->
+                <div class="form-group">
+                    <label>🟣 Cerebras (Llama 3.3) <span style="font-size:10px;color:#059669;">(1M tokens/dia
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-cerebras-key" placeholder="Cole sua chave csk-..."
+                            style="flex:1;" onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#7C3AED;"
+                            onclick="var el=document.getElementById('config-cerebras-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://cloud.cerebras.ai/" target="_blank"
+                            style="color:#7C3AED;">cloud.cerebras.ai</a>
+                    </p>
+                </div>
+
+                <!-- OpenRouter -->
+                <div class="form-group">
+                    <label>🟢 OpenRouter (Multi-modelo) <span style="font-size:10px;color:#059669;">(modelos
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-openrouter-key" placeholder="Cole sua chave sk-or-..."
+                            style="flex:1;" onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#059669;"
+                            onclick="var el=document.getElementById('config-openrouter-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://openrouter.ai/keys" target="_blank"
+                            style="color:#059669;">openrouter.ai/keys</a>
+                    </p>
+                </div>
+
                 <button type="button" class="submit-btn" style="margin-top:8px;"
                     onclick="window.iaConsultor.testarChave()">🧪 Testar Conexão IA</button>
             </div>

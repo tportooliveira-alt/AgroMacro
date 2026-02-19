@@ -1,14 +1,14 @@
-// ====== MÓDULO: IA CONSULTOR PECUÁRIO (Gemini API Real) ======
-// Usa Google Gemini Flash-Lite via Cloudflare Worker proxy
-// Custo: R$ 0/mês (free tier: 1000 req/dia)
+// ====== MÓDULO: IA CONSULTOR PECUÁRIO (Multi-Provedor) ======
+// Cascata: Gemini Flash-Lite → Flash → Groq → Cerebras → OpenRouter
+// Custo: R$ 0/mês (free tier de todos os provedores)
 window.iaConsultor = {
 
-    // ══ CONFIGURAÇÃO ══
-    // Opção 1: URL do Cloudflare Worker (produção — API key protegida)
-    // Opção 2: API key direto (desenvolvimento/teste local)
+    // ══ CONFIGURAÇÃO MULTI-PROVEDOR ══
     WORKER_URL: '',
-    API_KEY: '',
-    GROQ_KEY: '',
+    API_KEY: '',       // Google Gemini
+    GROQ_KEY: '',      // Groq (Llama 3.3)
+    CEREBRAS_KEY: '',  // Cerebras (Llama 3.3)
+    OPENROUTER_KEY: '', // OpenRouter (modelos grátis)
 
     CACHE_KEY: 'agromacro_ia_historico',
     MAX_HISTORICO: 20,
@@ -26,38 +26,83 @@ window.iaConsultor = {
             if (config.workerUrl) this.WORKER_URL = config.workerUrl;
             if (config.apiKey) this.API_KEY = config.apiKey;
             if (config.groqKey) this.GROQ_KEY = config.groqKey;
+            if (config.cerebrasKey) this.CEREBRAS_KEY = config.cerebrasKey;
+            if (config.openrouterKey) this.OPENROUTER_KEY = config.openrouterKey;
         } catch (e) { }
 
-        console.log('IA Consultor Ready' + (this._temConexao() ? ' (conectada)' : ' (sem config)'));
+        var provCount = this._contarProvedores();
+        console.log('IA Consultor Ready — ' + provCount + ' provedor(es) configurado(s)');
 
-        // Populate config fields if keys exist
-        var configField = document.getElementById('config-api-key');
-        if (configField && this.API_KEY) {
-            configField.value = this.API_KEY;
-        }
-        var groqField = document.getElementById('config-groq-key');
-        if (groqField && this.GROQ_KEY) {
-            groqField.value = this.GROQ_KEY;
-        }
+        // Populate config fields
+        var self = this;
+        setTimeout(function () {
+            var fields = {
+                'config-api-key': self.API_KEY,
+                'config-groq-key': self.GROQ_KEY,
+                'config-cerebras-key': self.CEREBRAS_KEY,
+                'config-openrouter-key': self.OPENROUTER_KEY
+            };
+            Object.keys(fields).forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el && fields[id]) el.value = fields[id];
+            });
+            self._atualizarStatusProvedores();
+        }, 300);
     },
 
     _temConexao: function () {
-        return !!(this.WORKER_URL || this.API_KEY);
+        return !!(this.WORKER_URL || this.API_KEY || this.GROQ_KEY || this.CEREBRAS_KEY || this.OPENROUTER_KEY);
     },
 
-    // ══ Salvar chaves da tela de configuração ══
-    salvarChaveConfig: function () {
-        var key = (document.getElementById('config-api-key').value || '').trim();
-        var groqKey = '';
-        var groqField = document.getElementById('config-groq-key');
-        if (groqField) groqKey = (groqField.value || '').trim();
-        this.API_KEY = key;
-        this.GROQ_KEY = groqKey;
-        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key, groqKey: groqKey }));
-        if (key || groqKey) {
-            window.app.showToast('🔑 Chave(s) API salva(s)!', 'success');
-        }
+    _contarProvedores: function () {
+        var c = 0;
+        if (this.API_KEY) c++;
+        if (this.GROQ_KEY) c++;
+        if (this.CEREBRAS_KEY) c++;
+        if (this.OPENROUTER_KEY) c++;
+        return c;
     },
+
+    _atualizarStatusProvedores: function () {
+        var el = document.getElementById('ia-providers-status');
+        if (!el) return;
+        var items = [
+            { name: 'Gemini', key: this.API_KEY, color: '#2563EB' },
+            { name: 'Groq', key: this.GROQ_KEY, color: '#D97706' },
+            { name: 'Cerebras', key: this.CEREBRAS_KEY, color: '#7C3AED' },
+            { name: 'OpenRouter', key: this.OPENROUTER_KEY, color: '#059669' }
+        ];
+        var html = '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+        items.forEach(function (p) {
+            var on = !!p.key;
+            html += '<span style="font-size:10px;padding:3px 8px;border-radius:12px;font-weight:600;'
+                + (on ? 'background:' + p.color + '15;color:' + p.color : 'background:#F1F5F9;color:#94A3B8;text-decoration:line-through')
+                + ';">' + (on ? '✅' : '⬜') + ' ' + p.name + '</span>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+    },
+
+    // ══ Salvar TODAS as chaves ══
+    salvarTodasChaves: function () {
+        var get = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+        this.API_KEY = get('config-api-key');
+        this.GROQ_KEY = get('config-groq-key');
+        this.CEREBRAS_KEY = get('config-cerebras-key');
+        this.OPENROUTER_KEY = get('config-openrouter-key');
+        localStorage.setItem('agromacro_ia_config', JSON.stringify({
+            apiKey: this.API_KEY,
+            groqKey: this.GROQ_KEY,
+            cerebrasKey: this.CEREBRAS_KEY,
+            openrouterKey: this.OPENROUTER_KEY
+        }));
+        this._atualizarStatusProvedores();
+        var count = this._contarProvedores();
+        window.app.showToast('🔑 ' + count + ' provedor(es) configurado(s)!', 'success');
+    },
+
+    // Backward compat
+    salvarChaveConfig: function () { this.salvarTodasChaves(); },
 
     // ══ Testar conexão IA ══
     testarChave: function () {
@@ -597,10 +642,10 @@ window.iaConsultor = {
                         return; // Não continua — o fallback vai lidar
                     }
 
-                    // Se ambos Gemini falharam com rate limit, tenta Groq
+                    // Se ambos Gemini falharam com rate limit, tenta próximo provedor
                     if (isRateLimit && model === fallbackModel) {
-                        console.log('IA: Ambos Gemini com rate limit, tentando Groq...');
-                        self._chamarGroqFallback(messages, context);
+                        console.log('IA: Ambos Gemini com rate limit, tentando próximo provedor...');
+                        self._chamarProximoFallback('gemini', messages, context);
                         return;
                     }
 
@@ -627,50 +672,169 @@ window.iaConsultor = {
                     self._chamarGeminiDireto(messages, context, fallbackModel);
                     return;
                 }
-                // Se ambos falharam, tenta Groq
-                console.log('IA: Ambos Gemini falharam, tentando Groq...');
-                self._chamarGroqFallback(messages, context);
+                // Se ambos falharam, tenta próximo
+                console.log('IA: Ambos Gemini falharam, tentando próximo...');
+                self._chamarProximoFallback('gemini', messages, context);
             });
     },
 
-    // ══ FALLBACK: Groq API (14.400 req/dia grátis) ══
+    // ══ CASCATA: decide próximo provedor após falha ══
+    _chamarProximoFallback: function (falhou, messages, context) {
+        var ordem = ['gemini', 'groq', 'cerebras', 'openrouter'];
+        var idx = ordem.indexOf(falhou);
+
+        // Tenta cada provedor após o que falhou
+        for (var i = idx + 1; i < ordem.length; i++) {
+            var prov = ordem[i];
+            if (prov === 'groq' && this.GROQ_KEY) {
+                console.log('IA Cascata → Groq');
+                this._chamarGroqFallback(messages, context);
+                return;
+            }
+            if (prov === 'cerebras' && this.CEREBRAS_KEY) {
+                console.log('IA Cascata → Cerebras');
+                this._chamarCerebrasFallback(messages, context);
+                return;
+            }
+            if (prov === 'openrouter' && this.OPENROUTER_KEY) {
+                console.log('IA Cascata → OpenRouter');
+                this._chamarOpenRouterFallback(messages, context);
+                return;
+            }
+        }
+
+        // Nenhum provedor disponível
+        this._mostrarDigitando(false);
+        var count = this._contarProvedores();
+        this.historico.push({
+            role: 'model',
+            content: '🕐 Todos os ' + count + ' provedor(es) atingiram o limite.\n\n'
+                + '💡 **Soluções:**\n'
+                + '• Aguarde 1 minuto e tente novamente\n'
+                + '• Configure mais provedores em ⚙️ Configurações\n'
+                + '• Provedores grátis: Gemini, Groq, Cerebras, OpenRouter',
+            time: Date.now()
+        });
+        this._salvarHistorico();
+        this._renderMensagens();
+    },
+
+    // ══ Prompt base para APIs OpenAI-compatíveis ══
+    _buildOpenAIMessages: function (messages, context) {
+        var sysMsg = [{
+            role: 'system',
+            content: 'Você é o AgroIA, o melhor analista pecuário do Brasil. Responda em português brasileiro, '
+                + 'usando dados reais da fazenda fornecidos. Seja direto, prático, use emojis. Máximo 400 palavras.\n\nDADOS DA FAZENDA:\n' + context
+        }];
+        messages.forEach(function (m) {
+            sysMsg.push({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content });
+        });
+        return sysMsg;
+    },
+
+    // ══ FALLBACK 1: Groq API (14.400 req/dia grátis) ══
     _chamarGroqFallback: function (messages, context) {
         var self = this;
-        var groqKey = this.GROQ_KEY || '';
-
-        if (!groqKey) {
-            self._mostrarDigitando(false);
-            self.historico.push({
-                role: 'model',
-                content: '🕐 Gemini atingiu o limite. Aguarde 1 minuto ou configure a chave Groq em Configurações para ter um plano de backup com 14.400 consultas/dia grátis.',
-                time: Date.now()
-            });
-            self._salvarHistorico();
-            self._renderMensagens();
+        if (!this.GROQ_KEY) {
+            this._chamarProximoFallback('groq', messages, context);
             return;
         }
 
-        var groqMessages = [
-            {
-                role: 'system',
-                content: 'Você é o AgroIA, o melhor analista pecuário do Brasil. Responda em português brasileiro, '
-                    + 'usando dados reais da fazenda fornecidos. Seja direto, prático, use emojis.\n\nDADOS DA FAZENDA:\n' + context
-            }
-        ];
-
-        messages.forEach(function (m) {
-            groqMessages.push({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content });
-        });
+        var groqMessages = this._buildOpenAIMessages(messages, context);
 
         fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + groqKey
+                'Authorization': 'Bearer ' + this.GROQ_KEY
             },
             body: JSON.stringify({
                 model: 'llama-3.3-70b-versatile',
                 messages: groqMessages,
+                temperature: 0.3,
+                max_tokens: 1500
+            })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.choices && data.choices[0]) {
+                    self._mostrarDigitando(false);
+                    self.historico.push({ role: 'model', content: data.choices[0].message.content, time: Date.now() });
+                    self._salvarHistorico();
+                    self._renderMensagens();
+                } else {
+                    console.log('IA: Groq falhou, tentando próximo...', data.error);
+                    self._chamarProximoFallback('groq', messages, context);
+                }
+            })
+            .catch(function () {
+                console.log('IA: Groq erro de rede, tentando próximo...');
+                self._chamarProximoFallback('groq', messages, context);
+            });
+    },
+
+    // ══ FALLBACK 2: Cerebras API (1M tokens/dia grátis) ══
+    _chamarCerebrasFallback: function (messages, context) {
+        var self = this;
+        if (!this.CEREBRAS_KEY) {
+            this._chamarProximoFallback('cerebras', messages, context);
+            return;
+        }
+
+        var cbrMessages = this._buildOpenAIMessages(messages, context);
+
+        fetch('https://api.cerebras.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.CEREBRAS_KEY
+            },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b',
+                messages: cbrMessages,
+                temperature: 0.3,
+                max_tokens: 1500
+            })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.choices && data.choices[0]) {
+                    self._mostrarDigitando(false);
+                    self.historico.push({ role: 'model', content: data.choices[0].message.content, time: Date.now() });
+                    self._salvarHistorico();
+                    self._renderMensagens();
+                } else {
+                    console.log('IA: Cerebras falhou, tentando próximo...', data.error);
+                    self._chamarProximoFallback('cerebras', messages, context);
+                }
+            })
+            .catch(function () {
+                console.log('IA: Cerebras erro de rede, tentando próximo...');
+                self._chamarProximoFallback('cerebras', messages, context);
+            });
+    },
+
+    // ══ FALLBACK 3: OpenRouter API (modelos grátis) ══
+    _chamarOpenRouterFallback: function (messages, context) {
+        var self = this;
+        if (!this.OPENROUTER_KEY) {
+            this._chamarProximoFallback('openrouter', messages, context);
+            return;
+        }
+
+        var orMessages = this._buildOpenAIMessages(messages, context);
+
+        fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.OPENROUTER_KEY,
+                'HTTP-Referer': window.location.href,
+                'X-Title': 'AgroMacro'
+            },
+            body: JSON.stringify({
+                model: 'google/gemma-3-4b-it:free',
+                messages: orMessages,
                 temperature: 0.3,
                 max_tokens: 1500
             })
@@ -682,7 +846,7 @@ window.iaConsultor = {
                 if (data.choices && data.choices[0]) {
                     reply = data.choices[0].message.content;
                 } else {
-                    reply = '⚠️ Erro no Groq: ' + JSON.stringify(data.error || data);
+                    reply = '⚠️ Todos os provedores falharam. Verifique suas chaves em Configurações.';
                 }
                 self.historico.push({ role: 'model', content: reply, time: Date.now() });
                 self._salvarHistorico();
