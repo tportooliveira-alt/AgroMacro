@@ -669,8 +669,65 @@ window.app = {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        this.showToast('Dados exportados com sucesso!', 'success');
-    }
+        this.showToast('📤 Dados exportados com sucesso!', 'success');
+    },
+
+    importData: function (event) {
+        var self = this;
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                var imported = JSON.parse(e.target.result);
+
+                // Validar
+                if (!imported.events && !imported.config) {
+                    self.showToast('❌ Arquivo inválido. Use um backup do AgroMacro.', 'error');
+                    return;
+                }
+
+                var numEvents = imported.events ? imported.events.length : 0;
+                var msg = '📥 Importar ' + numEvents + ' registros?\n\nIsso vai SUBSTITUIR todos os dados atuais neste dispositivo.\n\nData do backup: ' + (imported.exportDate || 'desconhecida');
+
+                if (!confirm(msg)) {
+                    self.showToast('Importação cancelada.', 'error');
+                    return;
+                }
+
+                // Importar config
+                if (imported.config) {
+                    localStorage.setItem(self.CONFIG_KEY, JSON.stringify(imported.config));
+                }
+
+                // Importar eventos
+                if (imported.events && window.data) {
+                    window.data.events = imported.events;
+                    window.data.save();
+                }
+
+                // Importar config IA se existir
+                if (imported.iaConfig) {
+                    localStorage.setItem('agromacro_ia_config', JSON.stringify(imported.iaConfig));
+                }
+
+                self.showToast('✅ ' + numEvents + ' registros importados com sucesso!', 'success');
+
+                // Recarregar a página para aplicar tudo
+                setTimeout(function () {
+                    location.reload();
+                }, 1500);
+
+            } catch (err) {
+                self.showToast('❌ Erro ao ler arquivo: ' + err.message, 'error');
+            }
+        };
+
+        reader.readAsText(file);
+        // Limpar input para poder selecionar o mesmo arquivo novamente
+        event.target.value = '';
+    },
 };
 
 document.addEventListener('DOMContentLoaded', function () {

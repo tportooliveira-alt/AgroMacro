@@ -938,7 +938,12 @@
             <div class="card-form" style="margin-top:16px;">
                 <div class="section-title">Dados</div>
                 <button type="button" class="submit-btn" style="margin-bottom:10px;"
-                    onclick="window.app.exportData()">Exportar Dados (JSON)</button>
+                    onclick="window.app.exportData()">📤 Exportar Dados (JSON)</button>
+                <button type="button" class="submit-btn"
+                    style="margin-bottom:10px; background:linear-gradient(135deg,#2563EB,#7C3AED);"
+                    onclick="document.getElementById('import-file-input').click()">📥 Importar Dados (JSON)</button>
+                <input type="file" id="import-file-input" accept=".json" style="display:none;"
+                    onchange="window.app.importData(event)">
                 <button type="button" class="submit-btn danger-btn" onclick="window.app.resetData()">Zerar Todos os
                     Dados</button>
                 <p class="info-note" style="margin-top:15px;">Esta ação apaga todos os registros. Não pode ser desfeita.
