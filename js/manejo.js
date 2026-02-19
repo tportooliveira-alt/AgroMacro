@@ -5,6 +5,59 @@ window.manejo = {
     init: function () {
         console.log('Manejo Module Ready');
         this.bindForm();
+        // Set default type state
+        setTimeout(function () { window.manejo.onTipoChange(); }, 200);
+    },
+
+    // ══ Atualiza campos conforme tipo de manejo ══
+    onTipoChange: function () {
+        var tipo = document.getElementById('manejo-tipo');
+        if (!tipo) return;
+        var val = tipo.value;
+        var qtyGroup = document.getElementById('manejo-qty-produto-group');
+        var matSection = document.getElementById('manejo-materials-section');
+        var produtoLabel = document.getElementById('manejo-produto-label');
+
+        if (val === 'nutricao') {
+            // Show product qty, hide materials section
+            if (qtyGroup) qtyGroup.style.display = 'block';
+            if (matSection) matSection.style.display = 'none';
+            if (produtoLabel) produtoLabel.textContent = 'Sal / Ração do Estoque';
+            // Populate only sal/ração from stock
+            this.populateNutricaoProducts();
+        } else if (val === 'vacinacao') {
+            // Hide product qty, show materials (remedios)
+            if (qtyGroup) qtyGroup.style.display = 'none';
+            if (matSection) matSection.style.display = 'block';
+            if (produtoLabel) produtoLabel.textContent = 'Produto / Descrição';
+            if (window.estoque) window.estoque.populateManejoProducts();
+            if (window.estoque) window.estoque.renderMaterialCheckboxes('manejo-materials-list', 'remedios');
+        } else {
+            if (qtyGroup) qtyGroup.style.display = 'none';
+            if (matSection) matSection.style.display = 'none';
+            if (produtoLabel) produtoLabel.textContent = 'Descrição';
+            if (window.estoque) window.estoque.populateManejoProducts();
+        }
+    },
+
+    // Popula dropdown apenas com sal/ração do estoque
+    populateNutricaoProducts: function () {
+        var select = document.getElementById('manejo-produto');
+        if (!select || !window.estoque) return;
+        var items = window.estoque.getStockByCategory('racao_sal');
+        // Also include items matching sal/racao from all stock
+        if (items.length === 0) {
+            items = window.estoque.getStockItems().filter(function (i) {
+                var n = i.name.toLowerCase();
+                return n.indexOf('sal') >= 0 || n.indexOf('racao') >= 0 || n.indexOf('ração') >= 0 || n.indexOf('mineral') >= 0 || n.indexOf('proteinado') >= 0;
+            });
+        }
+        var html = '<option value="">Selecionar Sal/Ração...</option>';
+        items.forEach(function (item) {
+            html += '<option value="' + item.name + '">🧂 ' + item.name + ' (' + Math.round(item.qty) + ' ' + item.unit + ' restante)</option>';
+        });
+        html += '<option value="__outro__">📝 Outro (digitar)</option>';
+        select.innerHTML = html;
     },
 
     setFilterTipo: function (tipo) {
@@ -36,21 +89,31 @@ window.manejo = {
             desc = produtoVal;
         }
         if (!desc && produtoVal === '') {
-            // fallback: try hidden field
             desc = document.getElementById('manejo-desc') ? document.getElementById('manejo-desc').value : '';
         }
         var qtd = parseInt(document.getElementById('manejo-qtd').value) || 0;
+        var qtyProduto = parseFloat(document.getElementById('manejo-qty-produto').value) || 0;
         var data = document.getElementById('manejo-data').value;
         var custo = parseFloat(document.getElementById('manejo-custo').value) || 0;
 
-        if (!desc) {
+        // Validações por tipo
+        if (tipo === 'nutricao') {
+            if (!desc) {
+                window.app.showToast('Selecione o sal ou ração do estoque.', 'error');
+                return;
+            }
+            if (!qtyProduto || qtyProduto <= 0) {
+                window.app.showToast('Informe a quantidade usada (kg).', 'error');
+                return;
+            }
+        } else if (!desc) {
             window.app.showToast('Selecione um produto ou preencha a descrição.', 'error');
             return;
         }
 
-        // Get selected materials from dynamic checkboxes
+        // Get selected materials from dynamic checkboxes (vacinação)
         var materials = [];
-        if (window.estoque) {
+        if (tipo === 'vacinacao' && window.estoque) {
             materials = window.estoque.getSelectedMaterials('manejo-materials-list');
         }
 
@@ -62,13 +125,27 @@ window.manejo = {
             lote: lote,
             desc: desc,
             qtdAnimais: qtd,
+            qtyProduto: qtyProduto,
             cost: custo,
             materiaisUsados: materials,
             date: data || new Date().toISOString().split('T')[0]
         };
         window.data.saveEvent(ev);
 
-        // For each material used, save stock deduction (two-event rule)
+        // ══ BAIXA NO ESTOQUE ══
+        // Nutrição: descontar a quantidade de sal/ração usada
+        if (tipo === 'nutricao' && qtyProduto > 0 && desc) {
+            var saida = {
+                type: 'SAIDA_ESTOQUE',
+                desc: 'Nutrição: ' + desc + (lote ? ' (' + lote + ')' : ''),
+                items: [{ name: desc, qty: qtyProduto }],
+                motivo: 'Nutrição manejo',
+                date: data || new Date().toISOString().split('T')[0]
+            };
+            window.data.saveEvent(saida);
+        }
+
+        // Vacinação: descontar materiais do estoque
         if (materials.length > 0) {
             var saida = {
                 type: 'SAIDA_ESTOQUE',
@@ -80,8 +157,15 @@ window.manejo = {
             window.data.saveEvent(saida);
         }
 
-        window.app.showToast('✅ Manejo registrado: ' + desc);
+        // Toast informativo
+        if (tipo === 'nutricao') {
+            window.app.showToast('✅ Nutrição: ' + qtyProduto + ' kg de ' + desc + (lote ? ' p/ ' + lote : '') + ' — baixa no estoque');
+        } else {
+            window.app.showToast('✅ Manejo registrado: ' + desc);
+        }
+
         document.getElementById('form-manejo').reset();
+        this.onTipoChange();
         this.renderHistory();
     },
 
@@ -94,6 +178,7 @@ window.manejo = {
 
         // Filter bar
         var tipoConfig = {
+            'nutricao': { icon: '🧂', label: 'Nutrição', color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
             'vacinacao': { icon: '💉', label: 'Vacinação', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
             'pesagem': { icon: '⚖️', label: 'Pesagem', color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
             'movimentacao': { icon: '🔄', label: 'Movimentação', color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
@@ -158,6 +243,7 @@ window.manejo = {
                 + '<div style="' + descStyle + '">' + (ev.desc || '--') + '</div>'
                 + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'
                 + (ev.qtdAnimais ? '<span style="' + detailStyle + '">🐄 ' + ev.qtdAnimais + ' cab</span>' : '')
+                + (ev.qtyProduto ? '<span style="' + detailStyle + '">📦 ' + ev.qtyProduto + ' kg usados</span>' : '')
                 + (ev.pasto ? '<span style="' + detailStyle + '">🌿 ' + ev.pasto + '</span>' : '')
                 + (ev.lote ? '<span style="' + detailStyle + '">📋 ' + ev.lote + '</span>' : '')
                 + '</div>'

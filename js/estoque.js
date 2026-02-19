@@ -169,17 +169,10 @@ window.estoque = {
             var dias = Math.max(0, Math.floor((hoje - dataEntrada) / (1000 * 60 * 60 * 24)));
             if (dias <= 0) return;
 
-            // Sal mineral: consumo em g/cab/dia → kg total acumulado
-            if (lote.salMineral && lote.salConsumo && lote.salConsumo > 0) {
-                var salKgDia = (lote.salConsumo / 1000) * lote.qtdAnimais;
-                consumos.push({
-                    produto: lote.salMineral,
-                    lote: lote.nome,
-                    consumoDiarioKg: salKgDia,
-                    consumoAcumuladoKg: salKgDia * dias,
-                    dias: dias
-                });
-            }
+            // Sal mineral: NÃO auto-deduz — gado come à vontade, 
+            // registramos via manejo/nutrição manualmente
+
+            // Ração: consumo fixo em kg/cab/dia → auto-deduz
 
             // Ração: consumo em kg/cab/dia → kg total acumulado
             if (lote.racao && lote.racaoConsumo && lote.racaoConsumo > 0) {
