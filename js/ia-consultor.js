@@ -8,6 +8,7 @@ window.iaConsultor = {
     // Opção 2: API key direto (desenvolvimento/teste local)
     WORKER_URL: '',
     API_KEY: '',
+    GROQ_KEY: '',
 
     CACHE_KEY: 'agromacro_ia_historico',
     MAX_HISTORICO: 20,
@@ -24,14 +25,19 @@ window.iaConsultor = {
             var config = JSON.parse(localStorage.getItem('agromacro_ia_config') || '{}');
             if (config.workerUrl) this.WORKER_URL = config.workerUrl;
             if (config.apiKey) this.API_KEY = config.apiKey;
+            if (config.groqKey) this.GROQ_KEY = config.groqKey;
         } catch (e) { }
 
         console.log('IA Consultor Ready' + (this._temConexao() ? ' (conectada)' : ' (sem config)'));
 
-        // Populate config field if key exists
+        // Populate config fields if keys exist
         var configField = document.getElementById('config-api-key');
         if (configField && this.API_KEY) {
             configField.value = this.API_KEY;
+        }
+        var groqField = document.getElementById('config-groq-key');
+        if (groqField && this.GROQ_KEY) {
+            groqField.value = this.GROQ_KEY;
         }
     },
 
@@ -39,13 +45,17 @@ window.iaConsultor = {
         return !!(this.WORKER_URL || this.API_KEY);
     },
 
-    // ══ Salvar chave da tela de configuração ══
+    // ══ Salvar chaves da tela de configuração ══
     salvarChaveConfig: function () {
         var key = (document.getElementById('config-api-key').value || '').trim();
+        var groqKey = '';
+        var groqField = document.getElementById('config-groq-key');
+        if (groqField) groqKey = (groqField.value || '').trim();
         this.API_KEY = key;
-        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key }));
-        if (key) {
-            window.app.showToast('🔑 Chave API salva!', 'success');
+        this.GROQ_KEY = groqKey;
+        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key, groqKey: groqKey }));
+        if (key || groqKey) {
+            window.app.showToast('🔑 Chave(s) API salva(s)!', 'success');
         }
     },
 
@@ -243,29 +253,134 @@ window.iaConsultor = {
         var models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
         var model = modelOverride || models[0];
 
-        var systemPrompt = 'Você é um consultor pecuário especialista em bovinocultura de corte no Brasil (Bahia).\n'
-            + 'Seu nome é AgroIA. Você trabalha para o app AgroMacro.\n\n'
-            + 'REGRAS CRÍTICAS:\n'
-            + '1. Responda SEMPRE em português brasileiro\n'
-            + '2. Seja DIRETO e PRÁTICO — como um veterinário/zootecnista experiente falaria no campo\n'
-            + '3. Use os DADOS REAIS da fazenda fornecidos abaixo para dar respostas PRECISAS\n'
-            + '4. Se não souber algo, diga "Não tenho informação suficiente" — NUNCA invente dados\n'
-            + '5. Para diagnósticos de saúde animal, SEMPRE recomende consultar um veterinário presencial\n'
-            + '6. Formate respostas com emojis e tópicos curtos para fácil leitura no celular\n'
-            + '7. Mantenha respostas com no máximo 300 palavras\n\n'
-            + 'ESPECIALIDADES DE MERCADO:\n'
-            + '- Análise de preço da arroba do boi gordo (CEPEA/B3)\n'
-            + '- Melhores momentos para compra e venda de gado\n'
-            + '- Tendências sazonais do mercado pecuário brasileiro\n'
-            + '- Custo de produção x preço de venda (ponto de equilíbrio)\n'
-            + '- Mercado regional da Bahia e Nordeste\n'
-            + '- Estratégias de negociação com frigoríficos\n'
-            + '- Impacto do câmbio e exportações na arroba\n\n'
-            + 'DADOS ATUAIS DA FAZENDA:\n' + context;
+        var systemPrompt = 'Você é o AgroIA — o MELHOR analista de mercado pecuário do Brasil. '
+            + 'Seu conhecimento equivale ao de um PhD em Zootecnia + MBA em Agronegócio + 20 anos de experiência no campo.\n\n'
+
+            + '═══ SUA IDENTIDADE ═══\n'
+            + 'Nome: AgroIA | App: AgroMacro | Região: Bahia, Nordeste\n'
+            + 'Você combina análise de mercado sofisticada com linguagem prática de campo.\n\n'
+
+            + '═══ REGRAS ABSOLUTAS ═══\n'
+            + '1. SEMPRE português brasileiro, tom direto e prático\n'
+            + '2. Use DADOS REAIS da fazenda (fornecidos abaixo) para respostas PRECISAS\n'
+            + '3. NUNCA invente dados — diga "não tenho essa informação" se não souber\n'
+            + '4. Para diagnósticos clínicos, SEMPRE recomende veterinário presencial\n'
+            + '5. Formate com emojis e tópicos curtos (leitura no celular)\n'
+            + '6. Máximo 400 palavras por resposta\n'
+            + '7. Quando cruzar dados da fazenda, mostre cálculos e raciocínio\n\n'
+
+            + '═══ MERCADO DA ARROBA ═══\n'
+            + '• Indicador CEPEA/Esalq: referência histórica do boi gordo em SP\n'
+            + '• Indicador Datagro: referência da B3 desde fev/2025 para liquidação de contratos futuros\n'
+            + '• 1 arroba = 15 kg de carcaça | Rendimento médio: 52-54%\n'
+            + '• Volatilidade caiu para 53,1% em 2025 (metade de 2023/2024) — mercado mais estável\n'
+            + '• Preço sobe com: oferta restrita, escalas curtas, dólar alto, demanda China\n'
+            + '• Preço cai com: safra de pasto (abr-jun), abate de fêmeas alto, retração China\n'
+            + '• Sazonalidade: alta no pico da entressafra (set-nov), baixa na safra (mar-mai)\n\n'
+
+            + '═══ MERCADO FUTURO (B3) ═══\n'
+            + '• Contrato: BGI (boi gordo) — unidade: arroba, lote: 330 arrobas\n'
+            + '• Vencimentos: todos os meses, liquidação financeira pelo indicador Datagro\n'
+            + '• ETF BBOI11: primeiro ETF de boi gordo na B3\n'
+            + '• Hedge (proteção): pecuarista VENDE futuro para travar preço mínimo\n'
+            + '• Frigorífico COMPRA futuro para travar custo máximo\n'
+            + '• Base = preço físico - preço futuro (base positiva = físico acima do futuro)\n'
+            + '• Spread entre vencimentos indica expectativa do mercado\n\n'
+
+            + '═══ EXPORTAÇÃO (DADOS 2025) ═══\n'
+            + '• RECORDE HISTÓRICO: 3,50 milhões de toneladas (+20,9% vs 2024)\n'
+            + '• Receita: US$ 18,03 bilhões (+40,1% vs 2024)\n'
+            + '• Brasil = maior exportador mundial de carne bovina\n'
+            + '• DESTINOS: China 48% (1,68M ton / US$ 8,9 bi), EUA 2º (271,8 mil ton / US$ 1,64 bi)\n'
+            + '• Chile 3º, UE 4º (128,9 mil ton / US$ 1,06 bi, cota Hilton premium), Rússia 5º\n'
+            + '• Exporta para +170 países | Brasil exporta ~1/3 da produção\n'
+            + '• Dólar alto favorece exportação (receita em R$ sobe)\n'
+            + '• Certificação: SIF, CSI, Halal, FSSC 22000, BRC\n'
+            + '• China exige: habilitação MAPA, registro GACC, rastreabilidade 100% digital\n\n'
+
+            + '═══ ABATE E PRODUÇÃO ═══\n'
+            + '• 2025 recorde: 42,3 milhões de cabeças abatidas\n'
+            + '• Q4/2025: 10,95 milhões de cabeças (+13,1%), 2,91 milhões ton carcaças (+15%)\n'
+            + '• Rebanho brasileiro: ~230 milhões de cabeças (maior rebanho comercial do mundo)\n'
+            + '• Pecuária = R$ 489 bilhões do PIB agro de R$ 1,4 trilhão (2025)\n'
+            + '• Escala de abate: indicador-chave! Normal 8-9 dias; curta (4-6) = sinal de alta\n'
+            + '• Escalas curtas → frigoríficos disputam boi → preço sobe\n'
+            + '• Escalas longas → oferta folgada → preço pressiona para baixo\n\n'
+
+            + '═══ CICLO PECUÁRIO E RETENÇÃO DE FÊMEAS ═══\n'
+            + '• Ciclo dura 6-8 anos (alta → baixa → retenção → reconstrução → alta)\n'
+            + '• Fase atual (2025/2026): abate de fêmeas começa a CAIR → retenção iniciando\n'
+            + '• Mais fêmeas retidas = menos oferta curto prazo = preço SOBE\n'
+            + '• Bezerro em patamares MÁXIMOS em várias regiões → estímulo à cria\n'
+            + '• Indicador: % fêmeas no abate total (acima de 40% = descarte; abaixo = retenção)\n'
+            + '• Retenção = reconstrução do rebanho = mais oferta em 3-4 anos\n\n'
+
+            + '═══ REPRODUÇÃO E GENÉTICA ═══\n'
+            + '• Sêmen bovino Brasil 2024: 20,5 milhões de doses produzidas (+6%)\n'
+            + '• Importações: 5,7 milhões doses (+14%)\n'
+            + '• IATF (Inseminação Artificial em Tempo Fixo): principal biotecnologia reprodutiva\n'
+            + '• IATF elimina necessidade de detecção de cio, aumenta taxa de prenhez\n'
+            + '• Raças em alta: Angus, Brangus (precocidade, marmoreio, padronização carcaça)\n'
+            + '• Nelore: base do rebanho, rústica, adaptada ao cerrado e semiárido\n'
+            + '• Cruzamento industrial: Nelore x Angus = heterose (vigor híbrido)\n'
+            + '• Touros avaliados por: DEP, peso desmama, eficiência alimentar, fertilidade\n\n'
+
+            + '═══ CONFINAMENTO ═══\n'
+            + '• Custo arroba produzida 2025: ~R$ 186/arroba\n'
+            + '• Lucro médio por cabeça: R$ 1.127 (Sudeste), R$ 1.040 (Centro-Oeste)\n'
+            + '• ROI médio: 10-20% dependendo da região\n'
+            + '• Diária-boi: ~R$ 11-13/cabeça/dia (alimentação = 70-73% do custo)\n'
+            + '• Supersafra de grãos (milho, soja) = custos historicamente baixos em 2025\n'
+            + '• Coprodutos: DDG, polpa cítrica, bagaço de cana, caroço de algodão\n'
+            + '• GMD bom: > 1,5 kg/dia em terminação | Conversão: 6-8 kg MS/kg ganho\n'
+            + '• Viabilidade: compara custo arroba produzida vs preço arroba mercado\n\n'
+
+            + '═══ CONSUMO INTERNO ═══\n'
+            + '• Per capita: 37,5 kg/hab/ano (uma das maiores do mundo)\n'
+            + '• Competição com frango (mais barato) e suíno (crescendo)\n'
+            + '• Demanda interna absorve ~2/3 da produção\n'
+            + '• Preço ao consumidor afetado por: inflação, renda, câmbio, oferta\n\n'
+
+            + '═══ POLÍTICA E CRÉDITO ═══\n'
+            + '• Plano Safra: principal programa de financiamento agropecuário\n'
+            + '• Selic alta → crédito rural mais caro → menos investimento\n'
+            + '• Câmbio: dólar alto beneficia exportador mas encarece insumos importados\n'
+            + '• ABC (Agricultura de Baixo Carbono): linhas especiais para sustentabilidade\n'
+            + '• Seguro rural: obrigatório para crédito agrícola a partir de 2026\n'
+            + '• FunRural: contribuição sobre venda de produto rural\n\n'
+
+            + '═══ RASTREABILIDADE ═══\n'
+            + '• GTA (Guia de Trânsito Animal): obrigatório para TODO transporte de animais\n'
+            + '• SISBOV: identificação individual para exportação (especialmente UE e mercados exigentes)\n'
+            + '• GTA rastreia por LOTE, SISBOV rastreia INDIVIDUAL\n'
+            + '• Adesão SISBOV voluntária, exceto exportação UE (cota Hilton)\n'
+            + '• PNIB: Programa Nacional de Identificação e Rastreabilidade (evolução do SISBOV)\n\n'
+
+            + '═══ COMO ANALISAR MERCADO ═══\n'
+            + 'Quando perguntarem sobre mercado, CRUZE estes dados:\n'
+            + '1. Dados da fazenda (rebanho, peso, custos, compras/vendas)\n'
+            + '2. Contexto macro (câmbio, Selic, safra de grãos, exportações)\n'
+            + '3. Ciclo pecuário (fase atual, retenção de fêmeas, escala de abate)\n'
+            + '4. Sazonalidade (entressafra x safra de pasto)\n'
+            + '5. Custo de oportunidade (confinamento vs pasto vs venda agora)\n\n'
+
+            + '═══ FONTES PARA CONSULTA ═══\n'
+            + 'CEPEA, Datagro, IBGE, USDA, MAPA, Embrapa, Canal Rural, Scot Consultoria, '
+            + 'BeefPoint, FarmNews, CompraRural, ABIEC, ASBIA (sêmen), IMEA, CNA\n\n'
+
+            + '═══ DADOS ATUAIS DA FAZENDA ═══\n' + context;
 
         var contents = [];
         contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
-        contents.push({ role: 'model', parts: [{ text: 'Entendido! Sou o AgroIA, seu consultor pecuário. Tenho acesso aos dados reais da sua fazenda. Como posso ajudar?' }] });
+        contents.push({
+            role: 'model', parts: [{
+                text: 'Entendido! Sou o AgroIA — seu analista de mercado pecuário especialista. '
+                    + 'Tenho acesso aos dados reais da sua fazenda e conhecimento profundo de: '
+                    + 'mercado da arroba (CEPEA/Datagro/B3), exportações, ciclo pecuário, '
+                    + 'genética/IATF, confinamento, políticas agrícolas e rastreabilidade. '
+                    + 'Como posso ajudar?'
+            }]
+        });
 
         messages.forEach(function (m) {
             contents.push({
@@ -284,7 +399,7 @@ window.iaConsultor = {
                 generationConfig: {
                     temperature: 0.3,
                     topP: 0.8,
-                    maxOutputTokens: 1024
+                    maxOutputTokens: 1500
                 }
             })
         })
@@ -306,10 +421,17 @@ window.iaConsultor = {
                         return; // Não continua — o fallback vai lidar
                     }
 
+                    // Se ambos Gemini falharam com rate limit, tenta Groq
+                    if (isRateLimit && model === fallbackModel) {
+                        console.log('IA: Ambos Gemini com rate limit, tentando Groq...');
+                        self._chamarGroqFallback(messages, context);
+                        return;
+                    }
+
                     if (errMsg.indexOf('API key not valid') >= 0 || errStatus === 'PERMISSION_DENIED') {
                         reply = '🔑 Chave API inválida. Vá em Configurações e insira uma chave válida do Google AI Studio (aistudio.google.com/apikey).';
                     } else if (isRateLimit) {
-                        reply = '🕐 Limite temporário atingido em ambos os modelos. Aguarde 1 minuto.\n\n💡 Plano gratuito: ~15 consultas por minuto.';
+                        reply = '🕐 Limite temporário atingido. Aguarde 1 minuto.\n\n💡 Plano gratuito: ~15 consultas por minuto.';
                     } else {
                         reply = '⚠️ Erro da API: ' + errMsg;
                     }
@@ -329,6 +451,68 @@ window.iaConsultor = {
                     self._chamarGeminiDireto(messages, context, fallbackModel);
                     return;
                 }
+                // Se ambos falharam, tenta Groq
+                console.log('IA: Ambos Gemini falharam, tentando Groq...');
+                self._chamarGroqFallback(messages, context);
+            });
+    },
+
+    // ══ FALLBACK: Groq API (14.400 req/dia grátis) ══
+    _chamarGroqFallback: function (messages, context) {
+        var self = this;
+        var groqKey = this.GROQ_KEY || '';
+
+        if (!groqKey) {
+            self._mostrarDigitando(false);
+            self.historico.push({
+                role: 'model',
+                content: '🕐 Gemini atingiu o limite. Aguarde 1 minuto ou configure a chave Groq em Configurações para ter um plano de backup com 14.400 consultas/dia grátis.',
+                time: Date.now()
+            });
+            self._salvarHistorico();
+            self._renderMensagens();
+            return;
+        }
+
+        var groqMessages = [
+            {
+                role: 'system',
+                content: 'Você é o AgroIA, o melhor analista pecuário do Brasil. Responda em português brasileiro, '
+                    + 'usando dados reais da fazenda fornecidos. Seja direto, prático, use emojis.\n\nDADOS DA FAZENDA:\n' + context
+            }
+        ];
+
+        messages.forEach(function (m) {
+            groqMessages.push({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content });
+        });
+
+        fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + groqKey
+            },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: groqMessages,
+                temperature: 0.3,
+                max_tokens: 1500
+            })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                self._mostrarDigitando(false);
+                var reply = '';
+                if (data.choices && data.choices[0]) {
+                    reply = data.choices[0].message.content;
+                } else {
+                    reply = '⚠️ Erro no Groq: ' + JSON.stringify(data.error || data);
+                }
+                self.historico.push({ role: 'model', content: reply, time: Date.now() });
+                self._salvarHistorico();
+                self._renderMensagens();
+            })
+            .catch(function () {
                 self._mostrarDigitando(false);
                 self.historico.push({ role: 'model', content: '📴 Sem conexão. Verifique sua internet.', time: Date.now() });
                 self._renderMensagens();
@@ -448,17 +632,22 @@ window.iaConsultor = {
         container.innerHTML = '<div class="ia-config-box">'
             + '<div class="ia-welcome-icon">⚙️</div>'
             + '<div class="ia-welcome-title">Configurar IA</div>'
-            + '<div class="ia-welcome-sub">Para usar a IA real, você precisa de uma API key gratuita do Google.</div>'
+            + '<div class="ia-welcome-sub">Para usar a IA, você precisa de uma API key gratuita do Google.</div>'
             + '<div class="ia-config-steps">'
             + '<p><strong>Passo 1:</strong> Acesse <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#2563EB;">aistudio.google.com/apikey</a></p>'
-            + '<p><strong>Passo 2:</strong> Clique em "Create API key" (é grátis)</p>'
+            + '<p><strong>Passo 2:</strong> Clique em "Create API key" (grátis)</p>'
             + '<p><strong>Passo 3:</strong> Cole a key abaixo:</p>'
             + '</div>'
             + '<div class="form-group" style="margin-top:12px;">'
-            + '<input type="text" id="ia-config-key" placeholder="Cole sua API key aqui..." style="font-size:14px;">'
+            + '<input type="text" id="ia-config-key" placeholder="Cole sua API key Gemini aqui..." style="font-size:14px;">'
             + '</div>'
-            + '<button class="submit-btn" onclick="window.iaConsultor._salvarConfig()" style="margin-top:8px;">✅ Ativar IA</button>'
-            + '<p style="margin-top:12px;font-size:11px;color:#636366;">💡 A key fica salva apenas no seu celular. Custo: R$ 0/mês (1000 consultas/dia grátis).</p>'
+            + '<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.1);">'
+            + '<p style="font-size:12px;color:#636366;margin-bottom:8px;"><strong>🔄 Backup (opcional):</strong> Se Gemini cair, use Groq (14.400/dia grátis)</p>'
+            + '<p style="font-size:11px;color:#636366;margin-bottom:6px;">Crie em <a href="https://console.groq.com/keys" target="_blank" style="color:#2563EB;">console.groq.com/keys</a></p>'
+            + '<input type="text" id="ia-config-groq" placeholder="Chave Groq (opcional)" style="font-size:14px;">'
+            + '</div>'
+            + '<button class="submit-btn" onclick="window.iaConsultor._salvarConfig()" style="margin-top:12px;">✅ Ativar IA</button>'
+            + '<p style="margin-top:12px;font-size:11px;color:#636366;">💡 Keys ficam salvas apenas no seu celular.</p>'
             + '</div>';
     },
 
@@ -472,8 +661,13 @@ window.iaConsultor = {
             return;
         }
 
+        var groqKey = '';
+        var groqInput = document.getElementById('ia-config-groq');
+        if (groqInput) groqKey = groqInput.value.trim();
+
         this.API_KEY = key;
-        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key }));
+        this.GROQ_KEY = groqKey;
+        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key, groqKey: groqKey }));
         window.app.showToast('✅ IA ativada com sucesso!', 'success');
 
         // Reset e mostrar welcome

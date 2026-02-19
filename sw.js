@@ -1,5 +1,5 @@
 // ====== SERVICE WORKER — AgroMacro PWA Offline ======
-var CACHE_NAME = 'agromacro-v20';
+var CACHE_NAME = 'agromacro-v22';
 var TILE_CACHE = 'agromacro-tiles-v1';
 var ASSETS = [
     '/',
