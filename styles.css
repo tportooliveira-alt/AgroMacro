@@ -3891,3 +3891,275 @@ body.perfil-campo .gerencia-only {
     display: flex;
     gap: 12px;
 }
+
+/* ═══════════════════════════════════════════════════
+   RESULTADOS DA FAZENDA — Dashboard de Lucro
+   ═══════════════════════════════════════════════════ */
+
+.res-section {
+    margin-bottom: 16px;
+}
+
+.res-section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1C1C1E;
+    margin-bottom: 10px;
+    padding-left: 2px;
+}
+
+.res-empty,
+.res-no-data {
+    text-align: center;
+    padding: 20px;
+    color: #AEAEB2;
+    font-size: 14px;
+    background: #F9FAFB;
+    border-radius: 16px;
+}
+
+/* Lot Cards */
+.res-lot-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #10B981;
+}
+
+.res-lot-card.res-soon {
+    border-left-color: #F59E0B;
+}
+
+.res-lot-card.res-urgent {
+    border-left-color: #EF4444;
+    background: linear-gradient(135deg, #FEF2F2, #fff);
+}
+
+.res-lot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.res-lot-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1C1C1E;
+}
+
+.res-lot-qty {
+    font-size: 13px;
+    color: #636366;
+    font-weight: 600;
+    background: #F2F2F7;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+/* Progress bar */
+.res-progress-container {
+    height: 8px;
+    background: #E5E5EA;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.res-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10B981, #059669);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+.res-lot-card.res-soon .res-progress-bar {
+    background: linear-gradient(90deg, #F59E0B, #D97706);
+}
+
+.res-lot-card.res-urgent .res-progress-bar {
+    background: linear-gradient(90deg, #EF4444, #DC2626);
+}
+
+.res-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #8E8E93;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Info grid */
+.res-lot-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.res-info-item {
+    text-align: center;
+    padding: 8px 4px;
+    background: #F9FAFB;
+    border-radius: 10px;
+}
+
+.res-info-item.res-ready {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+}
+
+.res-info-value {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    color: #1C1C1E;
+}
+
+.res-info-label {
+    display: block;
+    font-size: 10px;
+    color: #8E8E93;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* Cost cards */
+.res-cost-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.res-cost-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.res-cost-item {
+    text-align: center;
+    padding: 10px 4px;
+    background: #F9FAFB;
+    border-radius: 10px;
+}
+
+.res-cost-value {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+    color: #1C1C1E;
+}
+
+.res-cost-label {
+    display: block;
+    font-size: 10px;
+    color: #8E8E93;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* Cost breakdown */
+.res-breakdown {
+    padding-top: 8px;
+    border-top: 1px solid #F2F2F7;
+}
+
+.res-break-item {
+    margin-bottom: 6px;
+}
+
+.res-break-bar {
+    height: 6px;
+    border-radius: 3px;
+    margin-bottom: 2px;
+    transition: width 0.5s ease;
+}
+
+.res-break-label {
+    font-size: 11px;
+    color: #636366;
+    font-weight: 600;
+}
+
+/* Revenue card */
+.res-revenue-card {
+    background: linear-gradient(135deg, #0F766E, #115E59);
+    border-radius: 16px;
+    padding: 20px;
+    color: #fff;
+}
+
+.res-revenue-total {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.res-revenue-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.res-revenue-label {
+    display: block;
+    font-size: 12px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.res-revenue-details {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 12px;
+}
+
+.res-rev-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+.res-rev-val {
+    font-weight: 700;
+}
+
+/* Finance summary */
+.res-finance-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.res-fin-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #636366;
+}
+
+.res-fin-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0 0;
+    margin-top: 8px;
+    border-top: 2px solid #E5E5EA;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.res-positive {
+    color: #059669 !important;
+}
+
+.res-negative {
+    color: #DC2626 !important;
+}

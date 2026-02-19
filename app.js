@@ -53,6 +53,7 @@ window.app = {
         if (window.fotos) window.fotos.init();
         if (window.iaConsultor) window.iaConsultor.init();
         if (window.uxHelpers) window.uxHelpers.init();
+        if (window.resultados) window.resultados.init();
 
 
         this.loadConfig();
@@ -185,6 +186,7 @@ window.app = {
                 if (window.contas) window.contas.renderCotacaoRebanho();
                 if (window.graficos) window.graficos.renderGraficosHome();
                 if (window.clima) window.clima.carregarPrevisao();
+                if (window.resultados) window.resultados.renderDashboard();
                 break;
             case 'rebanho':
                 if (window.rebanho) window.rebanho.renderList();
