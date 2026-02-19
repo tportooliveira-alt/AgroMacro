@@ -1487,10 +1487,24 @@
     </script>
 
     <script>
-        // Register Service Worker for PWA offline
+        // Register Service Worker with AUTO-UPDATE
         if ('serviceWorker' in navigator) {
+            var refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (!refreshing) {
+                    refreshing = true;
+                    console.log('[PWA] Nova versão detectada! Recarregando...');
+                    window.location.reload();
+                }
+            });
             navigator.serviceWorker.register('/sw.js').then(function (reg) {
                 console.log('[PWA] Service Worker registered:', reg.scope);
+                // Check for updates every 60 seconds
+                setInterval(function () {
+                    reg.update().catch(function () { });
+                }, 60000);
+                // Also check immediately
+                reg.update().catch(function () { });
             }).catch(function (err) {
                 console.log('[PWA] SW registration failed:', err);
             });

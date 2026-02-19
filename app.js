@@ -75,8 +75,18 @@ window.app = {
     // ══ PWA — Service Worker Registration ══
     registerServiceWorker: function () {
         if ('serviceWorker' in navigator) {
+            var refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (!refreshing) {
+                    refreshing = true;
+                    console.log('[PWA] Nova versão! Recarregando...');
+                    window.location.reload();
+                }
+            });
             navigator.serviceWorker.register('./sw.js').then(function (reg) {
                 console.log('✅ Service Worker registrado:', reg.scope);
+                setInterval(function () { reg.update().catch(function () { }); }, 60000);
+                reg.update().catch(function () { });
             }).catch(function (err) {
                 console.warn('⚠️ SW falhou:', err);
             });
