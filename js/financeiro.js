@@ -1,5 +1,5 @@
-// ====== MÓDULO: FINANCEIRO (Compra/Venda de Gado + Fluxo de Caixa) ======
-// Exclusivamente GADO DE CORTE — sem categoria animal/material
+// ====== MÓDULO: FINANCEIRO (Compra/Venda + Fluxo de Caixa + Estorno) ======
+// AUDITADO: Inclui CONTA_PAGAR, OBRA_REGISTRO, MANEJO_SANITARIO, FUNCIONARIO
 window.financeiro = {
     init: function () {
         console.log('Financeiro Module Ready');
@@ -38,17 +38,18 @@ window.financeiro = {
             return;
         }
 
-        // Custo por cabeça e por arroba
         var custoCabeca = qty > 0 ? (valor / qty) : 0;
-        var pesoArroba = peso > 0 ? (peso / 30) : 0; // 1 arroba em pé = 30kg
+        var pesoArroba = peso > 0 ? (peso / 30) : 0;
         var custoArroba = pesoArroba > 0 ? (custoCabeca / pesoArroba) : 0;
 
         var ev = {
             type: 'COMPRA',
             qty: qty,
+            cabecas: qty,
             peso: peso,
             value: valor,
             desc: desc || (qty + ' cabeças'),
+            nome: desc || (qty + ' cabeças compradas'),
             fornecedor: fornecedor,
             lote: lote,
             custoCabeca: custoCabeca,
@@ -57,7 +58,34 @@ window.financeiro = {
         };
 
         window.data.saveEvent(ev);
-        window.app.showToast('✅ Compra registrada! R$ ' + custoCabeca.toFixed(2) + '/cab');
+
+        // ══ AUTO-CRIAR / ATUALIZAR LOTE ══
+        if (lote && window.lotes) {
+            var loteExistente = window.lotes.getLoteByNome(lote);
+            if (loteExistente) {
+                // Incrementar quantidade no lote existente
+                window.data.saveEvent({
+                    type: 'LOTE', nome: lote, categoria: loteExistente.categoria, raca: loteExistente.raca,
+                    qtdAnimais: (loteExistente.qtdAnimais || 0) + qty,
+                    pesoMedio: peso || loteExistente.pesoMedio,
+                    pasto: loteExistente.pasto, status: 'ATIVO',
+                    dataEntrada: loteExistente.dataEntrada,
+                    salMineral: loteExistente.salMineral, salConsumo: loteExistente.salConsumo
+                });
+                window.app.showToast('✅ Compra registrada! +' + qty + ' cab em ' + lote + ' | R$ ' + custoCabeca.toFixed(2) + '/cab');
+            } else {
+                // Criar novo lote
+                window.data.saveEvent({
+                    type: 'LOTE', nome: lote, categoria: 'engorda', raca: '',
+                    qtdAnimais: qty, pesoMedio: peso, pasto: '', status: 'ATIVO',
+                    dataEntrada: data || new Date().toISOString().split('T')[0]
+                });
+                window.app.showToast('✅ Compra + Novo lote: ' + lote + ' (' + qty + ' cab) | R$ ' + custoCabeca.toFixed(2) + '/cab');
+            }
+        } else {
+            window.app.showToast('✅ Compra registrada! R$ ' + custoCabeca.toFixed(2) + '/cab');
+        }
+
         document.getElementById('form-compra').reset();
     },
 
@@ -85,16 +113,18 @@ window.financeiro = {
 
         var precoArroba = 0;
         if (peso > 0) {
-            var totalArrobas = (qty * peso) / 30; // em pé /30
+            var totalArrobas = (qty * peso) / 30;
             precoArroba = valor / totalArrobas;
         }
 
         var ev = {
             type: 'VENDA',
             qty: qty,
+            cabecas: qty,
             peso: peso,
             value: valor,
             desc: desc || (qty + ' cabeças vendidas'),
+            nome: desc || (qty + ' cab vendidas'),
             comprador: comprador,
             lote: lote,
             precoArroba: precoArroba,
@@ -102,10 +132,117 @@ window.financeiro = {
         };
 
         window.data.saveEvent(ev);
+
+        // ══ AUTO-REDUZIR LOTE ══
+        if (lote && window.lotes) {
+            var loteObj = window.lotes.getLoteByNome(lote);
+            if (loteObj) {
+                var novaQtd = Math.max(0, (loteObj.qtdAnimais || 0) - qty);
+                window.data.saveEvent({
+                    type: 'LOTE', nome: lote, categoria: loteObj.categoria, raca: loteObj.raca,
+                    qtdAnimais: novaQtd, pesoMedio: loteObj.pesoMedio,
+                    pasto: loteObj.pasto, status: novaQtd > 0 ? 'ATIVO' : 'INATIVO',
+                    dataEntrada: loteObj.dataEntrada,
+                    salMineral: loteObj.salMineral, salConsumo: loteObj.salConsumo
+                });
+            }
+        }
+
         window.app.showToast('✅ Venda registrada! R$ ' + precoArroba.toFixed(2) + '/@');
         document.getElementById('form-venda').reset();
     },
 
+    // ══════════════════════════════════════════════
+    // ESTORNO — Reverter lançamento errado
+    // ══════════════════════════════════════════════
+    estornar: function (eventId) {
+        if (!window.data) return;
+
+        var evento = null;
+        var idx = -1;
+        for (var i = 0; i < window.data.events.length; i++) {
+            if (window.data.events[i].id === eventId) {
+                evento = window.data.events[i];
+                idx = i;
+                break;
+            }
+        }
+
+        if (!evento) {
+            window.app.showToast('Evento não encontrado.', 'error');
+            return;
+        }
+
+        if (evento.estornado) {
+            window.app.showToast('Este lançamento já foi estornado.', 'error');
+            return;
+        }
+
+        var tipoLabel = {
+            'COMPRA': 'Compra', 'VENDA': 'Venda', 'ESTOQUE_ENTRADA': 'Entrada Estoque',
+            'MANEJO_SANITARIO': 'Manejo', 'CONTA_PAGAR': 'Conta', 'OBRA_REGISTRO': 'Obra'
+        };
+        var label = tipoLabel[evento.type] || evento.type;
+        var valor = evento.value || evento.custo || evento.cost || 0;
+
+        if (!confirm('⚠️ Estornar "' + label + '"?\n\n' +
+            (evento.desc || evento.nome || '--') + '\n' +
+            'Valor: R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '\n\n' +
+            'Isso criará um contra-lançamento e marcará o original como estornado.')) {
+            return;
+        }
+
+        // Marcar original como estornado
+        window.data.events[idx].estornado = true;
+        window.data.events[idx].dataEstorno = new Date().toISOString();
+
+        // Criar contra-evento
+        var contra = {
+            type: 'ESTORNO',
+            eventoOriginalId: eventId,
+            tipoOriginal: evento.type,
+            desc: '🔄 ESTORNO: ' + (evento.desc || evento.nome || label),
+            nome: '🔄 ESTORNO: ' + (evento.desc || evento.nome || label),
+            value: valor,
+            date: new Date().toISOString().split('T')[0]
+        };
+        window.data.saveEvent(contra);
+
+        // ══ Reverter efeito no lote se COMPRA/VENDA ══
+        if (evento.type === 'COMPRA' && evento.lote && window.lotes) {
+            var lote = window.lotes.getLoteByNome(evento.lote);
+            if (lote) {
+                var newQtd = Math.max(0, (lote.qtdAnimais || 0) - (evento.qty || evento.cabecas || 0));
+                window.data.saveEvent({
+                    type: 'LOTE', nome: evento.lote, categoria: lote.categoria, raca: lote.raca,
+                    qtdAnimais: newQtd, pesoMedio: lote.pesoMedio,
+                    pasto: lote.pasto, status: newQtd > 0 ? 'ATIVO' : 'INATIVO',
+                    dataEntrada: lote.dataEntrada
+                });
+            }
+        }
+
+        if (evento.type === 'VENDA' && evento.lote && window.lotes) {
+            var loteV = window.lotes.getLoteByNome(evento.lote);
+            if (loteV) {
+                window.data.saveEvent({
+                    type: 'LOTE', nome: evento.lote, categoria: loteV.categoria, raca: loteV.raca,
+                    qtdAnimais: (loteV.qtdAnimais || 0) + (evento.qty || evento.cabecas || 0),
+                    pesoMedio: loteV.pesoMedio,
+                    pasto: loteV.pasto, status: 'ATIVO',
+                    dataEntrada: loteV.dataEntrada
+                });
+            }
+        }
+
+        window.data.save();
+        window.app.showToast('🔄 Estorno realizado com sucesso!');
+        this.updateFluxoUI();
+    },
+
+    // ══════════════════════════════════════════════
+    // FLUXO DE CAIXA — COMPLETO
+    // ══════════════════════════════════════════════
     updateFluxoUI: function () {
         var container = document.getElementById('fluxo-content');
         if (!container || !window.data) return;
@@ -113,58 +250,71 @@ window.financeiro = {
         var events = window.data.events;
         var totalEntradas = 0;
         var totalSaidas = 0;
-        var compras = [];
-        var vendas = [];
+        var allTransactions = [];
 
         events.forEach(function (ev) {
+            if (ev.estornado) return; // Ignorar estornados
+
+            var valor = ev.value || ev.custo || ev.cost || 0;
+
             if (ev.type === 'VENDA') {
-                totalEntradas += (ev.value || 0);
-                vendas.push(ev);
+                totalEntradas += valor;
+                allTransactions.push({ type: 'VENDA', valor: valor, desc: ev.desc || ev.nome || 'Venda', date: ev.date, id: ev.id, isEntrada: true });
             } else if (ev.type === 'COMPRA') {
-                totalSaidas += (ev.value || 0);
-                compras.push(ev);
-            } else if (ev.type === 'ESTOQUE_ENTRADA') {
-                totalSaidas += (ev.value || 0);
-            } else if (ev.type === 'MANEJO' && ev.cost) {
-                totalSaidas += ev.cost;
+                totalSaidas += valor;
+                allTransactions.push({ type: 'COMPRA', valor: valor, desc: ev.desc || ev.nome || 'Compra', date: ev.date, id: ev.id, isEntrada: false });
+            } else if (ev.type === 'ESTOQUE_ENTRADA' && valor > 0) {
+                totalSaidas += valor;
+                allTransactions.push({ type: 'ESTOQUE_ENTRADA', valor: valor, desc: ev.name || ev.nome || ev.desc || 'Insumo', date: ev.date, id: ev.id, isEntrada: false });
+            } else if ((ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && (ev.cost || ev.custo)) {
+                var mCusto = ev.cost || ev.custo || 0;
+                totalSaidas += mCusto;
+                allTransactions.push({ type: 'MANEJO', valor: mCusto, desc: (ev.tipo || 'Manejo') + ' — ' + (ev.produto || ev.desc || ''), date: ev.date, id: ev.id, isEntrada: false });
+            } else if (ev.type === 'CONTA_PAGAR' && ev.pago) {
+                totalSaidas += valor;
+                allTransactions.push({ type: 'CONTA_PAGAR', valor: valor, desc: ev.nome || ev.desc || 'Conta', date: ev.date, id: ev.id, isEntrada: false });
+            } else if (ev.type === 'OBRA_REGISTRO' && valor > 0) {
+                totalSaidas += valor;
+                allTransactions.push({ type: 'OBRA_REGISTRO', valor: valor, desc: ev.nome || ev.desc || 'Obra', date: ev.date, id: ev.id, isEntrada: false });
+            } else if (ev.type === 'ESTORNO') {
+                // Estornos são contra-lançamentos
+                if (ev.tipoOriginal === 'VENDA') {
+                    totalEntradas -= valor;
+                } else {
+                    totalSaidas -= valor;
+                }
+                allTransactions.push({ type: 'ESTORNO', valor: valor, desc: ev.desc || ev.nome || 'Estorno', date: ev.date, id: ev.id, isEntrada: ev.tipoOriginal !== 'VENDA' });
             }
         });
 
         var saldo = totalEntradas - totalSaidas;
 
-        // Summary cards — premium inline styles
+        // Summary cards
         var saldoColor = saldo >= 0 ? '#059669' : '#DC2626';
         var saldoBg = saldo >= 0 ? 'rgba(5,150,105,0.08)' : 'rgba(220,38,38,0.08)';
 
         var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
-            // Entradas
             + '<div style="background:linear-gradient(135deg, #059669, #10B981);border-radius:14px;padding:14px 16px;color:#fff;">'
             + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;">💰 Entradas</div>'
             + '<div style="font-size:22px;font-weight:800;margin-top:4px;">R$ ' + totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
-            + '<div style="font-size:10px;opacity:0.7;margin-top:2px;">' + vendas.length + ' vendas</div>'
             + '</div>'
-            // Saídas
             + '<div style="background:linear-gradient(135deg, #DC2626, #EF4444);border-radius:14px;padding:14px 16px;color:#fff;">'
             + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;">📉 Saídas</div>'
             + '<div style="font-size:22px;font-weight:800;margin-top:4px;">R$ ' + totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
-            + '<div style="font-size:10px;opacity:0.7;margin-top:2px;">Compras + Insumos + Manejo</div>'
             + '</div>'
             + '</div>'
-            // Saldo — full width
             + '<div style="background:' + saldoBg + ';border:2px solid ' + saldoColor + ';border-radius:14px;padding:14px 16px;text-align:center;margin-bottom:16px;">'
             + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:' + saldoColor + ';">📊 SALDO</div>'
             + '<div style="font-size:28px;font-weight:800;color:' + saldoColor + ';margin-top:4px;">' + (saldo >= 0 ? '+' : '') + 'R$ ' + saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
             + '</div>';
 
         // Indicadores de Gado de Corte
+        var compras = events.filter(function (e) { return e.type === 'COMPRA' && !e.estornado; });
+        var vendas = events.filter(function (e) { return e.type === 'VENDA' && !e.estornado; });
         var totalArrobasCompradas = 0;
         var totalArrobasVendidas = 0;
-        compras.forEach(function (c) {
-            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 30); // em pé /30
-        });
-        vendas.forEach(function (v) {
-            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 30); // em pé /30
-        });
+        compras.forEach(function (c) { if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 30); });
+        vendas.forEach(function (v) { if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 30); });
 
         var custoMedioArroba = totalArrobasCompradas > 0 ? (totalSaidas / totalArrobasCompradas) : 0;
         var precoMedioVenda = totalArrobasVendidas > 0 ? (totalEntradas / totalArrobasVendidas) : 0;
@@ -179,34 +329,33 @@ window.financeiro = {
             + '  <div class="kpi-card"><div class="kpi-label">@ Vendidas</div><div class="kpi-value">' + totalArrobasVendidas.toFixed(1) + '</div></div>'
             + '</div></div>';
 
-        // Recent transactions — include stock entries and manejo costs
+        // Movimentações — com botão de ESTORNO
         html += '<div class="section-title" style="margin-top:16px;">Movimentações Recentes</div>';
 
-        var estoqueEntradas = events.filter(function (ev) { return ev.type === 'ESTOQUE_ENTRADA' && ev.value; });
-        var manejoCosts = events.filter(function (ev) { return ev.type === 'MANEJO' && ev.cost; });
-        var allTransactions = compras.concat(vendas).concat(estoqueEntradas).concat(manejoCosts);
         allTransactions.sort(function (a, b) {
-            return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
+            return new Date(b.date || 0) - new Date(a.date || 0);
         });
+
+        var txConfig = {
+            'VENDA': { icon: '📈', label: 'VENDA', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+            'COMPRA': { icon: '🐄', label: 'COMPRA GADO', color: '#DC2626', bg: 'rgba(220,38,38,0.08)' },
+            'ESTOQUE_ENTRADA': { icon: '📦', label: 'INSUMO', color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
+            'MANEJO': { icon: '💉', label: 'MANEJO', color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+            'CONTA_PAGAR': { icon: '📝', label: 'CONTA PAGA', color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
+            'OBRA_REGISTRO': { icon: '🔨', label: 'OBRA', color: '#795548', bg: 'rgba(121,85,72,0.08)' },
+            'ESTORNO': { icon: '🔄', label: 'ESTORNO', color: '#6B7280', bg: 'rgba(107,114,128,0.12)' }
+        };
 
         if (allTransactions.length === 0) {
             html += '<div class="empty-state">'
                 + '<span class="empty-state-icon">💰</span>'
                 + '<div class="empty-state-title">Sem Movimentações</div>'
-                + '<div class="empty-state-text">Registre compras e vendas de gado para visualizar o fluxo de caixa.</div>'
+                + '<div class="empty-state-text">Registre compras e vendas para visualizar o fluxo de caixa.</div>'
                 + '</div>';
         } else {
-            allTransactions.slice(0, 30).forEach(function (ev) {
-                var isEntrada = ev.type === 'VENDA';
-                var valor = ev.value || ev.cost || 0;
-                var txConfig = {
-                    'VENDA': { icon: '📈', label: 'VENDA', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-                    'COMPRA': { icon: '🐄', label: 'COMPRA GADO', color: '#DC2626', bg: 'rgba(220,38,38,0.08)' },
-                    'ESTOQUE_ENTRADA': { icon: '📦', label: 'INSUMO', color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
-                    'MANEJO': { icon: '💉', label: 'MANEJO', color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' }
-                };
-                var cfg = txConfig[ev.type] || { icon: '📝', label: 'OUTRO', color: '#64748B', bg: 'rgba(100,116,139,0.08)' };
-                var dateStr = (ev.date || '').split('T')[0];
+            allTransactions.slice(0, 40).forEach(function (tx) {
+                var cfg = txConfig[tx.type] || { icon: '📝', label: 'OUTRO', color: '#64748B', bg: 'rgba(100,116,139,0.08)' };
+                var dateStr = (tx.date || '').split('T')[0];
                 var dp = dateStr.split('-');
                 var df = dp.length === 3 ? dp[2] + '/' + dp[1] : dateStr;
 
@@ -216,10 +365,20 @@ window.financeiro = {
                     + '<span style="font-size:10px;color:#94A3B8;">📅 ' + df + '</span>'
                     + '</div>'
                     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">'
-                    + '<div style="font-size:13px;font-weight:600;color:#1E293B;">' + (ev.desc || '--') + '</div>'
-                    + '<div style="font-size:14px;font-weight:800;color:' + cfg.color + ';">' + (isEntrada ? '+' : '-') + ' R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
-                    + '</div>'
+                    + '<div style="font-size:13px;font-weight:600;color:#1E293B;flex:1;">' + (tx.desc || '--') + '</div>'
+                    + '<div style="font-size:14px;font-weight:800;color:' + cfg.color + ';white-space:nowrap;margin-left:8px;">' + (tx.isEntrada ? '+' : '-') + ' R$ ' + tx.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
                     + '</div>';
+
+                // Botão ESTORNO (não mostra para estornos ou itens sem id)
+                if (tx.type !== 'ESTORNO' && tx.id) {
+                    html += '<div style="margin-top:6px;text-align:right;">'
+                        + '<button onclick="window.financeiro.estornar(\'' + tx.id + '\')" '
+                        + 'style="background:none;border:1px solid #CBD5E1;color:#64748B;font-size:9px;font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;">'
+                        + '🔄 ESTORNAR</button>'
+                        + '</div>';
+                }
+
+                html += '</div>';
             });
         }
 
@@ -231,7 +390,7 @@ window.financeiro = {
         var container = document.getElementById('balanco-content');
         if (!container || !window.data) return;
 
-        var events = window.data.events;
+        var events = window.data.events.filter(function (e) { return !e.estornado; });
 
         // ─── 1. RECEITAS ───
         var receitaGado = 0;
@@ -240,54 +399,65 @@ window.financeiro = {
 
         var totalArrobasVendidas = 0;
         vendas.forEach(function (v) {
-            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 30); // em pé /30
+            if (v.peso && v.qty) totalArrobasVendidas += (v.qty * v.peso / 30);
         });
 
         // ─── 2. CUSTOS VARIÁVEIS ───
-        // 2a. Compra de Gado (Reposição)
         var custoReposicao = 0;
         var compras = events.filter(function (ev) { return ev.type === 'COMPRA'; });
         compras.forEach(function (c) { custoReposicao += (c.value || 0); });
 
         var totalArrobasCompradas = 0;
         compras.forEach(function (c) {
-            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 30); // em pé /30
+            if (c.peso && c.qty) totalArrobasCompradas += (c.qty * c.peso / 30);
         });
 
-        // 2b. Nutrição (Ração + Sal + Silagem + Milho...)
+        // 2b. Nutrição — usar name OU nome, category OU categoria
         var custoNutricao = 0;
         var estoqueNutricao = events.filter(function (ev) {
             if (ev.type !== 'ESTOQUE_ENTRADA') return false;
-            var cat = (ev.category || '').toLowerCase();
-            var name = (ev.name || '').toLowerCase();
-            return cat === 'racao_sal' || name.indexOf('sal') >= 0 || name.indexOf('ração') >= 0 || name.indexOf('racao') >= 0 || name.indexOf('milho') >= 0 || name.indexOf('silagem') >= 0 || name.indexOf('farelo') >= 0;
+            var cat = (ev.category || ev.categoria || '').toLowerCase();
+            var name = (ev.name || ev.nome || ev.desc || '').toLowerCase();
+            return cat === 'racao_sal' || name.indexOf('sal') >= 0 || name.indexOf('ração') >= 0
+                || name.indexOf('racao') >= 0 || name.indexOf('milho') >= 0
+                || name.indexOf('silagem') >= 0 || name.indexOf('farelo') >= 0
+                || name.indexOf('proteinado') >= 0;
         });
         estoqueNutricao.forEach(function (ev) { custoNutricao += (ev.value || 0); });
 
-        // 2c. Sanidade (Vacinas + Remédios + Manejo)
+        // 2c. Sanidade
         var custoSanidade = 0;
         var estoqueRemedios = events.filter(function (ev) {
             if (ev.type !== 'ESTOQUE_ENTRADA') return false;
-            var cat = (ev.category || '').toLowerCase();
-            var name = (ev.name || '').toLowerCase();
-            return cat === 'remedios' || name.indexOf('vacina') >= 0 || name.indexOf('ivermectina') >= 0 || name.indexOf('antibiótico') >= 0 || name.indexOf('vermifugo') >= 0;
+            var cat = (ev.category || ev.categoria || '').toLowerCase();
+            var name = (ev.name || ev.nome || ev.desc || '').toLowerCase();
+            return cat === 'remedios' || name.indexOf('vacina') >= 0
+                || name.indexOf('ivermectina') >= 0 || name.indexOf('antibiótico') >= 0
+                || name.indexOf('vermifugo') >= 0 || name.indexOf('vermífugo') >= 0;
         });
         estoqueRemedios.forEach(function (ev) { custoSanidade += (ev.value || 0); });
 
-        // Add manejo costs
-        var manejoCosts = events.filter(function (ev) { return (ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && ev.cost; });
-        manejoCosts.forEach(function (ev) { custoSanidade += (ev.cost || 0); });
+        // Manejo costs (check both cost and custo)
+        var manejoCosts = events.filter(function (ev) {
+            return (ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && (ev.cost || ev.custo);
+        });
+        manejoCosts.forEach(function (ev) { custoSanidade += (ev.cost || ev.custo || 0); });
 
         // ─── 3. CUSTOS FIXOS / INFRAESTRUTURA ───
         var custoInfra = 0;
+        // Estoque de obras
         var estoqueObras = events.filter(function (ev) {
             if (ev.type !== 'ESTOQUE_ENTRADA') return false;
-            var cat = (ev.category || '').toLowerCase();
+            var cat = (ev.category || ev.categoria || '').toLowerCase();
             return cat === 'obras';
         });
         estoqueObras.forEach(function (ev) { custoInfra += (ev.value || 0); });
 
-        // 3b. Mão de Obra
+        // Obras registradas
+        var obrasRegistro = events.filter(function (ev) { return ev.type === 'OBRA_REGISTRO'; });
+        obrasRegistro.forEach(function (ob) { custoInfra += (ob.value || ob.custo || 0); });
+
+        // Mão de Obra (obras com workers + funcionários)
         var custoMaoDeObra = 0;
         var obras = events.filter(function (ev) { return ev.type === 'OBRA'; });
         obras.forEach(function (ob) {
@@ -298,9 +468,19 @@ window.financeiro = {
             }
         });
 
+        // Funcionários (salários como custo mensal)
+        var funcionarios = events.filter(function (ev) { return ev.type === 'FUNCIONARIO' && ev.status === 'ATIVO'; });
+        var salariosMensais = 0;
+        funcionarios.forEach(function (f) { salariosMensais += (f.salario || 0); });
+
+        // Contas pagas
+        var contasPagas = 0;
+        events.filter(function (ev) { return ev.type === 'CONTA_PAGAR' && ev.pago; })
+            .forEach(function (c) { contasPagas += (c.value || 0); });
+
         // ─── TOTAIS ───
         var custoVariavelTotal = custoReposicao + custoNutricao + custoSanidade;
-        var custoFixoTotal = custoInfra + custoMaoDeObra;
+        var custoFixoTotal = custoInfra + custoMaoDeObra + salariosMensais + contasPagas;
         var custoOperacionalTotal = custoVariavelTotal + custoFixoTotal;
         var resultadoBruto = receitaGado - custoReposicao;
         var resultadoLiquido = receitaGado - custoOperacionalTotal;
@@ -329,20 +509,17 @@ window.financeiro = {
 
         var gmdMedio = countGMD > 0 ? somaGMD / countGMD : 0;
 
-        // Custo por cabeça e por arroba
         var custoPorCabeca = totalAnimaisAtivos > 0 ? custoOperacionalTotal / totalAnimaisAtivos : 0;
-        var arrobasTotais = totalAnimaisAtivos * pesoMedioRebanho / 30; // em pé /30
+        var arrobasTotais = totalAnimaisAtivos * pesoMedioRebanho / 30;
         var custoPorArroba = arrobasTotais > 0 ? custoOperacionalTotal / arrobasTotais : 0;
         var precoMedioVendaArroba = totalArrobasVendidas > 0 ? receitaGado / totalArrobasVendidas : 0;
         var margemPorArroba = precoMedioVendaArroba - custoPorArroba;
 
-        // Valor estimado do rebanho (cabeças × peso × preço/@)
         var valorRebanho = 0;
         if (precoMedioVendaArroba > 0 && totalAnimaisAtivos > 0) {
             valorRebanho = arrobasTotais * precoMedioVendaArroba;
         }
 
-        // Custo diário da fazenda (nutrição dos lotes ativos)
         var custoDiarioFazenda = 0;
         if (window.lotes) {
             window.lotes.getLotes().forEach(function (l) {
@@ -375,44 +552,41 @@ window.financeiro = {
             + '<div class="kpi-card"><div class="kpi-label">Preço Venda/@</div><div class="kpi-value positive">' + fmt(precoMedioVendaArroba) + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Margem/@</div><div class="kpi-value ' + (margemPorArroba >= 0 ? 'positive' : 'negative') + '">' + fmt(margemPorArroba) + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Custo Diário Fazenda</div><div class="kpi-value">' + fmt(custoDiarioFazenda) + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Custo Mensal Fazenda</div><div class="kpi-value">' + fmt(custoDiarioFazenda * 30) + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Folha Mensal</div><div class="kpi-value">' + fmt(salariosMensais) + '</div></div>'
             + '</div></div>';
 
-        // ══ DRE — DEMONSTRATIVO DE RESULTADO ══
+        // ══ DRE ══
         html += '<div class="dre-section" style="margin-top:16px;">'
             + '<div class="kpi-title">📋 DRE — Demonstrativo de Resultado</div>'
             + '<div class="dre-table">';
 
-        // RECEITAS
         html += '<div class="dre-header">RECEITAS</div>'
             + '<div class="dre-row"><span>Venda de Gado</span><span class="text-green">' + fmt(receitaGado) + '</span></div>'
             + '<div class="dre-row"><span class="dre-sub">@ Vendidas: ' + totalArrobasVendidas.toFixed(1) + ' | Vendas: ' + vendas.length + '</span><span></span></div>'
             + '<div class="dre-total"><span>TOTAL RECEITAS</span><span class="text-green">' + fmt(receitaGado) + '</span></div>';
 
-        // CUSTOS VARIÁVEIS
         html += '<div class="dre-header" style="margin-top:12px;">CUSTOS VARIÁVEIS</div>'
             + '<div class="dre-row"><span>🐄 Reposição de Gado</span><span class="text-red">' + fmt(custoReposicao) + '</span></div>'
             + '<div class="dre-row"><span>🧂 Nutrição (Ração/Sal/Silagem)</span><span class="text-red">' + fmt(custoNutricao) + '</span></div>'
             + '<div class="dre-row"><span>💊 Sanidade (Vacinas/Remédios/Manejo)</span><span class="text-red">' + fmt(custoSanidade) + '</span></div>'
             + '<div class="dre-total"><span>TOTAL VARIÁVEIS</span><span class="text-red">' + fmt(custoVariavelTotal) + '</span></div>';
 
-        // RESULTADO BRUTO
         html += '<div class="dre-resultado ' + (resultadoBruto >= 0 ? 'positivo' : 'negativo') + '">'
             + '<span>RESULTADO BRUTO</span><span>' + fmt(resultadoBruto) + '</span></div>';
 
-        // CUSTOS FIXOS
         html += '<div class="dre-header" style="margin-top:12px;">CUSTOS FIXOS / ESTRUTURAIS</div>'
             + '<div class="dre-row"><span>🔨 Infraestrutura (Obras/Materiais)</span><span class="text-red">' + fmt(custoInfra) + '</span></div>'
             + '<div class="dre-row"><span>👷 Mão de Obra</span><span class="text-red">' + fmt(custoMaoDeObra) + '</span></div>'
+            + '<div class="dre-row"><span>💼 Folha de Pagamento</span><span class="text-red">' + fmt(salariosMensais) + '</span></div>'
+            + '<div class="dre-row"><span>📝 Contas Pagas</span><span class="text-red">' + fmt(contasPagas) + '</span></div>'
             + '<div class="dre-total"><span>TOTAL FIXOS</span><span class="text-red">' + fmt(custoFixoTotal) + '</span></div>';
 
-        // RESULTADO LÍQUIDO
         html += '<div class="dre-resultado ' + (resultadoLiquido >= 0 ? 'positivo' : 'negativo') + '" style="font-size:16px;">'
             + '<span>📊 RESULTADO LÍQUIDO</span><span>' + fmt(resultadoLiquido) + '</span></div>';
 
         html += '</div></div>';
 
-        // ══ PROJEÇÃO / VALOR DO REBANHO ══
+        // ══ PROJEÇÃO ══
         if (valorRebanho > 0) {
             var resultadoPotencial = valorRebanho - custoOperacionalTotal + receitaGado;
             html += '<div class="kpi-section" style="margin-top:16px;">'
@@ -424,13 +598,15 @@ window.financeiro = {
                 + '</div></div>';
         }
 
-        // ══ COMPOSIÇÃO DE CUSTOS (GRÁFICO VISUAL) ══
+        // ══ COMPOSIÇÃO DE CUSTOS ══
         var custoItems = [
             { label: '🐄 Reposição', valor: custoReposicao, cor: '#E91E63' },
             { label: '🧂 Nutrição', valor: custoNutricao, cor: '#FF9800' },
             { label: '💊 Sanidade', valor: custoSanidade, cor: '#2196F3' },
             { label: '🔨 Infraestrutura', valor: custoInfra, cor: '#795548' },
-            { label: '👷 Mão de Obra', valor: custoMaoDeObra, cor: '#9C27B0' }
+            { label: '👷 Mão de Obra', valor: custoMaoDeObra, cor: '#9C27B0' },
+            { label: '💼 Folha Pgto', valor: salariosMensais, cor: '#00BCD4' },
+            { label: '📝 Contas Pagas', valor: contasPagas, cor: '#607D8B' }
         ];
 
         var maxCusto = Math.max.apply(null, custoItems.map(function (c) { return c.valor; }));
@@ -440,6 +616,7 @@ window.financeiro = {
                 + '<div class="kpi-title">📈 Composição de Custos</div>';
 
             custoItems.forEach(function (item) {
+                if (item.valor <= 0) return;
                 var pct = custoOperacionalTotal > 0 ? (item.valor / custoOperacionalTotal * 100) : 0;
                 var barWidth = maxCusto > 0 ? (item.valor / maxCusto * 100) : 0;
                 html += '<div style="margin-bottom:8px;">'

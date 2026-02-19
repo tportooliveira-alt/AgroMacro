@@ -129,11 +129,15 @@
         { nome: 'Compra Garrotes Recria', cabecas: 140, pesoMedio: 240, valor: 364000, lote: 'Recria Chico', fornecedor: 'Fazenda São José', data: 30 }
     ];
 
-    compras.forEach(function (c) {
+    compras.forEach(function (c, idx) {
         window.data.events.push({
             type: 'COMPRA',
+            id: 'DEMO-C' + idx + '-' + Date.now(),
             nome: c.nome,
+            desc: c.nome,
+            qty: c.cabecas,
             cabecas: c.cabecas,
+            peso: c.pesoMedio,
             pesoMedio: c.pesoMedio,
             value: c.valor,
             lote: c.lote,
@@ -152,11 +156,15 @@
         { nome: 'Venda Engorda Subaco', cabecas: 35, pesoMedio: 490, valor: 171500, lote: 'Engorda Subaco', comprador: 'Frigorífico Minerva', data: 8 }
     ];
 
-    vendas.forEach(function (v) {
+    vendas.forEach(function (v, idx) {
         window.data.events.push({
             type: 'VENDA',
+            id: 'DEMO-V' + idx + '-' + Date.now(),
             nome: v.nome,
+            desc: v.nome,
+            qty: v.cabecas,
             cabecas: v.cabecas,
+            peso: v.pesoMedio,
             pesoMedio: v.pesoMedio,
             value: v.valor,
             lote: v.lote,
@@ -192,13 +200,16 @@
         { lote: 'Vacas Paridas', tipo: 'Tratamento', produto: 'Anti-inflamatório', custo: 320, obs: '2 vacas pós-parto', data: 14 }
     ];
 
-    manejos.forEach(function (m) {
+    manejos.forEach(function (m, idx) {
         window.data.events.push({
             type: 'MANEJO_SANITARIO',
+            id: 'DEMO-M' + idx + '-' + Date.now(),
             lote: m.lote,
             tipo: m.tipo,
             produto: m.produto,
             custo: m.custo,
+            cost: m.custo,
+            desc: m.tipo + ' — ' + m.produto,
             obs: m.obs,
             date: fmt(daysAgo(m.data))
         });
@@ -231,31 +242,38 @@
     // ═══════════════════════════════════════════════════════════
     var estoque = [
         // Medicamentos
-        { item: 'Ivermectina 3.15%', qty: 25, unit: 'litros', cat: 'remedios' },
-        { item: 'Doramectina', qty: 15, unit: 'litros', cat: 'remedios' },
-        { item: 'Vacina Aftosa', qty: 500, unit: 'doses', cat: 'remedios' },
-        { item: 'Vacina Brucelose B-19', qty: 100, unit: 'doses', cat: 'remedios' },
-        { item: 'Vacina Clostridiose', qty: 300, unit: 'doses', cat: 'remedios' },
-        { item: 'Oxitetraciclina LA', qty: 8, unit: 'frascos', cat: 'remedios' },
-        { item: 'Anti-inflamatório Banamine', qty: 5, unit: 'frascos', cat: 'remedios' },
-        // Nutrição
-        { item: 'Sal Mineral Premix', qty: 2000, unit: 'kg', cat: 'remedios' },
-        { item: 'Sal Proteinado 40%', qty: 3000, unit: 'kg', cat: 'remedios' },
-        { item: 'Ração 18% PB', qty: 5000, unit: 'kg', cat: 'remedios' },
-        { item: 'Ureia Pecuária', qty: 500, unit: 'kg', cat: 'remedios' },
+        { item: 'Ivermectina 3.15%', qty: 25, unit: 'litros', cat: 'remedios', preco: 85 },
+        { item: 'Doramectina', qty: 15, unit: 'litros', cat: 'remedios', preco: 120 },
+        { item: 'Vacina Aftosa', qty: 500, unit: 'doses', cat: 'remedios', preco: 1.80 },
+        { item: 'Vacina Brucelose B-19', qty: 100, unit: 'doses', cat: 'remedios', preco: 3.50 },
+        { item: 'Vacina Clostridiose', qty: 300, unit: 'doses', cat: 'remedios', preco: 2.20 },
+        { item: 'Oxitetraciclina LA', qty: 8, unit: 'frascos', cat: 'remedios', preco: 45 },
+        { item: 'Anti-inflamatório Banamine', qty: 5, unit: 'frascos', cat: 'remedios', preco: 68 },
+        // Nutrição (CORRIGIDO: era 'remedios', agora 'racao_sal')
+        { item: 'Sal Mineral Premix', qty: 2000, unit: 'kg', cat: 'racao_sal', preco: 3.80 },
+        { item: 'Sal Proteinado 40%', qty: 3000, unit: 'kg', cat: 'racao_sal', preco: 4.50 },
+        { item: 'Ração 18% PB', qty: 5000, unit: 'kg', cat: 'racao_sal', preco: 2.10 },
+        { item: 'Ureia Pecuária', qty: 500, unit: 'kg', cat: 'racao_sal', preco: 3.20 },
         // Materiais
-        { item: 'Arame Farpado', qty: 120, unit: 'rolos', cat: 'obras' },
-        { item: 'Arame Liso', qty: 40, unit: 'rolos', cat: 'obras' },
-        { item: 'Mourão Eucalipto 2.2m', qty: 300, unit: 'un', cat: 'obras' },
-        { item: 'Mourão Concreto', qty: 80, unit: 'un', cat: 'obras' },
-        { item: 'Cimento CP-II', qty: 50, unit: 'sacos', cat: 'obras' },
-        { item: 'Barra de Ferro 3/8', qty: 30, unit: 'barras', cat: 'obras' },
-        { item: 'Diesel', qty: 800, unit: 'litros', cat: 'obras' }
+        { item: 'Arame Farpado', qty: 120, unit: 'rolos', cat: 'obras', preco: 175 },
+        { item: 'Arame Liso', qty: 40, unit: 'rolos', cat: 'obras', preco: 220 },
+        { item: 'Mourão Eucalipto 2.2m', qty: 300, unit: 'un', cat: 'obras', preco: 35 },
+        { item: 'Mourão Concreto', qty: 80, unit: 'un', cat: 'obras', preco: 65 },
+        { item: 'Cimento CP-II', qty: 50, unit: 'sacos', cat: 'obras', preco: 38 },
+        { item: 'Barra de Ferro 3/8', qty: 30, unit: 'barras', cat: 'obras', preco: 42 },
+        { item: 'Diesel', qty: 800, unit: 'litros', cat: 'obras', preco: 6.50 }
     ];
 
     estoque.forEach(function (e) {
         window.data.events.push({
-            type: 'ESTOQUE_ENTRADA', item: e.item, nome: e.item, qty: e.qty, unit: e.unit, categoria: e.cat,
+            type: 'ESTOQUE_ENTRADA',
+            name: e.item,          // 'name' (padrão do estoque.js)
+            desc: e.item,
+            qty: e.qty,
+            unit: e.unit,
+            category: e.cat,       // 'category' (padrão do estoque.js)
+            value: e.qty * e.preco, // Custo total
+            valorUnitario: e.preco,
             date: fmt(daysAgo(Math.floor(Math.random() * 30)))
         });
     });
