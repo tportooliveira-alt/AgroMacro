@@ -303,6 +303,11 @@ window.app = {
         var pesoMedio = pesados > 0 ? (pesoTotal / pesados).toFixed(0) : '--';
         // 1@ vivo = 30 kg (15 kg só após abate)
         var pesoArrobas = pesados > 0 ? (pesoTotal / pesados / 30).toFixed(1) : '--';
+        var totalArrobas = pesoTotal > 0 ? (pesoTotal / 30) : 0;
+
+        // Valor do rebanho em pé (@ total × preço da @)
+        var precoArroba = window.contas ? window.contas.getPrecoArroba() : 0;
+        var valorRebanho = totalArrobas * precoArroba;
 
         // Get projeção summary
         var projStr = '';
@@ -321,6 +326,8 @@ window.app = {
             + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value">' + totalLotes + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Pastos</div><div class="kpi-value">' + totalPastos + '</div></div>'
             + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div><div style="font-size:11px;color:var(--text-2,#6B7280);font-weight:600;margin-top:2px;">@ ' + pesoArrobas + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">@ Total Rebanho</div><div class="kpi-value">' + totalArrobas.toFixed(0) + ' @</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">💰 Valor em Pé</div><div class="kpi-value ' + (valorRebanho > 0 ? 'positive' : '') + '">' + (valorRebanho > 0 ? 'R$ ' + (valorRebanho / 1000).toFixed(0) + 'k' : 'Definir @') + '</div></div>'
             + projStr;
     },
 

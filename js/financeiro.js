@@ -235,6 +235,35 @@ window.financeiro = {
             }
         }
 
+        // ══ Reverter estoque se ESTOQUE_ENTRADA ══
+        if (evento.type === 'ESTOQUE_ENTRADA' && evento.produto && window.estoque) {
+            try {
+                var produtos = window.estoque.getProdutos ? window.estoque.getProdutos() : [];
+                for (var p = 0; p < produtos.length; p++) {
+                    if (produtos[p].nome === evento.produto || produtos[p].name === evento.produto) {
+                        var qtdOriginal = evento.qty || evento.qtdSacos || 0;
+                        produtos[p].qty = Math.max(0, (produtos[p].qty || 0) - qtdOriginal);
+                        break;
+                    }
+                }
+            } catch (e) { /* best effort */ }
+        }
+
+        // ══ Reverter materiais se MANEJO ══
+        if ((evento.type === 'MANEJO_SANITARIO' || evento.type === 'MANEJO') && evento.materials && window.estoque) {
+            try {
+                var produtosM = window.estoque.getProdutos ? window.estoque.getProdutos() : [];
+                evento.materials.forEach(function (mat) {
+                    for (var pm = 0; pm < produtosM.length; pm++) {
+                        if (produtosM[pm].nome === mat.name || produtosM[pm].name === mat.name) {
+                            produtosM[pm].qty = (produtosM[pm].qty || 0) + (mat.qty || 0);
+                            break;
+                        }
+                    }
+                });
+            } catch (e) { /* best effort */ }
+        }
+
         window.data.save();
         window.app.showToast('🔄 Estorno realizado com sucesso!');
         this.updateFluxoUI();

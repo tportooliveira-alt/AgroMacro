@@ -782,6 +782,21 @@
                     <label>Observações</label>
                     <textarea id="obra-obs" rows="2"></textarea>
                 </div>
+                <div class="section-title">Empreiteiro (Opcional)</div>
+                <div class="form-group">
+                    <label>Nome do Empreiteiro</label>
+                    <input type="text" id="obra-empreiteiro-nome" placeholder="Ex: João da Silva / Construtora ABC">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Contato</label>
+                        <input type="text" id="obra-empreiteiro-contato" placeholder="(77) 99999-0000">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Contratado (R$)</label>
+                        <input type="number" id="obra-empreiteiro-valor" step="0.01" placeholder="5000.00">
+                    </div>
+                </div>
                 <div class="section-title">Funcionários na Obra</div>
                 <div id="workers-list" class="workers-grid"></div>
                 <button type="button" class="add-btn" onclick="window.obras.addWorker()">+ Adicionar
@@ -1245,6 +1260,11 @@
                 <div class="mapa-dash-card mapa-dash-gray">
                     <span class="mapa-dash-num" id="dash-vazios">0</span>
                     <span class="mapa-dash-label">Vazios</span>
+                </div>
+                <div class="mapa-dash-card"
+                    style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-color:#0284c7;">
+                    <span class="mapa-dash-num" id="dash-total-hectares" style="color:#0369a1;">0</span>
+                    <span class="mapa-dash-label">📐 Hectares</span>
                 </div>
             </div>
 

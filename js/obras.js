@@ -59,6 +59,11 @@ window.obras = {
             materials = window.estoque.getSelectedMaterials('obra-materials-list');
         }
 
+        // Get empreiteiro data
+        var empreiteiroNome = (document.getElementById('obra-empreiteiro-nome') || {}).value || '';
+        var empreiteiroContato = (document.getElementById('obra-empreiteiro-contato') || {}).value || '';
+        var empreiteiroValor = parseFloat((document.getElementById('obra-empreiteiro-valor') || {}).value) || 0;
+
         var ev = {
             type: 'OBRA_REGISTRO',
             nome: nome,
@@ -67,6 +72,11 @@ window.obras = {
             obs: obs,
             workers: selectedWorkers,
             materials: materials,
+            empreiteiro: empreiteiroNome ? {
+                nome: empreiteiroNome,
+                contato: empreiteiroContato,
+                valor: empreiteiroValor
+            } : null,
             date: inicio
         };
 
@@ -125,6 +135,17 @@ window.obras = {
                 });
             }
 
+            // Empreiteiro
+            var empreiteiroHtml = '';
+            if (ob.empreiteiro && ob.empreiteiro.nome) {
+                empreiteiroHtml = '<div style="margin-bottom:6px;padding:8px;background:rgba(124,58,237,0.05);border-radius:8px;">'
+                    + '<div style="font-size:11px;font-weight:700;color:#7C3AED;margin-bottom:4px;">EMPREITEIRO</div>'
+                    + '<div style="font-size:12px;padding:2px 0;">👷 <strong>' + ob.empreiteiro.nome + '</strong></div>'
+                    + (ob.empreiteiro.contato ? '<div style="font-size:12px;padding:2px 0;color:#64748B;">📞 ' + ob.empreiteiro.contato + '</div>' : '')
+                    + (ob.empreiteiro.valor > 0 ? '<div style="font-size:12px;padding:2px 0;font-weight:700;">💰 Valor: R$ ' + ob.empreiteiro.valor.toFixed(2) + '</div>' : '')
+                    + '</div>';
+            }
+
             var statusColor = ob.status === 'concluido' ? '#059669' : '#D97706';
             var statusLabel = ob.status === 'concluido' ? '✅ Concluída' : '🔨 Em Andamento';
 
@@ -137,6 +158,7 @@ window.obras = {
                 + '📅 ' + fmtDate(startDate) + (endDate ? ' → ' + fmtDate(endDate) : ' (em aberto)')
                 + '</div>'
                 + (ob.obs ? '<div style="font-size:13px;color:#475569;margin-bottom:8px;">' + ob.obs + '</div>' : '')
+                + (empreiteiroHtml)
                 + (workersHtml ? '<div style="margin-bottom:6px;padding:8px;background:rgba(37,99,235,0.05);border-radius:8px;">'
                     + '<div style="font-size:11px;font-weight:700;color:#2563EB;margin-bottom:4px;">EQUIPE</div>'
                     + workersHtml

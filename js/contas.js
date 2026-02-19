@@ -81,7 +81,7 @@ window.contas = {
         if (!container || !window.data) return;
 
         var contas = window.data.events.filter(function (ev) {
-            return ev.type === 'CONTA_PAGAR';
+            return ev.type === 'CONTA_PAGAR' && !ev.estornado;
         });
 
         var pendentes = contas.filter(function (c) { return c.status === 'pendente'; });
@@ -127,7 +127,7 @@ window.contas = {
                     + '<strong class="text-red">' + fmt(c.value) + '</strong>'
                     + '<div style="display:flex;gap:6px;">'
                     + '<button class="btn-sm" onclick="window.contas.pagarConta(\'' + c.id + '\')">✅ Pagar</button>'
-                    + '<button class="danger-btn-sm" onclick="window.contas.excluirConta(\'' + c.id + '\')">🗑️</button>'
+                    + '<button class="btn-sm" style="background:#64748B;" onclick="window.contas.estornarConta(\'' + c.id + '\')">🔄 Estornar</button>'
                     + '</div>'
                     + '</div></div>';
             });
@@ -218,15 +218,13 @@ window.contas = {
         container.innerHTML = html;
     },
 
-    excluirConta: function (contaId) {
-        if (!confirm('Excluir esta conta?')) return;
-        if (!window.data) return;
-        window.data.events = window.data.events.filter(function (ev) {
-            return !(ev.id === contaId && ev.type === 'CONTA_PAGAR');
-        });
-        window.data.save();
-        window.app.showToast('🗑️ Conta excluída.');
-        this.renderContasPagar();
+    estornarConta: function (contaId) {
+        if (window.financeiro && window.financeiro.estornar) {
+            window.financeiro.estornar(contaId);
+            this.renderContasPagar();
+        } else {
+            window.app.showToast('Módulo financeiro não disponível.', 'error');
+        }
     },
 
     fecharModal: function (id) {

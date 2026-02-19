@@ -72,50 +72,12 @@ window.mapa = {
         };
         L.control.layers(baseMaps, null, { position: 'topright' }).addTo(this.map);
 
-        // ── Camada de desenho ──
+        // ── Camada de polígonos (somente leitura — edição via Google Earth KML) ──
         this.drawnItems = new L.FeatureGroup();
         this.map.addLayer(this.drawnItems);
 
-        // Controle Leaflet.draw (apenas polígono)
-        this.drawControl = new L.Control.Draw({
-            position: 'topleft',
-            draw: {
-                polygon: {
-                    allowIntersection: false,
-                    shapeOptions: {
-                        color: '#22C55E',
-                        weight: 3,
-                        fillOpacity: 0.35
-                    }
-                },
-                polyline: false,
-                circle: false,
-                rectangle: false,
-                marker: false,
-                circlemarker: false
-            },
-            edit: {
-                featureGroup: this.drawnItems,
-                remove: true
-            }
-        });
-        this.map.addControl(this.drawControl);
-
-        // ── Evento: novo polígono desenhado ──
-        var self = this;
-        this.map.on(L.Draw.Event.CREATED, function (e) {
-            var layer = e.layer;
-            self.promptNomePasto(layer);
-        });
-
-        // ── Evento: polígono deletado ──
-        this.map.on(L.Draw.Event.DELETED, function (e) {
-            self.saveAllPolygons();
-            self.updateDashboard();
-            window.app.showToast('Pasto removido do mapa');
-        });
-
         // ── Carregar polígonos salvos ──
+        var self = this;
         this.loadPolygons();
 
         // ── Tentar geolocalização se sem polígonos ──
@@ -137,7 +99,7 @@ window.mapa = {
     //  DASHBOARD — Totais no topo
     // ══════════════════════════════════════════════
     getDashboardStats: function () {
-        var stats = { totalPastos: 0, totalCabecas: 0, ocupados: 0, vazios: 0 };
+        var stats = { totalPastos: 0, totalCabecas: 0, ocupados: 0, vazios: 0, totalHectares: 0 };
         var self = this;
         if (!this.drawnItems) return stats;
 
@@ -151,6 +113,9 @@ window.mapa = {
             } else {
                 stats.vazios++;
             }
+            // Somar hectares de cada polígono
+            var area = self.calcArea(layer);
+            stats.totalHectares += area;
         });
         return stats;
     },
@@ -162,6 +127,7 @@ window.mapa = {
         if (el('dash-total-cabecas')) el('dash-total-cabecas').textContent = stats.totalCabecas;
         if (el('dash-ocupados')) el('dash-ocupados').textContent = stats.ocupados;
         if (el('dash-vazios')) el('dash-vazios').textContent = stats.vazios;
+        if (el('dash-total-hectares')) el('dash-total-hectares').textContent = stats.totalHectares.toFixed(1);
     },
 
     // ══════════════════════════════════════════════
@@ -627,13 +593,7 @@ window.mapa = {
                     '</div>';
             }
 
-            // ── Botões de ação ──
-            var layerId = L.stamp(layer);
-            var nomeEscaped = nome.replace(/'/g, "\\'");
-            html += '<div style="display:flex;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid #E5E7EB;">' +
-                '<button onclick="window.mapa.renamePasto(' + layerId + ')" style="flex:1;padding:6px;border:none;border-radius:6px;background:#3B82F6;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">✏️ Renomear</button>' +
-                '<button onclick="window.mapa.deletePasto(' + layerId + ')" style="flex:1;padding:6px;border:none;border-radius:6px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">🗑️ Excluir</button>' +
-                '</div>';
+            // ── Botão mover gado (se tem lotes) — único botão de ação ──
 
             // Botão mover gado (se tem lotes)
             if (info.lotes.length > 0) {
@@ -939,6 +899,56 @@ window.mapa = {
         if (this.map) {
             var c = this.map.getCenter();
             this.saveCenter(c.lat, c.lng, this.map.getZoom());
+        }
+    },
+
+    // ══════════════════════════════════════════════
+    //  SYNC — Auto-cadastra pastos do mapa no sistema
+    // ══════════════════════════════════════════════
+    syncPastosToApp: function () {
+        if (!window.data) return;
+        var self = this;
+        var created = 0;
+
+        // Pegar nomes de pastos já cadastrados no sistema
+        var existingPastos = {};
+        window.data.events.forEach(function (ev) {
+            if (ev.type === 'PASTO' && ev.nome) {
+                existingPastos[ev.nome.toLowerCase()] = true;
+            }
+        });
+
+        // Para cada polígono no mapa, criar PASTO se não existe
+        this.drawnItems.eachLayer(function (layer) {
+            if (!layer.pastoNome) return;
+            var nome = layer.pastoNome;
+
+            if (existingPastos[nome.toLowerCase()]) return; // já existe
+
+            var area = self.calcArea(layer);
+
+            var pasto = {
+                type: 'PASTO',
+                nome: nome,
+                area: area,
+                capacidade: 0,
+                tipoPasto: 'Braquiária',
+                statusPasto: 'disponivel',
+                obs: 'Auto-cadastrado via import KML',
+                date: new Date().toISOString(),
+                timestamp: new Date().toISOString()
+            };
+
+            window.data.saveEvent(pasto);
+            created++;
+        });
+
+        if (created > 0) {
+            window.app.showToast('📋 ' + created + ' pasto(s) cadastrado(s) automaticamente!');
+            // Atualizar lista de pastos se estiver visível
+            if (window.pastos && window.pastos.renderList) {
+                window.pastos.renderList();
+            }
         }
     },
 
