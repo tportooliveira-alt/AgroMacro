@@ -1449,6 +1449,7 @@
     <script src="js/fotos.js?v=20260213a"></script>
     <script src="js/fazenda-data.js?v=20260219a"></script>
     <script src="js/mapa.js?v=20260219c"></script>
+    <script src="js/ia-consultor.js?v=20260219a"></script>
 
     <script src="app.js"></script>
 
@@ -1495,6 +1496,36 @@
             });
         }
     </script>
+
+    <!-- IA Consultor Modal -->
+    <div id="ia-modal" class="ia-modal">
+        <div class="ia-modal-content">
+            <div class="ia-header">
+                <div class="ia-header-left">
+                    <span class="ia-header-icon">🤖</span>
+                    <div>
+                        <div class="ia-header-title">AgroIA</div>
+                        <div class="ia-header-sub">Consultor Pecuário • Gemini AI</div>
+                    </div>
+                </div>
+                <div class="ia-header-actions">
+                    <button class="ia-header-btn" onclick="window.iaConsultor.limparHistorico()"
+                        title="Limpar">🗑️</button>
+                    <button class="ia-header-btn" onclick="window.iaConsultor.toggle()" title="Fechar">✕</button>
+                </div>
+            </div>
+            <div id="ia-messages" class="ia-messages"></div>
+            <div id="ia-typing" class="ia-typing" style="display:none;">
+                <div class="ia-typing-dots"><span></span><span></span><span></span></div>
+                <span>AgroIA está analisando seus dados...</span>
+            </div>
+            <div class="ia-input-bar">
+                <input type="text" id="ia-input" class="ia-input"
+                    placeholder="Pergunte sobre seu rebanho, pastos, custos..." autocomplete="off">
+                <button class="ia-send-btn" onclick="window.iaConsultor._enviarDoInput()">➤</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

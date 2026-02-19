@@ -51,6 +51,7 @@ window.app = {
         if (window.indicadores) window.indicadores.init();
         if (window.graficos) window.graficos.init();
         if (window.fotos) window.fotos.init();
+        if (window.iaConsultor) window.iaConsultor.init();
 
 
         this.loadConfig();

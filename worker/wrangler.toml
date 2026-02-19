@@ -1,0 +1,8 @@
+name = "agromacro-ia"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# O free tier do Cloudflare Workers inclui:
+# - 100.000 requisições/dia
+# - 10ms CPU time por request
+# - Sem custo
