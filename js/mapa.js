@@ -988,6 +988,8 @@ window.mapa = {
                     }
 
                     loaded = true;
+                    // Sync pastos do localStorage com o cadastro do app
+                    this.syncPastosToApp();
                 }
             }
         } catch (e) {
