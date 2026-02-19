@@ -129,12 +129,74 @@ window.estoque = {
                 });
             }
         });
+
+        // ══ CONSUMO DIÁRIO AUTOMÁTICO ══
+        // Deduz consumo acumulado de sal/ração de lotes ativos
+        var consumos = this.calcConsumoAcumulado();
+        consumos.forEach(function (c) {
+            var key = self.normalizeKey(c.produto);
+            if (stock[key]) {
+                stock[key].qty -= c.consumoAcumuladoKg;
+                if (!stock[key].consumoDiario) stock[key].consumoDiario = 0;
+                stock[key].consumoDiario += c.consumoDiarioKg;
+            }
+        });
+
         var items = [];
         Object.keys(stock).forEach(function (key) {
-            if (stock[key].qty > 0) items.push(stock[key]);
+            var item = stock[key];
+            if (item.qty > 0 || item.consumoDiario) items.push(item);
         });
         return items.sort(function (a, b) { return a.name.localeCompare(b.name); });
     },
+
+    // ══════════════════════════════════════════════
+    //  CONSUMO DIÁRIO AUTOMÁTICO — calcula baixa acumulada
+    // ══════════════════════════════════════════════
+    calcConsumoAcumulado: function () {
+        if (!window.lotes || !window.lotes.getLotes) return [];
+        var lotes = window.lotes.getLotes();
+        var hoje = new Date();
+        var consumos = [];
+
+        lotes.forEach(function (lote) {
+            if (!lote.qtdAnimais || lote.qtdAnimais <= 0) return;
+            if (lote.status && lote.status !== 'ATIVO') return;
+
+            var dataEntrada = lote.dataEntrada ? new Date(lote.dataEntrada) : null;
+            if (!dataEntrada || isNaN(dataEntrada.getTime())) return;
+
+            var dias = Math.max(0, Math.floor((hoje - dataEntrada) / (1000 * 60 * 60 * 24)));
+            if (dias <= 0) return;
+
+            // Sal mineral: consumo em g/cab/dia → kg total acumulado
+            if (lote.salMineral && lote.salConsumo && lote.salConsumo > 0) {
+                var salKgDia = (lote.salConsumo / 1000) * lote.qtdAnimais;
+                consumos.push({
+                    produto: lote.salMineral,
+                    lote: lote.nome,
+                    consumoDiarioKg: salKgDia,
+                    consumoAcumuladoKg: salKgDia * dias,
+                    dias: dias
+                });
+            }
+
+            // Ração: consumo em kg/cab/dia → kg total acumulado
+            if (lote.racao && lote.racaoConsumo && lote.racaoConsumo > 0) {
+                var racaoKgDia = lote.racaoConsumo * lote.qtdAnimais;
+                consumos.push({
+                    produto: lote.racao,
+                    lote: lote.nome,
+                    consumoDiarioKg: racaoKgDia,
+                    consumoAcumuladoKg: racaoKgDia * dias,
+                    dias: dias
+                });
+            }
+        });
+
+        return consumos;
+    },
+
 
     // Populates the manejo-produto dropdown with ALL items from stock
     populateManejoProducts: function () {
@@ -396,6 +458,20 @@ window.estoque = {
             }
         });
 
+        // ══ CONSUMO DIÁRIO AUTOMÁTICO ══
+        var consumos = this.calcConsumoAcumulado();
+        consumos.forEach(function (c) {
+            var key = self.normalizeKey(c.produto);
+            if (stock[key]) {
+                stock[key].qty -= c.consumoAcumuladoKg;
+                if (!stock[key].consumoDiario) stock[key].consumoDiario = 0;
+                stock[key].consumoDiario += c.consumoDiarioKg;
+                if (!stock[key].diasRestantes || stock[key].diasRestantes > (stock[key].qty / c.consumoDiarioKg)) {
+                    stock[key].diasRestantes = stock[key].qty > 0 ? Math.floor(stock[key].qty / c.consumoDiarioKg) : 0;
+                }
+            }
+        });
+
         var keys = Object.keys(stock);
 
         // Apply filter
@@ -444,6 +520,10 @@ window.estoque = {
                 + '<div style="font-size:14px;font-weight:700;color:#1E293B;">' + item.name + '</div>'
                 + '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:' + cfg.color + ';">' + cfg.label + '</div>'
                 + '</div>'
+                + (item.consumoDiario ? '<div style="background:#FEF3C7;border-radius:6px;padding:4px 8px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;">'
+                    + '<span style="font-size:10px;color:#92400E;">📉 Consumo: ' + item.consumoDiario.toFixed(1) + ' kg/dia</span>'
+                    + '<span style="font-size:10px;font-weight:700;color:' + (item.diasRestantes <= 7 ? '#DC2626' : item.diasRestantes <= 30 ? '#D97706' : '#059669') + ';">' + (item.diasRestantes || 0) + ' dias restantes</span>'
+                    + '</div>' : '')
                 + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;">'
                 + '<div style="font-family:monospace;font-size:18px;font-weight:800;color:' + barColor + ';">' + item.qty + ' <span style="font-size:12px;font-weight:600;color:#94A3B8;">' + item.unit + '</span></div>'
                 + '<div style="font-size:11px;color:#64748B;">' + (unitPrice > 0 ? 'R$ ' + unitPrice.toFixed(2) + '/' + item.unit : '') + '</div>'
