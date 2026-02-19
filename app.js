@@ -169,14 +169,14 @@ window.app = {
         });
         var navMap = {
             'home': 'nav-home',
-            // Rebanho hub + sub-views
-            'rebanho-hub': 'nav-rebanho', 'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
+            // Rebanho sub-views → nav-rebanho
+            'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
             'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho', 'mapa': 'nav-rebanho',
-            // Financeiro hub + sub-views
-            'financeiro-hub': 'nav-financeiro', 'compra': 'nav-financeiro',
+            // Financeiro sub-views → nav-financeiro
+            'compra': 'nav-financeiro',
             'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
-            // Operações hub + sub-views
-            'operacoes-hub': 'nav-operacoes', 'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes', 'rastreabilidade': 'nav-operacoes',
+            // Operações sub-views → nav-operacoes
+            'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes', 'rastreabilidade': 'nav-operacoes',
             // Config
             'config': 'nav-config'
         };
@@ -185,7 +185,7 @@ window.app = {
         if (navEl) navEl.classList.add('active');
 
         // Block financial views for campo profile
-        var blockedForCampo = ['compra', 'venda', 'fluxo', 'balanco', 'contas', 'financeiro', 'financeiro-hub'];
+        var blockedForCampo = ['compra', 'venda', 'fluxo', 'balanco', 'contas', 'financeiro'];
         if (this.getPerfil() === 'campo' && blockedForCampo.indexOf(pageId) >= 0) {
             this.showToast('Acesso restrito à Gerência', 'warning');
             return;
@@ -245,6 +245,7 @@ window.app = {
                 if (window.obras) window.obras.renderHistory();
                 if (window.estoque) window.estoque.renderMaterialCheckboxes('obra-materials-list', null);
                 if (window.funcionarios) window.funcionarios.renderWorkersForObra();
+                this.populatePastosSelect('obra-pasto');
                 break;
             case 'funcionarios':
                 if (window.funcionarios) window.funcionarios.render();
@@ -269,6 +270,7 @@ window.app = {
                 break;
             case 'config':
                 this.loadConfig();
+                this.loadArrobaPrice();
                 if (window.firebaseSync) window.firebaseSync.renderSyncUI('sync-container');
                 break;
         }
@@ -276,12 +278,63 @@ window.app = {
 
     populatePastosSelect: function (selectId) {
         var select = document.getElementById(selectId);
-        if (!select || !window.pastos) return;
-        var pastosData = window.pastos.getPastos();
-        var html = '<option value="">Selecionar...</option>';
-        pastosData.forEach(function (p) {
-            html += '<option value="' + p.nome + '">' + p.nome + ' (' + (p.area || 0) + ' ha)</option>';
+        if (!select) return;
+
+        var pastos = [];
+        var seen = {};
+
+        // 1. Pastos do mapa (FAZENDA_PASTOS do KML) — prioridade
+        if (window.FAZENDA_PASTOS && Array.isArray(window.FAZENDA_PASTOS)) {
+            window.FAZENDA_PASTOS.forEach(function (p) {
+                var nome = p.nome || '';
+                if (nome && !seen[nome.toLowerCase()]) {
+                    pastos.push({ nome: nome, area: 0 });
+                    seen[nome.toLowerCase()] = true;
+                }
+            });
+        }
+
+        // 2. Pastos do módulo pastos (cadastrados via eventos)
+        if (window.pastos && window.pastos.getPastos) {
+            window.pastos.getPastos().forEach(function (p) {
+                var nome = p.nome || '';
+                if (nome && !seen[nome.toLowerCase()]) {
+                    pastos.push({ nome: nome, area: p.area || 0 });
+                    seen[nome.toLowerCase()] = true;
+                }
+            });
+        }
+
+        // 3. Pastos dos lotes existentes (caso tenha algum não mapeado)
+        if (window.lotes && window.lotes.getLotes) {
+            window.lotes.getLotes().forEach(function (l) {
+                var pasto = l.pasto || '';
+                if (pasto && !seen[pasto.toLowerCase()]) {
+                    pastos.push({ nome: pasto, area: 0 });
+                    seen[pasto.toLowerCase()] = true;
+                }
+            });
+        }
+
+        // 4. Pastos manuais (localStorage)
+        try {
+            var manuais = JSON.parse(localStorage.getItem('agromacro_pastos_manuais') || '[]');
+            manuais.forEach(function (nome) {
+                if (nome && !seen[nome.toLowerCase()]) {
+                    pastos.push({ nome: nome, area: 0 });
+                    seen[nome.toLowerCase()] = true;
+                }
+            });
+        } catch (e) { }
+
+        // Ordenar por nome
+        pastos.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+
+        var html = '<option value="">Selecionar Pasto...</option>';
+        pastos.forEach(function (p) {
+            html += '<option value="' + p.nome + '">' + p.nome + (p.area > 0 ? ' (' + p.area + ' ha)' : '') + '</option>';
         });
+        html += '<option value="__novo__">➕ Novo pasto...</option>';
         select.innerHTML = html;
     },
 
@@ -588,34 +641,19 @@ window.app = {
     },
 
     applyPerfil: function () {
-        var perfil = this.getPerfil();
+        // Interface unificada — sempre gerência
         var body = document.body;
-
-        // Body class
         body.classList.remove('perfil-gerencia', 'perfil-campo');
-        body.classList.add('perfil-' + perfil);
+        body.classList.add('perfil-gerencia');
 
-        // Home sections
-        var homeCampo = document.getElementById('home-campo');
+        // Home: sempre mostra gerência
         var homeGerencia = document.getElementById('home-gerencia');
-        if (homeCampo) homeCampo.style.display = perfil === 'campo' ? 'block' : 'none';
-        if (homeGerencia) homeGerencia.style.display = perfil === 'gerencia' ? 'block' : 'none';
+        if (homeGerencia) homeGerencia.style.display = 'block';
 
-        // Elements with gerencia-only / campo-only classes
+        // Mostrar todos os elementos (sem restrição)
         document.querySelectorAll('.gerencia-only').forEach(function (el) {
-            if (el.id === 'home-gerencia') return; // already handled
-            el.style.display = perfil === 'gerencia' ? '' : 'none';
+            el.style.display = '';
         });
-        document.querySelectorAll('.campo-only').forEach(function (el) {
-            if (el.id === 'home-campo') return; // already handled
-            el.style.display = perfil === 'campo' ? '' : 'none';
-        });
-
-        // Config buttons
-        var btnG = document.getElementById('btn-perfil-gerencia');
-        var btnC = document.getElementById('btn-perfil-campo');
-        if (btnG) btnG.classList.toggle('active', perfil === 'gerencia');
-        if (btnC) btnC.classList.toggle('active', perfil === 'campo');
     },
 
     // ── Config persistence ──
@@ -634,6 +672,28 @@ window.app = {
         } catch (e) {
             console.error('Erro ao salvar config:', e);
         }
+    },
+
+    // ── Arroba price persistence ──
+    saveArrobaPrice: function () {
+        var input = document.getElementById('config-preco-arroba');
+        if (!input) return;
+        var preco = parseFloat(input.value) || 0;
+        try {
+            localStorage.setItem('agromacro_preco_arroba', preco);
+            // Also save in config for indicadores.js compatibility
+            var config = JSON.parse(localStorage.getItem(this.CONFIG_KEY) || '{}');
+            config.precoArroba = preco;
+            localStorage.setItem(this.CONFIG_KEY, JSON.stringify(config));
+        } catch (e) { console.error('Erro ao salvar arroba:', e); }
+        this.showToast('✅ Preço da @ atualizado: R$ ' + preco.toFixed(2));
+    },
+
+    loadArrobaPrice: function () {
+        var input = document.getElementById('config-preco-arroba');
+        if (!input) return;
+        var preco = parseFloat(localStorage.getItem('agromacro_preco_arroba')) || 0;
+        if (preco > 0) input.value = preco;
     },
 
     loadConfig: function () {

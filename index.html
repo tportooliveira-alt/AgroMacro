@@ -44,48 +44,7 @@
                 <div class="greeting-sub" id="greeting-date"></div>
             </div>
 
-            <!-- ══ HOME CAMPO (Peão/Manutenção) — Botões grandes, sem valores ══ -->
-            <div id="home-campo" class="campo-only" style="display:none;">
-                <div class="kpi-title">Tarefas do Dia</div>
-                <div class="campo-grid">
-                    <button class="campo-card" onclick="window.app.navigate('lotes')">
-                        <span class="campo-card-icon">🐄</span>
-                        <span class="campo-card-title">Contagem</span>
-                        <span class="campo-card-sub">Conferir gado nos lotes</span>
-                    </button>
-                    <button class="campo-card" onclick="window.app.navigate('estoque')">
-                        <span class="campo-card-icon">📦</span>
-                        <span class="campo-card-title">Retirar Material</span>
-                        <span class="campo-card-sub">Usar produto do estoque</span>
-                    </button>
-                    <button class="campo-card" onclick="window.app.navigate('obras')">
-                        <span class="campo-card-icon">🔨</span>
-                        <span class="campo-card-title">Registrar Serviço</span>
-                        <span class="campo-card-sub">Obra ou manutenção</span>
-                    </button>
-                    <button class="campo-card" onclick="window.app.navigate('manejo')">
-                        <span class="campo-card-icon">💉</span>
-                        <span class="campo-card-title">Manejo</span>
-                        <span class="campo-card-sub">Vacina ou tratamento</span>
-                    </button>
-                    <button class="campo-card" onclick="window.app.navigate('pastos')">
-                        <span class="campo-card-icon">🌿</span>
-                        <span class="campo-card-title">Pastos</span>
-                        <span class="campo-card-sub">Verificar piquetes</span>
-                    </button>
-                    <button class="campo-card" onclick="window.app.navigate('cabecas')">
-                        <span class="campo-card-icon">🏷️</span>
-                        <span class="campo-card-title">Cabeças</span>
-                        <span class="campo-card-sub">Cadastro individual</span>
-                    </button>
-                    <button class="campo-card" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9);"
-                        onclick="window.app.navigate('mapa')">
-                        <span class="campo-card-icon">🗺️</span>
-                        <span class="campo-card-title">Mapa</span>
-                        <span class="campo-card-sub">Mapa da fazenda</span>
-                    </button>
-                </div>
-            </div>
+            <!-- HOME CAMPO REMOVIDO — Interface unificada -->
 
             <!-- ══ HOME GERÊNCIA (Produtor) — Layout completo ══ -->
             <div id="home-gerencia" class="gerencia-only">
@@ -152,7 +111,7 @@
         <!-- ===================== COMPRA DE GADO ===================== -->
         <section id="view-compra" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('financeiro-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Compra de Gado</h2>
             </div>
             <form id="form-compra" class="card-form">
@@ -199,7 +158,7 @@
         <!-- ===================== VENDA DE GADO ===================== -->
         <section id="view-venda" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('financeiro-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Venda de Gado</h2>
             </div>
             <form id="form-venda" class="card-form">
@@ -240,7 +199,7 @@
         <!-- ===================== REBANHO ===================== -->
         <section id="view-rebanho" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Cadastro de Rebanho</h2>
             </div>
             <!-- Tabs -->
@@ -386,7 +345,7 @@
         <!-- ===================== LOTES ===================== -->
         <section id="view-lotes" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Gestão de Lotes</h2>
             </div>
             <form id="form-lote" class="card-form">
@@ -489,7 +448,7 @@
         <!-- ===================== PASTOS ===================== -->
         <section id="view-pastos" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Cadastro de Pastos</h2>
             </div>
             <form id="form-pasto" class="card-form">
@@ -549,7 +508,7 @@
         <!-- ===================== ESTOQUE ===================== -->
         <section id="view-estoque" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('operacoes-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Estoque de Insumos</h2>
             </div>
             <!-- Quick add form -->
@@ -621,7 +580,7 @@
         <!-- ===================== FLUXO DE CAIXA ===================== -->
         <section id="view-fluxo" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('financeiro-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Fluxo de Caixa</h2>
             </div>
             <div id="fluxo-content"></div>
@@ -638,7 +597,7 @@
         <!-- ===================== MANEJO ===================== -->
         <section id="view-manejo" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Manejo</h2>
             </div>
             <form id="form-manejo" class="card-form">
@@ -706,7 +665,7 @@
         <!-- ===================== OBRAS ===================== -->
         <section id="view-rastreabilidade" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('operacoes-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Rastreabilidade SISBOV</h2>
             </div>
             <div id="rastreabilidade-content">
@@ -716,13 +675,19 @@
 
         <section id="view-obras" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('operacoes-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Registrar Obra</h2>
             </div>
             <form id="form-obra" class="card-form">
                 <div class="form-group">
                     <label>Nome da Obra</label>
                     <input type="text" id="obra-nome" placeholder="Ex: Cercamento Curral 2" required>
+                </div>
+                <div class="form-group">
+                    <label>Pasto / Local</label>
+                    <select id="obra-pasto">
+                        <option value="">Selecionar pasto...</option>
+                    </select>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -768,7 +733,7 @@
         <!-- ===================== FUNCIONÁRIOS ===================== -->
         <section id="view-funcionarios" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('operacoes-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Funcionários</h2>
             </div>
             <form id="form-funcionario" class="card-form">
@@ -791,13 +756,29 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Diária (R$)</label>
-                        <input type="number" id="func-diaria" step="0.01" placeholder="150.00">
+                        <label>Tipo de Pagamento</label>
+                        <select id="func-tipo-pagamento">
+                            <option value="mensal">💰 Salário Mensal</option>
+                            <option value="diaria">📋 Diária</option>
+                            <option value="empreiteiro">🔨 Empreiteiro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="number" id="func-valor" step="0.01" placeholder="2500.00">
+                        <small id="func-valor-hint" style="color:var(--text-light);font-size:11px;">Salário
+                            mensal</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="tel" id="func-telefone" placeholder="(xx) xxxxx-xxxx">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Telefone</label>
-                    <input type="tel" id="func-telefone" placeholder="(xx) xxxxx-xxxx">
+                    <label>CPF / Documento</label>
+                    <input type="text" id="func-cpf" placeholder="000.000.000-00">
                 </div>
                 <button type="submit" class="submit-btn">✅ Cadastrar Funcionário</button>
             </form>
@@ -815,7 +796,7 @@
         <!-- ===================== BALANÇO / DRE ===================== -->
         <section id="view-balanco" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('financeiro-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Balanço & DRE</h2>
             </div>
             <div id="balanco-content"></div>
@@ -835,22 +816,15 @@
                 <h2>Configurações</h2>
             </div>
 
-            <!-- Seletor de Perfil -->
+            <!-- Cotação da Arroba -->
             <div class="card-form">
-                <div class="section-title">👤 Perfil de Acesso</div>
-                <div class="perfil-selector">
-                    <button type="button" id="btn-perfil-gerencia" class="perfil-btn active"
-                        onclick="window.app.setPerfil('gerencia')">
-                        <span class="perfil-btn-icon">👔</span>
-                        <span class="perfil-btn-label">Gerência</span>
-                        <span class="perfil-btn-desc">Acesso completo com financeiro</span>
-                    </button>
-                    <button type="button" id="btn-perfil-campo" class="perfil-btn"
-                        onclick="window.app.setPerfil('campo')">
-                        <span class="perfil-btn-icon">🤠</span>
-                        <span class="perfil-btn-label">Campo</span>
-                        <span class="perfil-btn-desc">Operações do dia-a-dia</span>
-                    </button>
+                <div class="section-title">💰 Cotação da Arroba</div>
+                <div class="form-group">
+                    <label>Preço da @ (R$)</label>
+                    <input type="number" id="config-preco-arroba" step="0.01" placeholder="280.00"
+                        onchange="window.app.saveArrobaPrice()">
+                    <small style="color:var(--text-light);margin-top:4px;display:block;">Usado nos KPIs de valor do
+                        rebanho e projeções de receita</small>
                 </div>
             </div>
 
@@ -964,7 +938,7 @@
         <!-- ===================== CALENDÁRIO SANITÁRIO ===================== -->
         <section id="view-calendario" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Calendário Sanitário</h2>
             </div>
             <div id="calendario-content"></div>
@@ -980,7 +954,7 @@
         <!-- ===================== CONTAS A PAGAR ===================== -->
         <section id="view-contas" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('financeiro-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Contas a Pagar</h2>
             </div>
             <div id="contas-pagar-content"></div>
@@ -993,140 +967,12 @@
             </div>
         </section>
 
-        <!-- ===================== HUB: REBANHO ===================== -->
-        <section id="view-rebanho-hub" class="view hidden">
-            <div class="view-header">
-                <h2>Rebanho</h2>
-            </div>
-            <div class="home-grid">
-                <button class="home-card" onclick="window.app.navigate('lotes')">
-                    <div class="home-card-icon" data-icon="lotes"
-                        style="background: linear-gradient(135deg, #0F766E, #115E59);"></div>
-                    <span class="home-card-title">Lotes</span>
-                    <span class="home-card-sub">Gestão por lote</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('cabecas')">
-                    <div class="home-card-icon" data-icon="cabecas"
-                        style="background: linear-gradient(135deg, #155E75, #164E63);"></div>
-                    <span class="home-card-title">Cabeças</span>
-                    <span class="home-card-sub">Individual</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('pastos')">
-                    <div class="home-card-icon" data-icon="pastos"
-                        style="background: linear-gradient(135deg, #14532D, #166534);"></div>
-                    <span class="home-card-title">Pastos</span>
-                    <span class="home-card-sub">Piquetes e rotação</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('manejo')">
-                    <div class="home-card-icon" data-icon="manejo"
-                        style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);"></div>
-                    <span class="home-card-title">Manejo</span>
-                    <span class="home-card-sub">Vacinas e pesagem</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('calendario')">
-                    <div class="home-card-icon" data-icon="calendario"
-                        style="background: linear-gradient(135deg, #7F1D1D, #991B1B);"></div>
-                    <span class="home-card-title">Calendário</span>
-                    <span class="home-card-sub">Sanitário</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('rebanho')">
-                    <div class="home-card-icon" data-icon="indicadores"
-                        style="background: linear-gradient(135deg, #1E3A5F, #0C4A6E);"></div>
-                    <span class="home-card-title">Indicadores</span>
-                    <span class="home-card-sub">Produtivos</span>
-                </button>
-
-            </div>
-        </section>
-
-        <!-- ===================== HUB: FINANCEIRO ===================== -->
-        <section id="view-financeiro-hub" class="view hidden">
-            <div class="view-header">
-                <h2>Financeiro</h2>
-            </div>
-            <div class="home-grid">
-                <button class="home-card" onclick="window.app.navigate('compra')">
-                    <div class="home-card-icon" data-icon="compra"
-                        style="background: linear-gradient(135deg, #0F766E, #115E59);"></div>
-                    <span class="home-card-title">Compra</span>
-                    <span class="home-card-sub">Compra de gado</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('venda')">
-                    <div class="home-card-icon" data-icon="venda"
-                        style="background: linear-gradient(135deg, #14532D, #166534);"></div>
-                    <span class="home-card-title">Venda</span>
-                    <span class="home-card-sub">Venda de gado</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('fluxo')">
-                    <div class="home-card-icon" data-icon="fluxo"
-                        style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);"></div>
-                    <span class="home-card-title">Fluxo</span>
-                    <span class="home-card-sub">Caixa</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('balanco')">
-                    <div class="home-card-icon" data-icon="balanco"
-                        style="background: linear-gradient(135deg, #155E75, #164E63);"></div>
-                    <span class="home-card-title">Balanço</span>
-                    <span class="home-card-sub">DRE</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('contas')">
-                    <div class="home-card-icon" data-icon="contas"
-                        style="background: linear-gradient(135deg, #78350F, #92400E);"></div>
-                    <span class="home-card-title">Contas</span>
-                    <span class="home-card-sub">A pagar</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('fluxo')">
-                    <div class="home-card-icon" data-icon="indicadores"
-                        style="background: linear-gradient(135deg, #44403C, #57534E);"></div>
-                    <span class="home-card-title">Indicadores</span>
-                    <span class="home-card-sub">Financeiros</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- ===================== HUB: OPERAÇÕES ===================== -->
-        <section id="view-operacoes-hub" class="view hidden">
-            <div class="view-header">
-                <h2>Operações</h2>
-            </div>
-            <div class="home-grid">
-                <button class="home-card" onclick="window.app.navigate('rastreabilidade')">
-                    <div class="home-card-icon" data-icon="sisbov"
-                        style="background: linear-gradient(135deg, #1E40AF, #3B82F6);"></div>
-                    <span class="home-card-title">Rastreabilidade</span>
-                    <span class="home-card-sub">SISBOV / GTA</span>
-                </button>
-                <button class="home-card" onclick="window.balanca.abrirModoPesagem()">
-                    <div class="home-card-icon" data-icon="balanca_rfid"
-                        style="background: linear-gradient(135deg, #059669, #10B981);"></div>
-                    <span class="home-card-title">Modo Pesagem</span>
-                    <span class="home-card-sub">Balança + RFID</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('estoque')">
-                    <div class="home-card-icon" data-icon="estoque"
-                        style="background: linear-gradient(135deg, #78350F, #92400E);"></div>
-                    <span class="home-card-title">Estoque</span>
-                    <span class="home-card-sub">Insumos e ração</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('obras')">
-                    <div class="home-card-icon" data-icon="obras"
-                        style="background: linear-gradient(135deg, #44403C, #57534E);"></div>
-                    <span class="home-card-title">Obras</span>
-                    <span class="home-card-sub">Construções</span>
-                </button>
-                <button class="home-card" onclick="window.app.navigate('funcionarios')">
-                    <div class="home-card-icon" data-icon="funcionarios"
-                        style="background: linear-gradient(135deg, #0F766E, #115E59);"></div>
-                    <span class="home-card-title">Funcionários</span>
-                    <span class="home-card-sub">Equipe</span>
-                </button>
-            </div>
-        </section>
+        <!-- HUBS REMOVIDOS — navegação direta via bottom nav para lotes/fluxo/estoque -->
 
         <!-- ===================== CABEÇAS INDIVIDUAIS ===================== -->
         <section id="view-cabecas" class="view hidden">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('rebanho-hub')">←</button>
+                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Cabeças Individuais</h2>
             </div>
 
@@ -1403,15 +1249,15 @@
             <span class="nav-icon" data-icon="home"></span>
             Home
         </button>
-        <button class="nav-item" onclick="window.app.navigate('rebanho-hub')" id="nav-rebanho">
+        <button class="nav-item" onclick="window.app.navigate('lotes')" id="nav-rebanho">
             <span class="nav-icon" data-icon="rebanho"></span>
             Rebanho
         </button>
-        <button class="nav-item gerencia-only" onclick="window.app.navigate('financeiro-hub')" id="nav-financeiro">
+        <button class="nav-item gerencia-only" onclick="window.app.navigate('fluxo')" id="nav-financeiro">
             <span class="nav-icon" data-icon="financeiro"></span>
             Financeiro
         </button>
-        <button class="nav-item" onclick="window.app.navigate('operacoes-hub')" id="nav-operacoes">
+        <button class="nav-item" onclick="window.app.navigate('estoque')" id="nav-operacoes">
             <span class="nav-icon" data-icon="operacoes"></span>
             Operações
         </button>

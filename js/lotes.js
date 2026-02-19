@@ -724,6 +724,180 @@ window.lotes = {
         this.renderList();
     },
 
+    // ====== ABRIR DETALHES DO LOTE (Modal) ======
+    abrirDetalhes: function (loteNome) {
+        var lote = this.getLoteByNome(loteNome);
+        if (!lote) {
+            if (window.app) window.app.showToast('Lote não encontrado', 'error');
+            return;
+        }
+
+        var qtd = lote.qtdAnimais || 0;
+        var peso = lote.pesoMedio || 0;
+        var arrobas = peso > 0 ? (peso / 30).toFixed(1) : '—';
+
+        // Preço da arroba (config)
+        var precoArroba = 0;
+        try { precoArroba = parseFloat(localStorage.getItem('agromacro_preco_arroba') || '0'); } catch (e) { }
+        var valorCabeca = precoArroba > 0 && peso > 0 ? (peso / 30 * precoArroba) : 0;
+        var valorLote = valorCabeca * qtd;
+
+        // GMD
+        var gmd = 0;
+        if (window.indicadores && window.indicadores.calcGMD) {
+            gmd = window.indicadores.calcGMD(loteNome);
+        }
+
+        // Dias no lote
+        var dias = 0;
+        if (lote.dataEntrada) {
+            dias = Math.floor((new Date() - new Date(lote.dataEntrada)) / (1000 * 60 * 60 * 24));
+        }
+
+        // Próximo vermífugo
+        var proxVermifugo = '—';
+        try {
+            if (window.calendario && window.calendario.getProximoEvento) {
+                proxVermifugo = window.calendario.getProximoEvento(loteNome, 'vermifugo') || '—';
+            }
+            if (proxVermifugo === '—') {
+                // Buscar último manejo de vermifugação
+                var manejos = window.data.events.filter(function (e) {
+                    return (e.type === 'MANEJO' || e.type === 'MANEJO_SANITARIO') && e.lote === loteNome;
+                });
+                var ultimoVerm = null;
+                manejos.forEach(function (m) {
+                    var tipo = (m.manejoTipo || m.tipo || '').toLowerCase();
+                    if (tipo.indexOf('vermif') >= 0 || tipo.indexOf('desvermin') >= 0) {
+                        if (!ultimoVerm || new Date(m.date) > new Date(ultimoVerm.date)) {
+                            ultimoVerm = m;
+                        }
+                    }
+                });
+                if (ultimoVerm && ultimoVerm.date) {
+                    var d = new Date(ultimoVerm.date);
+                    d.setDate(d.getDate() + 90);
+                    proxVermifugo = d.toLocaleDateString('pt-BR');
+                }
+            }
+        } catch (e) { }
+
+        // Consumo diário de ração em sacos
+        var consumoSacosDia = '—';
+        if (lote.racaoConsumo && qtd > 0) {
+            var kgDia = lote.racaoConsumo * qtd;
+            var pesoSaco = 25;
+            consumoSacosDia = (kgDia / pesoSaco).toFixed(1) + ' sacos/dia (' + kgDia.toFixed(0) + ' kg)';
+        }
+
+        // Consumo diário de sal
+        var consumoSalDia = '—';
+        if (lote.salConsumo && qtd > 0) {
+            var gDia = lote.salConsumo * qtd;
+            consumoSalDia = (gDia / 1000).toFixed(1) + ' kg/dia (' + gDia.toFixed(0) + ' g)';
+        }
+
+        // Custo total do lote
+        var custoData = { custoTotal: 0 };
+        if (this.calcCustoLote) custoData = this.calcCustoLote(loteNome);
+
+        var catEmoji = { 'cria': '🐣', 'recria': '🐄', 'engorda': '🥩', 'matrizes': '👸', 'touros': '🐂' }[lote.categoria] || '🐄';
+        var catLabel = { 'cria': 'CRIA', 'recria': 'RECRIA', 'engorda': 'ENGORDA', 'matrizes': 'MATRIZES', 'touros': 'TOUROS' }[lote.categoria] || '';
+
+        var html = '<div class="agro-modal-header" style="background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;padding:16px;border-radius:12px 12px 0 0;">'
+            + '<h3 style="margin:0;font-size:18px;">' + catEmoji + ' ' + loteNome + '</h3>'
+            + '<button class="modal-close" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\')" style="color:#fff;">✕</button>'
+            + '</div>'
+            + '<div class="agro-modal-body" style="padding:16px;">'
+            + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+            + '<div style="background:#F0FDF4;border-radius:8px;padding:10px;text-align:center;">'
+            + '<div style="font-size:10px;color:#059669;font-weight:700;">🐄 ANIMAIS</div>'
+            + '<div style="font-size:22px;font-weight:900;color:#059669;">' + qtd + '</div></div>'
+            + '<div style="background:#EFF6FF;border-radius:8px;padding:10px;text-align:center;">'
+            + '<div style="font-size:10px;color:#1E40AF;font-weight:700;">⚖️ PESO MÉDIO</div>'
+            + '<div style="font-size:22px;font-weight:900;color:#1E40AF;">' + peso + ' kg</div></div>'
+            + '<div style="background:#F5F3FF;border-radius:8px;padding:10px;text-align:center;">'
+            + '<div style="font-size:10px;color:#7C3AED;font-weight:700;">📊 ARROBAS</div>'
+            + '<div style="font-size:22px;font-weight:900;color:#7C3AED;">' + arrobas + ' @</div></div>'
+            + '<div style="background:#FEF2F2;border-radius:8px;padding:10px;text-align:center;">'
+            + '<div style="font-size:10px;color:#DC2626;font-weight:700;">📈 GMD</div>'
+            + '<div style="font-size:22px;font-weight:900;color:' + (gmd > 0 ? '#059669' : '#9CA3AF') + ';">' + (gmd > 0 ? gmd.toFixed(3) : '—') + '</div></div>'
+            + '</div>';
+
+        // Valor do lote
+        if (valorLote > 0) {
+            html += '<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;">'
+                + '<div style="font-size:11px;color:#92400E;font-weight:700;">💰 VALOR DO LOTE (@ R$ ' + precoArroba.toFixed(2) + ')</div>'
+                + '<div style="font-size:24px;font-weight:900;color:#78350F;">R$ ' + valorLote.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
+                + '<div style="font-size:11px;color:#92400E;">R$ ' + valorCabeca.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' /cabeça</div>'
+                + '</div>';
+        }
+
+        // Informações gerais
+        html += '<div style="background:#F8FAFC;border-radius:8px;padding:12px;margin-bottom:10px;">'
+            + '<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">📋 INFORMAÇÕES</div>'
+            + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;">'
+            + '<div><strong>Categoria:</strong> ' + catEmoji + ' ' + catLabel + '</div>'
+            + '<div><strong>Raça:</strong> ' + (lote.raca || '—') + '</div>'
+            + '<div><strong>Pasto:</strong> ' + (lote.pasto || 'Sem pasto') + '</div>'
+            + '<div><strong>Dias no lote:</strong> ' + dias + 'd</div>'
+            + '<div><strong>Entrada:</strong> ' + (lote.dataEntrada || '—') + '</div>'
+            + '<div><strong>Próx. Vermífugo:</strong> ' + proxVermifugo + '</div>'
+            + '</div></div>';
+
+        // Nutrição
+        html += '<div style="background:#FFF7ED;border-radius:8px;padding:12px;margin-bottom:10px;">'
+            + '<div style="font-size:12px;font-weight:700;color:#EA580C;margin-bottom:6px;">🧂 NUTRIÇÃO</div>'
+            + '<div style="font-size:12px;line-height:1.8;">'
+            + '<div><strong>Sal Mineral:</strong> ' + (lote.salMineral || 'Nenhum') + (lote.salConsumo ? ' (' + lote.salConsumo + ' g/cab/dia)' : '') + '</div>'
+            + '<div><strong>Consumo Sal:</strong> ' + consumoSalDia + '</div>'
+            + '<div><strong>Ração:</strong> ' + (lote.racao || 'Nenhuma') + (lote.racaoConsumo ? ' (' + lote.racaoConsumo + ' kg/cab/dia)' : '') + '</div>'
+            + '<div><strong>Consumo Ração:</strong> ' + consumoSacosDia + '</div>'
+            + '</div></div>';
+
+        // Custos
+        if (custoData.custoTotal > 0) {
+            html += '<div style="background:#FEF2F2;border-radius:8px;padding:12px;margin-bottom:10px;">'
+                + '<div style="font-size:12px;font-weight:700;color:#DC2626;margin-bottom:4px;">💰 CUSTOS ACUMULADOS</div>'
+                + '<div style="font-size:18px;font-weight:900;color:#991B1B;">R$ ' + custoData.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</div>'
+                + '</div>';
+        }
+
+        // Observações
+        if (lote.obs) {
+            html += '<div style="background:#F1F5F9;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;">'
+                + '<strong>📝 Obs:</strong> ' + lote.obs + '</div>';
+        }
+
+        // Ações
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">'
+            + '<button class="btn-sm" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.lotes.manejoRapido(\'' + loteNome + '\', \'vacinacao\')">💉 Manejo</button>'
+            + '<button class="btn-sm" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.lotes.trocarPasto(\'' + loteNome + '\')">🔄 Mover</button>'
+            + '<button class="btn-sm" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.rebanhoOps.abrirTransferencia(\'' + loteNome + '\')">↗️ Transferir</button>'
+            + '<button class="btn-sm" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.rebanhoOps.abrirTimeline(\'' + loteNome + '\')">📜 Histórico</button>'
+            + '<button class="btn-sm" style="background:#2563EB;" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.lotes.editLote(\'' + loteNome + '\')">✏️ Editar</button>'
+            + '<button class="btn-sm" style="background:#DC2626;" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.lotes.excluirLote(\'' + loteNome + '\')">🗑️ Inativar</button>'
+            + '</div>';
+
+        html += '</div>';
+
+        // Show modal
+        var modal = document.getElementById('modal-detalhes-lote');
+        if (!modal) {
+            // Create modal if doesn't exist
+            modal = document.createElement('div');
+            modal.id = 'modal-detalhes-lote';
+            modal.className = 'agro-modal';
+            modal.innerHTML = '<div class="agro-modal-content" id="modal-detalhes-lote-content"></div>';
+            modal.onclick = function (e) { if (e.target === modal) modal.classList.remove('active'); };
+            document.body.appendChild(modal);
+        }
+
+        var content = document.getElementById('modal-detalhes-lote-content');
+        if (content) content.innerHTML = html;
+        modal.classList.add('active');
+    },
+
     // ====== RENDER LIST ======
     renderList: function () {
         var container = document.getElementById('lotes-list');
