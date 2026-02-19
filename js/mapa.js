@@ -461,55 +461,77 @@ window.mapa = {
     },
 
     // ══════════════════════════════════════════════
-    //  ESTILIZAR — Cores VIBRANTES por status
+    //  ESTILIZAR — Cor ÚNICA por pasto + borda por status
     // ══════════════════════════════════════════════
+    // 24 cores distintas espalhadas pelo espectro para máximo contraste entre vizinhos
+    PASTO_COLORS: [
+        '#E63946', '#F4A261', '#2A9D8F', '#264653', '#E9C46A',
+        '#457B9D', '#F72585', '#7209B7', '#3A0CA3', '#4361EE',
+        '#4CC9F0', '#06D6A0', '#118AB2', '#EF476F', '#FFD166',
+        '#073B4C', '#8338EC', '#FF006E', '#FB5607', '#FFBE0B',
+        '#3A86FF', '#8AC926', '#1982C4', '#6A4C93'
+    ],
+
+    // Gera cor do pasto baseado no índice (vizinhos ficam com cores distantes)
+    getPastoColor: function (index) {
+        // Golden angle offset: pula 9 posições por pasto para máxima distância de vizinhos
+        var paletteSize = this.PASTO_COLORS.length;
+        var offset = (index * 9) % paletteSize;
+        return this.PASTO_COLORS[offset];
+    },
+
     stylePolygon: function (layer) {
         var nome = layer.pastoNome || '';
         var info = this.getPastoInfo(nome);
         var restDays = this.getRestDays(nome);
 
-        // Cores vibrantes para fácil visualização no campo
-        var color = '#64748B';       // cinza azulado = vazio
-        var fillColor = '#94A3B8';
-        var fillOpacity = 0.20;
-        var weight = 2;
-        var dashArray = '6, 4';
+        // Determinar índice do pasto para cor única
+        var index = 0;
+        var self = this;
+        var layers = [];
+        this.drawnItems.eachLayer(function (l) {
+            if (l instanceof L.Polygon && !(l instanceof L.Rectangle)) {
+                layers.push(l);
+            }
+        });
+        for (var i = 0; i < layers.length; i++) {
+            if (layers[i] === layer) { index = i; break; }
+        }
 
+        var baseColor = this.getPastoColor(index);
+
+        // Fill = cor do pasto (única)
+        var fillColor = baseColor;
+        var color = baseColor;  // borda = mesma cor, mais forte
+        var fillOpacity = 0.50;
+        var weight = 4;
+        var dashArray = null;
+
+        // Status via estilo da borda
         if (info.emObra && info.totalAnimais > 0) {
-            // AMARELO FORTE = obra + gado
-            color = '#EAB308';
-            fillColor = '#FDE047';
-            fillOpacity = 0.45;
-            weight = 4;
-            dashArray = null;
-        } else if (info.emObra) {
-            // LARANJA VIBRANTE = em obra
-            color = '#F97316';
-            fillColor = '#FB923C';
-            fillOpacity = 0.40;
-            weight = 3;
+            // Obra + Gado = borda EXTRA GROSSA tracejada
+            weight = 6;
             dashArray = '8, 4';
+            fillOpacity = 0.60;
+        } else if (info.emObra) {
+            // Obra = borda tracejada média
+            weight = 5;
+            dashArray = '10, 5';
+            fillOpacity = 0.55;
         } else if (info.totalAnimais > 0) {
-            // VERDE VIBRANTE = com gado
-            color = '#16A34A';
-            fillColor = '#4ADE80';
-            fillOpacity = 0.40;
-            weight = 4;
-            dashArray = null;
-        } else if (restDays > 30) {
-            // VERDE CLARO = bem descansado
-            color = '#065F46';
-            fillColor = '#6EE7B7';
-            fillOpacity = 0.30;
-            weight = 2;
-            dashArray = '4, 4';
+            // Com gado = borda GROSSA sólida
+            weight = 5;
+            fillOpacity = 0.55;
         } else if (restDays > 0) {
-            // AZUL = descansando há pouco
-            color = '#1D4ED8';
-            fillColor = '#93C5FD';
-            fillOpacity = 0.25;
-            weight = 2;
+            // Descansando = borda média pontilhada
+            weight = 3;
             dashArray = '4, 4';
+            fillOpacity = 0.45;
+        } else {
+            // Vazio = borda fina tracejada
+            weight = 3;
+            dashArray = '6, 4';
+            fillOpacity = 0.40;
         }
 
         layer.setStyle({
