@@ -382,14 +382,14 @@ window.estoque = {
 
             if (ev.type === 'SAIDA_ESTOQUE' && ev.items) {
                 ev.items.forEach(function (item) {
-                    var key = (item.name || '').toLowerCase().trim();
+                    var key = self.normalizeKey(item.name);
                     if (stock[key]) stock[key].qty -= (item.qty || 0);
                 });
             }
 
             if (ev.type === 'OBRA_REGISTRO' && ev.materials) {
                 ev.materials.forEach(function (mat) {
-                    var key = (mat.name || '').toLowerCase().trim();
+                    var key = self.normalizeKey(mat.name);
                     if (stock[key]) stock[key].qty -= (mat.qty || 0);
                 });
             }

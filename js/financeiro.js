@@ -511,7 +511,7 @@ window.financeiro = {
 
         // Mão de Obra (obras com workers + funcionários)
         var custoMaoDeObra = 0;
-        var obras = events.filter(function (ev) { return ev.type === 'OBRA'; });
+        var obras = events.filter(function (ev) { return ev.type === 'OBRA_REGISTRO'; });
         obras.forEach(function (ob) {
             if (ob.workers && Array.isArray(ob.workers)) {
                 ob.workers.forEach(function (w) {

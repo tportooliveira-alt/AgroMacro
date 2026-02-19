@@ -64,6 +64,11 @@ window.obras = {
         var empreiteiroContato = (document.getElementById('obra-empreiteiro-contato') || {}).value || '';
         var empreiteiroValor = parseFloat((document.getElementById('obra-empreiteiro-valor') || {}).value) || 0;
 
+        // ══ Calcular custo total da obra ══
+        var custoWorkers = 0;
+        selectedWorkers.forEach(function (w) { custoWorkers += (w.subtotal || 0); });
+        var custoTotal = custoWorkers + empreiteiroValor;
+
         var ev = {
             type: 'OBRA_REGISTRO',
             nome: nome,
@@ -77,6 +82,8 @@ window.obras = {
                 contato: empreiteiroContato,
                 valor: empreiteiroValor
             } : null,
+            value: custoTotal,
+            custo: custoTotal,
             date: inicio
         };
 
