@@ -3,13 +3,48 @@ window.clima = {
     CACHE_KEY: 'agromacro_clima_cache',
     CACHE_DURATION: 3600000, // 1 hora em ms
 
-    // Coordenadas padrão da fazenda (extraídas de fazenda-data.js)
-    LAT: -15.10,
-    LON: -40.748,
+    // Coordenadas — calculadas automaticamente da fazenda cadastrada
+    LAT: null,
+    LON: null,
 
     init: function () {
-        console.log('Clima Module Ready');
+        this._calcCoordsFromFazenda();
+        console.log('Clima Module Ready — coords:', this.LAT.toFixed(4), this.LON.toFixed(4));
         this.carregarPrevisao();
+    },
+
+    // Calcula o centro geográfico dos pastos cadastrados
+    _calcCoordsFromFazenda: function () {
+        var lat = -15.10, lon = -40.748; // fallback
+
+        // Prioridade 1: Polígonos do mapa (fazenda-data.js)
+        if (window.FAZENDA_PASTOS && window.FAZENDA_PASTOS.length > 0) {
+            var totalLat = 0, totalLon = 0, count = 0;
+            window.FAZENDA_PASTOS.forEach(function (pasto) {
+                if (pasto.coords && pasto.coords.length > 0) {
+                    // Usar primeiro ponto de cada polígono (mais rápido que todos)
+                    totalLat += pasto.coords[0][0];
+                    totalLon += pasto.coords[0][1];
+                    count++;
+                }
+            });
+            if (count > 0) {
+                lat = totalLat / count;
+                lon = totalLon / count;
+            }
+        }
+
+        // Prioridade 2: Configuração manual salva pelo usuário
+        try {
+            var cfg = JSON.parse(localStorage.getItem('agromacro_config') || '{}');
+            if (cfg.lat && cfg.lon) {
+                lat = parseFloat(cfg.lat);
+                lon = parseFloat(cfg.lon);
+            }
+        } catch (e) { /* ignore */ }
+
+        this.LAT = lat;
+        this.LON = lon;
     },
 
     // ══ REGISTRO DE CHUVA MANUAL ══
