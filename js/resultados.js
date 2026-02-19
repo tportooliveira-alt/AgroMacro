@@ -65,8 +65,9 @@ window.resultados = {
                 html += '<div class="res-info-item"><span class="res-info-value">' + dataAbate + '</span><span class="res-info-label">Estimativa</span></div>';
 
                 var gmd = window.indicadores.calcGMD(lote);
-                if (gmd) {
-                    html += '<div class="res-info-item"><span class="res-info-value">' + gmd.toFixed(3) + '</span><span class="res-info-label">GMD kg/dia</span></div>';
+                var gmdVal = typeof gmd === 'number' ? gmd : (gmd && typeof gmd.valor === 'number' ? gmd.valor : parseFloat(gmd) || 0);
+                if (gmdVal) {
+                    html += '<div class="res-info-item"><span class="res-info-value">' + gmdVal.toFixed(3) + '</span><span class="res-info-label">GMD kg/dia</span></div>';
                 }
                 html += '</div>';
                 html += '</div>';
