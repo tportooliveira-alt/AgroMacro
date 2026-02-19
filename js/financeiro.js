@@ -108,6 +108,7 @@ window.financeiro = {
         }
 
         document.getElementById('form-compra').reset();
+        setTimeout(function () { window.app.navigate('fluxo'); }, 400);
     },
 
     saveVenda: function () {
@@ -171,6 +172,7 @@ window.financeiro = {
 
         window.app.showToast('✅ Venda registrada! R$ ' + precoArroba.toFixed(2) + '/@');
         document.getElementById('form-venda').reset();
+        setTimeout(function () { window.app.navigate('fluxo'); }, 400);
     },
 
     // ══════════════════════════════════════════════

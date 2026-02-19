@@ -196,9 +196,13 @@ window.resultados = {
         var events = window.data.events;
         var totalCompras = 0, totalVendas = 0, totalDespesas = 0;
         events.forEach(function (ev) {
-            if (ev.type === 'COMPRA') totalCompras += (ev.valorTotal || 0);
-            if (ev.type === 'VENDA') totalVendas += (ev.valorTotal || 0);
+            if (ev.estornado) return;
+            if (ev.type === 'COMPRA') totalCompras += (ev.value || 0);
+            if (ev.type === 'VENDA') totalVendas += (ev.value || 0);
             if (ev.type === 'CONTA_PAGAR' && ev.pago) totalDespesas += (ev.value || 0);
+            if (ev.type === 'ESTOQUE_ENTRADA') totalDespesas += (ev.value || 0);
+            if ((ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && (ev.cost || ev.custo)) totalDespesas += (ev.cost || ev.custo || 0);
+            if (ev.type === 'OBRA_REGISTRO') totalDespesas += (ev.value || ev.custo || 0);
         });
 
         if (totalCompras > 0 || totalVendas > 0) {
