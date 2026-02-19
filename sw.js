@@ -1,5 +1,5 @@
 // ====== SERVICE WORKER — AgroMacro PWA Offline ======
-var CACHE_NAME = 'agromacro-v31';
+var CACHE_NAME = 'agromacro-v32';
 var TILE_CACHE = 'agromacro-tiles-v1';
 var ASSETS = [
     '/',
@@ -46,7 +46,7 @@ var TILE_DOMAINS = [
 
 // Install — cache all assets
 self.addEventListener('install', function (event) {
-    console.log('[SW] Instalando agromacro-v31...');
+    console.log('[SW] Instalando agromacro-v32...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
             console.log('[SW] Cacheando assets v30');
@@ -59,7 +59,7 @@ self.addEventListener('install', function (event) {
 
 // Activate — clean old caches (keep tile cache)
 self.addEventListener('activate', function (event) {
-    console.log('[SW] Ativando agromacro-v31...');
+    console.log('[SW] Ativando agromacro-v32...');
     event.waitUntil(
         caches.keys().then(function (keys) {
             return Promise.all(

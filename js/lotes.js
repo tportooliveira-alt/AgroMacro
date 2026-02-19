@@ -867,16 +867,10 @@ window.lotes = {
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.manejoRapido(\'' + l.nome + '\', \'vacinacao\')">💉 Manejo</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🔄 Mover</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.nutricao.abrirLeitura(\'' + l.nome + '\')">🍽️ Cocho</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.abrirAbastecer(\'' + l.nome + '\', \'sal\')">🧂 Abastecer</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTransferencia(\'' + l.nome + '\')">🔄 Transferir</button>'
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTransferencia(\'' + l.nome + '\')">↗️ Transferir</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirMortalidade(\'' + l.nome + '\')">💀 Baixa</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirNascimento(\'' + l.nome + '\')">🐣 Nasc.</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Hist.</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.registrarProtocolo(\'' + l.nome + '\')">🐄 Reprod.</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.calendario && window.calendario.renderFichaSanitaria(\'' + l.nome + '\')">📋 Ficha</button>'
-                + (window.fotos ? '<button class="btn-sm" onclick="event.stopPropagation(); window.fotos.abrirCaptura(\'' + l.nome + '\', \'lote\', \'' + (l.nome || '').replace(/'/g, "\\'") + '\')">📸 Foto</button>' : '')
+                + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Histórico</button>'
                 + '<button class="btn-sm" style="background:#2563EB;" onclick="event.stopPropagation(); window.lotes.editLote(\'' + l.nome + '\')">✏️ Editar</button>'
-                + '<button class="btn-sm" style="background:#DC2626;" onclick="event.stopPropagation(); window.lotes.excluirLote(\'' + l.nome + '\')">🗑️ Excluir</button>'
                 + '</div>'
                 + '</div>'
                 + '</div>';
