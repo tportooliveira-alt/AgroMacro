@@ -1,10 +1,18 @@
-// ====== MÓDULO: CLIMA & PLUVIOMETRIA ======
+// ====== MÓDULO: CLIMA & PLUVIOMETRIA + PREVISÃO DO TEMPO ======
 window.clima = {
+    CACHE_KEY: 'agromacro_clima_cache',
+    CACHE_DURATION: 3600000, // 1 hora em ms
+
+    // Coordenadas padrão da fazenda (extraídas de fazenda-data.js)
+    LAT: -15.10,
+    LON: -40.748,
+
     init: function () {
         console.log('Clima Module Ready');
-        // No unique view binding needed yet, used by Pasto Mgmt
+        this.carregarPrevisao();
     },
 
+    // ══ REGISTRO DE CHUVA MANUAL ══
     registrarChuva: function (mm, data) {
         if (!mm) return;
         var event = {
@@ -33,6 +41,135 @@ window.clima = {
     getUltimaChuva: function () {
         var chuvas = window.data.events.filter(function (ev) { return ev.type === 'CHUVA_REGISTRO'; });
         if (chuvas.length === 0) return null;
-        return chuvas[chuvas.length - 1]; // Last registered
+        return chuvas[chuvas.length - 1];
+    },
+
+    // ══ PREVISÃO DO TEMPO — Open-Meteo (gratuita, sem chave) ══
+    carregarPrevisao: function () {
+        var self = this;
+
+        // Tentar cache primeiro
+        var cached = this._getCache();
+        if (cached) {
+            this.renderWidget(cached);
+            return;
+        }
+
+        // Buscar da API
+        var url = 'https://api.open-meteo.com/v1/forecast'
+            + '?latitude=' + this.LAT
+            + '&longitude=' + this.LON
+            + '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode'
+            + '&current=temperature_2m,relative_humidity_2m,weathercode,wind_speed_10m'
+            + '&timezone=America/Sao_Paulo'
+            + '&forecast_days=5';
+
+        fetch(url)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data && data.current && data.daily) {
+                    self._setCache(data);
+                    self.renderWidget(data);
+                }
+            })
+            .catch(function (err) {
+                console.warn('⚠️ Clima offline, usando cache anterior');
+                // Tentar cache expirado
+                try {
+                    var raw = localStorage.getItem(self.CACHE_KEY);
+                    if (raw) {
+                        var obj = JSON.parse(raw);
+                        self.renderWidget(obj.data);
+                    }
+                } catch (e) { /* sem dados */ }
+            });
+    },
+
+    _getCache: function () {
+        try {
+            var raw = localStorage.getItem(this.CACHE_KEY);
+            if (!raw) return null;
+            var obj = JSON.parse(raw);
+            if (Date.now() - obj.timestamp < this.CACHE_DURATION) {
+                return obj.data;
+            }
+        } catch (e) { }
+        return null;
+    },
+
+    _setCache: function (data) {
+        try {
+            localStorage.setItem(this.CACHE_KEY, JSON.stringify({
+                timestamp: Date.now(),
+                data: data
+            }));
+        } catch (e) { }
+    },
+
+    // ══ WMO Weather Code → Emoji + Descrição ══
+    _weatherIcon: function (code) {
+        if (code === 0) return { icon: '☀️', desc: 'Céu limpo' };
+        if (code <= 3) return { icon: '⛅', desc: 'Parcialmente nublado' };
+        if (code <= 48) return { icon: '🌫️', desc: 'Neblina' };
+        if (code <= 55) return { icon: '🌦️', desc: 'Chuvisco' };
+        if (code <= 65) return { icon: '🌧️', desc: 'Chuva' };
+        if (code <= 67) return { icon: '🌧️', desc: 'Chuva gelada' };
+        if (code <= 77) return { icon: '❄️', desc: 'Neve' };
+        if (code <= 82) return { icon: '🌧️', desc: 'Pancadas' };
+        if (code <= 86) return { icon: '❄️', desc: 'Neve forte' };
+        if (code <= 99) return { icon: '⛈️', desc: 'Tempestade' };
+        return { icon: '🌤️', desc: '--' };
+    },
+
+    _diaSemana: function (dateStr) {
+        var dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        var d = new Date(dateStr + 'T12:00:00');
+        return dias[d.getDay()];
+    },
+
+    // ══ RENDER WIDGET DE CLIMA NA HOME ══
+    renderWidget: function (data) {
+        var container = document.getElementById('clima-widget');
+        if (!container) return;
+
+        var current = data.current;
+        var daily = data.daily;
+        var w = this._weatherIcon(current.weathercode);
+
+        // Acumulado de chuva registrada manualmente
+        var acumulado = this.getAcumulado30Dias();
+
+        var html = '<div class="clima-atual">'
+            + '<div class="clima-temp-box">'
+            + '<span class="clima-icon-big">' + w.icon + '</span>'
+            + '<span class="clima-temp">' + Math.round(current.temperature_2m) + '°</span>'
+            + '</div>'
+            + '<div class="clima-details">'
+            + '<span class="clima-desc">' + w.desc + '</span>'
+            + '<span class="clima-info">💧 ' + current.relative_humidity_2m + '% · 💨 ' + Math.round(current.wind_speed_10m) + ' km/h</span>'
+            + '<span class="clima-info">🌧️ Acum. 30d: ' + acumulado.toFixed(0) + ' mm</span>'
+            + '</div>'
+            + '</div>';
+
+        // Previsão 5 dias
+        html += '<div class="clima-forecast">';
+        for (var i = 0; i < Math.min(5, daily.time.length); i++) {
+            var dw = this._weatherIcon(daily.weathercode[i]);
+            var chuva = daily.precipitation_sum[i];
+            var dia = i === 0 ? 'Hoje' : this._diaSemana(daily.time[i]);
+            html += '<div class="clima-day">'
+                + '<span class="clima-day-label">' + dia + '</span>'
+                + '<span class="clima-day-icon">' + dw.icon + '</span>'
+                + '<span class="clima-day-temps">'
+                + '<span class="clima-max">' + Math.round(daily.temperature_2m_max[i]) + '°</span>'
+                + '<span class="clima-min">' + Math.round(daily.temperature_2m_min[i]) + '°</span>'
+                + '</span>'
+                + (chuva > 0 ? '<span class="clima-day-rain">💧' + chuva.toFixed(0) + '</span>' : '')
+                + '</div>';
+        }
+        html += '</div>';
+
+        container.innerHTML = html;
+        container.style.display = 'block';
     }
 };

@@ -182,6 +182,7 @@ window.app = {
                 this.renderAtividadeRecente();
                 if (window.contas) window.contas.renderCotacaoRebanho();
                 if (window.graficos) window.graficos.renderGraficosHome();
+                if (window.clima) window.clima.carregarPrevisao();
                 break;
             case 'rebanho':
                 if (window.rebanho) window.rebanho.renderList();
@@ -363,6 +364,33 @@ window.app = {
                         }
                     });
                 }
+            } catch (e) { /* ignore */ }
+        }
+
+        // ══ 3b. Pasto superlotado (UA/ha > 3.0) ══
+        if (window.pastos && window.pastos.getPastos) {
+            try {
+                var pastosData = window.pastos.getPastos();
+                var lotesMap = {};
+                events.forEach(function (ev) {
+                    if (ev.type === 'LOTE' && ev.status === 'ATIVO') lotesMap[ev.nome] = ev;
+                });
+                pastosData.forEach(function (p) {
+                    if (!p.area || p.area <= 0) return;
+                    var animaisNoPasto = 0;
+                    for (var nome in lotesMap) {
+                        if (lotesMap[nome].pasto === p.nome) {
+                            animaisNoPasto += (lotesMap[nome].qtdAnimais || 0);
+                        }
+                    }
+                    if (animaisNoPasto > 0) {
+                        var ua = animaisNoPasto * 0.75; // Estimativa: 1 cabeça ≈ 0.75 UA
+                        var uaHa = ua / p.area;
+                        if (uaHa > 3.0) {
+                            alerts.push({ icon: '🚨', msg: p.nome + ' superlotado: ' + uaHa.toFixed(1) + ' UA/ha (máx 3.0)', type: 'danger' });
+                        }
+                    }
+                });
             } catch (e) { /* ignore */ }
         }
 

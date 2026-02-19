@@ -3210,3 +3210,109 @@ body.perfil-campo .gerencia-only {
     text-transform: capitalize;
     letter-spacing: 0.3px;
 }
+
+/* ═══════ CLIMATE WIDGET — iOS Style ═══════ */
+.clima-widget {
+    background: linear-gradient(135deg, #1E3A5F, #2563EB);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    color: white;
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.25);
+}
+
+.clima-atual {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.clima-temp-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.clima-icon-big {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.clima-temp {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+}
+
+.clima-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.clima-desc {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.clima-info {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+.clima-forecast {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.clima-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    padding: 6px 2px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.clima-day-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.clima-day-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.clima-day-temps {
+    display: flex;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.clima-max {
+    color: #fff;
+}
+
+.clima-min {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.clima-day-rain {
+    font-size: 9px;
+    color: #93C5FD;
+    font-weight: 600;
+}
