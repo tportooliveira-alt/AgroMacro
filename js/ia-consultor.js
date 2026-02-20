@@ -125,7 +125,7 @@ window.iaConsultor = {
             return;
         }
 
-        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + key;
+        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + key;
         window.app.showToast('🧪 Testando Gemini...', 'success');
 
         var self = this;
@@ -357,7 +357,7 @@ window.iaConsultor = {
 
     _chamarGeminiDireto: function (messages, context, modelOverride) {
         var self = this;
-        var models = ['gemini-2.0-flash-lite', 'gemini-2.0-flash'];
+        var models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
         var model = modelOverride || models[0];
 
         var systemPrompt = 'Você é o AgroIA — o MELHOR analista de mercado pecuário do Brasil. '
@@ -1234,7 +1234,7 @@ window.iaConsultor = {
             + 'Use dados do CEPEA, B3, Canal Rural, BeefPoint, Scot Consultoria. Preços em R$.';
 
         var apiKey = this.API_KEY;
-        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
 
         var body = {
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
