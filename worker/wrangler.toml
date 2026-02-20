@@ -1,6 +1,8 @@
-name = "agromacro-ia"
+name = "steep-glitter-59ba"
 main = "index.js"
 compatibility_date = "2024-01-01"
+account_id = "0b742453f4721d89e5bd53413d921848"
+# URL: https://steep-glitter-59ba.tportooliveira.workers.dev
 
 # Free tier: 100.000 req/dia, 10ms CPU/req
 # Rotas:
