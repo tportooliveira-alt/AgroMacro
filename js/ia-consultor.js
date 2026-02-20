@@ -695,29 +695,25 @@ window.iaConsultor = {
                     var errMsg = data.error.message || '';
                     var errStatus = (data.error.status || '').toUpperCase();
 
-                    // Se falhou com rate limit, tenta o modelo alternativo
-                    var isRateLimit = errMsg.indexOf('quota') >= 0 || errMsg.indexOf('rate') >= 0 || errMsg.indexOf('exceeded') >= 0 || errStatus === 'RESOURCE_EXHAUSTED';
+                    // Qualquer erro do Gemini: tenta cascata!
+                    var isRecoverable = errMsg.indexOf('quota') >= 0 || errMsg.indexOf('rate') >= 0 || errMsg.indexOf('exceeded') >= 0 || errStatus === 'RESOURCE_EXHAUSTED' || errMsg.indexOf('API key not valid') >= 0 || errStatus === 'PERMISSION_DENIED' || errMsg.indexOf('leaked') >= 0;
                     var fallbackModel = models[1];
-                    if (isRateLimit && model !== fallbackModel) {
-                        console.log('IA: Rate limit em ' + model + ', tentando ' + fallbackModel + '...');
+
+                    if (isRecoverable && model !== fallbackModel) {
+                        console.log('IA: Gemini erro em ' + model + ' (' + errStatus + '), tentando ' + fallbackModel + '...');
                         self._chamarGeminiDireto(messages, context, fallbackModel);
-                        return; // Não continua — o fallback vai lidar
+                        return;
                     }
 
-                    // Se ambos Gemini falharam com rate limit, tenta próximo provedor
-                    if (isRateLimit && model === fallbackModel) {
-                        console.log('IA: Ambos Gemini com rate limit, tentando próximo provedor...');
+                    // Se ambos Gemini falharam, tenta próximo provedor
+                    if (isRecoverable) {
+                        console.log('IA: Ambos Gemini falharam, cascateando para próximo provedor...');
                         self._chamarProximoFallback('gemini', messages, context);
                         return;
                     }
 
-                    if (errMsg.indexOf('API key not valid') >= 0 || errStatus === 'PERMISSION_DENIED') {
-                        reply = '🔑 Chave API inválida. Vá em Configurações e insira uma chave válida do Google AI Studio (aistudio.google.com/apikey).';
-                    } else if (isRateLimit) {
-                        reply = '🕐 Limite temporário atingido. Aguarde 1 minuto.\n\n💡 Plano gratuito: ~15 consultas por minuto.';
-                    } else {
-                        reply = '⚠️ Erro da API: ' + errMsg;
-                    }
+                    // Erro não-recuperável (raro)
+                    reply = '⚠️ Erro Gemini: ' + errMsg;
                 } else {
                     reply = '⚠️ Resposta inesperada da IA.';
                 }
@@ -852,7 +848,7 @@ window.iaConsultor = {
                 'Authorization': 'Bearer ' + this.CEREBRAS_KEY
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b',
+                model: 'llama3.3-70b',
                 messages: cbrMessages,
                 temperature: 0.3,
                 max_tokens: 1500
