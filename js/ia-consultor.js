@@ -1342,10 +1342,52 @@ window.iaConsultor = {
         self._salvarHistorico();
         self._renderMensagens();
 
-        // Toast de feedback
+        // ══ CONFIRMAÇÃO VISUAL — Toast individual para cada ação ══
         if (window.app && window.app.showToast) {
-            window.app.showToast('🤖 ' + acoes.length + ' ação(ões) executada(s)!', 'success');
+            resultados.forEach(function (resultado, i) {
+                setTimeout(function () {
+                    window.app.showToast(resultado, resultado.indexOf('❌') >= 0 ? 'error' : 'success');
+                }, i * 1200); // Espaça os toasts para o usuário ver cada um
+            });
         }
+
+        // ══ BANNER FIXO NO TOPO — Sem sumir, fica até o usuário fechar ══
+        var oldBanner = document.getElementById('ia-actions-banner');
+        if (oldBanner) oldBanner.remove();
+
+        var banner = document.createElement('div');
+        banner.id = 'ia-actions-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;'
+            + 'background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff;'
+            + 'padding:12px 16px;font-size:13px;font-weight:600;'
+            + 'box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:slideDown 0.4s ease;';
+
+        var bannerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">'
+            + '<span>🤖 IA executou ' + resultados.length + ' ação(ões):</span>'
+            + '<button onclick="this.parentNode.parentNode.remove()" '
+            + 'style="background:rgba(255,255,255,0.2);border:none;color:#fff;'
+            + 'font-size:18px;width:28px;height:28px;border-radius:50%;cursor:pointer;'
+            + 'display:flex;align-items:center;justify-content:center;">✕</button>'
+            + '</div>'
+            + '<div style="margin-top:6px;font-size:12px;opacity:0.95;">';
+
+        resultados.forEach(function (r) {
+            bannerHTML += '<div style="padding:2px 0;">' + r + '</div>';
+        });
+        bannerHTML += '</div>';
+        banner.innerHTML = bannerHTML;
+        document.body.appendChild(banner);
+
+        // Auto-remover banner após 12 segundos
+        setTimeout(function () {
+            var b = document.getElementById('ia-actions-banner');
+            if (b) {
+                b.style.transition = 'opacity 0.5s, transform 0.5s';
+                b.style.opacity = '0';
+                b.style.transform = 'translateY(-100%)';
+                setTimeout(function () { if (b.parentNode) b.remove(); }, 500);
+            }
+        }, 12000);
 
         // Refresh UI
         if (window.app && window.app.renderCurrentView) {
