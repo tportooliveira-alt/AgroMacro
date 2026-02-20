@@ -2558,9 +2558,13 @@ body.perfil-campo .gerencia-only {
 /* Container do mapa — ocupa toda a tela */
 #view-mapa {
     padding: 0 !important;
-    display: flex;
     flex-direction: column;
     height: calc(100vh - 60px);
+}
+
+/* Só mostra como flex quando ativo (evita aparecer em todas as telas) */
+#view-mapa.active {
+    display: flex !important;
 }
 
 #mapa-container {
