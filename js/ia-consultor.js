@@ -11,9 +11,14 @@ window.iaConsultor = {
     OPENROUTER_KEY: '', // OpenRouter (modelos grátis)
 
     CACHE_KEY: 'agromacro_ia_historico',
+    MERCADO_CACHE_KEY: 'agromacro_mercado',
+    MERCADO_CACHE_HORAS: 12,
     MAX_HISTORICO: 20,
     historico: [],
     aberto: false,
+    _tooltipTimer: null,
+    _badgeCount: 0,
+    _telaAtual: 'home',
 
     init: function () {
         this.historico = this._carregarHistorico();
@@ -222,6 +227,31 @@ window.iaConsultor = {
                     var gmd = window.indicadores.calcGMDGeral ? window.indicadores.calcGMDGeral() : null;
                     if (gmd) ctx.push('\n📈 GMD médio do rebanho: ' + gmd.toFixed(3) + ' kg/dia');
                 } catch (e) { }
+            }
+
+            // ── Dados de mercado (cache) ──
+            var mercado = this.getMercado();
+            if (mercado) {
+                ctx.push('\n📊 MERCADO ATUALIZADO (' + (mercado.data || 'cache') + '):');
+                if (mercado.arrobaSP) ctx.push('  Arroba CEPEA/SP: R$ ' + Number(mercado.arrobaSP).toFixed(2));
+                if (mercado.arrobaBA) ctx.push('  Arroba BA: R$ ' + Number(mercado.arrobaBA).toFixed(2));
+                if (mercado.arrobaGO) ctx.push('  Arroba GO: R$ ' + Number(mercado.arrobaGO).toFixed(2));
+                if (mercado.arrobaMT) ctx.push('  Arroba MT: R$ ' + Number(mercado.arrobaMT).toFixed(2));
+                if (mercado.arrobaMS) ctx.push('  Arroba MS: R$ ' + Number(mercado.arrobaMS).toFixed(2));
+                if (mercado.tendencia) ctx.push('  Tendência: ' + mercado.tendencia + ' (' + (mercado.variacao7d || '') + ' na semana)');
+                if (mercado.bezerro) ctx.push('  Bezerro: R$ ' + Number(mercado.bezerro).toFixed(2));
+                if (mercado.rt) ctx.push('  Relação de Troca: ' + mercado.rt.toFixed(1) + ' @/bezerro');
+                if (mercado.dolar) ctx.push('  Dólar: R$ ' + Number(mercado.dolar).toFixed(2));
+                if (mercado.milho60kg) ctx.push('  Milho 60kg: R$ ' + Number(mercado.milho60kg).toFixed(2));
+                if (mercado.escalas) ctx.push('  Escalas de abate: ' + mercado.escalas);
+                if (mercado.exportacao) ctx.push('  Exportação: ' + mercado.exportacao);
+                if (mercado.noticias && mercado.noticias.length > 0) {
+                    ctx.push('  NOTÍCIAS:');
+                    mercado.noticias.forEach(function (n) {
+                        ctx.push('    • ' + n.titulo + ': ' + n.resumo);
+                    });
+                }
+                if (mercado.analise) ctx.push('  ANÁLISE: ' + mercado.analise);
             }
 
         } catch (err) {
@@ -867,7 +897,7 @@ window.iaConsultor = {
         btn = document.createElement('button');
         btn.id = 'ia-fab';
         btn.className = 'ia-fab';
-        btn.innerHTML = '🤖';
+        btn.innerHTML = '🤖<span id="ia-badge" class="ia-badge" style="display:none;">0</span>';
         btn.title = 'Consultor IA';
         btn.onclick = function () { window.iaConsultor.toggle(); };
         document.body.appendChild(btn);
@@ -919,22 +949,76 @@ window.iaConsultor = {
         this.enviarPergunta(texto);
     },
 
-    // ══ RENDER MENSAGENS ══
+    // ══ RENDER MENSAGENS (C5: Contextual Welcome + C7: Dynamic Suggestions) ══
     _renderMensagens: function () {
         var container = document.getElementById('ia-messages');
         if (!container) return;
 
         if (this.historico.length === 0) {
+            // ── C5: Contextual welcome based on current page + data ──
+            var mercado = this.getMercado();
+            var events = window.data ? window.data.events : [];
+            var lotesAtivos = [];
+            var lotesMap = {};
+            events.forEach(function (ev) { if (ev.type === 'LOTE') lotesMap[ev.nome] = ev; });
+            for (var n in lotesMap) { if (lotesMap[n].status === 'ATIVO') lotesAtivos.push(lotesMap[n]); }
+            var totalCab = 0, pesoT = 0, pesados = 0;
+            lotesAtivos.forEach(function (l) {
+                totalCab += (l.qtdAnimais || 0);
+                if (l.pesoMedio && (l.qtdAnimais || 0) > 0) { pesoT += l.pesoMedio * l.qtdAnimais; pesados += l.qtdAnimais; }
+            });
+            var pesoMed = pesados > 0 ? (pesoT / pesados).toFixed(0) : '--';
+            var arrobas = pesoT > 0 ? (pesoT / 30).toFixed(0) : '--';
+
+            var welcomeMsg = '';
+            if (mercado && mercado.arrobaSP && totalCab > 0) {
+                var precoArr = mercado.arrobaBA || mercado.arrobaSP;
+                var valorReb = (pesoT / 30) * precoArr;
+                welcomeMsg = '📊 Seu rebanho: <strong>' + totalCab + ' cab</strong>, peso médio ' + pesoMed + 'kg (' + arrobas + '@)<br>'
+                    + '💰 CEPEA: <strong>R$ ' + Number(mercado.arrobaSP).toFixed(2) + '/@</strong> (' + (mercado.tendencia || '—') + ')<br>'
+                    + '🐂 Valor em pé: <strong>R$ ' + valorReb.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + '</strong>';
+            } else if (totalCab > 0) {
+                welcomeMsg = '📊 Seu rebanho: <strong>' + totalCab + ' cab</strong> em ' + lotesAtivos.length + ' lotes, peso médio ' + pesoMed + 'kg';
+            } else {
+                welcomeMsg = 'Consultor pecuário com IA real.<br>Usa os dados da sua fazenda para respostas precisas.';
+            }
+
+            // ── C7: Dynamic suggestions based on real data + financial education ──
+            var suggestions = [];
+
+            // Data-driven suggestions
+            if (mercado && mercado.arrobaSP) {
+                suggestions.push({ icon: '📈', text: 'Como está o mercado hoje?', q: 'Como está o mercado da arroba hoje? Analise tendência, escalas e me aconselhe.' });
+            }
+            var temLotePronto = lotesAtivos.some(function (l) { return l.pesoMedio && l.pesoMedio / 30 >= 16; });
+            if (temLotePronto) {
+                suggestions.push({ icon: '💰', text: 'Devo vender meu lote pronto?', q: 'Tenho lote pronto (≥16@). Analise o mercado e me diga se devo vender agora ou esperar.' });
+            }
+            var hoje = new Date().toISOString().split('T')[0];
+            var vencidas = events.filter(function (e) { return e.type === 'CONTA_PAGAR' && !e.pago && e.vencimento && e.vencimento < hoje; });
+            if (vencidas.length > 0) {
+                suggestions.push({ icon: '⚠️', text: vencidas.length + ' contas vencidas!', q: 'Tenho ' + vencidas.length + ' contas vencidas. Me ajude a priorizar pagamentos.' });
+            }
+
+            // Financial education — always available
+            suggestions.push({ icon: '🔒', text: 'Como TRAVAR preço na B3? (Hedge)', q: 'Explique de forma clara e passo a passo como funciona o hedge na B3 para pecuarista. O que é contrato futuro BGI? Como funciona a PUT (opção de venda)? Quanto custa? Qual o lote mínimo? Me explique como se eu nunca tivesse ouvido falar disso.' });
+            suggestions.push({ icon: '🏦', text: 'O que é CPR? (Antecipar dinheiro)', q: 'Explique de forma clara o que é CPR (Cédula de Produto Rural). Como funciona a CPR Física e a Financeira? Onde faço (bancos)? Quais garantias pedem? Quanto custa? Vantagens e riscos? Me explique passo a passo.' });
+            suggestions.push({ icon: '📝', text: 'Venda a Termo (Contrato com Frigorífico)', q: 'Explique de forma clara como funciona a Venda a Termo com frigorífico. Como travo o preço? Quais as vantagens e riscos? Quando devo usar? Compare com hedge na B3 e CPR.' });
+            suggestions.push({ icon: '🔄', text: 'Qual melhor caminho pra vender?', q: 'Compare as modalidades de venda: spot (à vista), venda a termo, CPR, futuro B3 e PUT. Para o tamanho do meu rebanho, qual é a melhor opção? Me explique cada uma de forma simples.' });
+
+            // General
+            suggestions.push({ icon: '📊', text: 'Resumo completo da fazenda', q: 'Dê um resumo completo da minha fazenda: rebanho, custos, receitas, estoque, pastos e manejos pendentes.' });
+
+            var sugHtml = '';
+            suggestions.forEach(function (s) {
+                sugHtml += '<button class="ia-suggest-btn" onclick="window.iaConsultor.enviarPergunta(\'' + s.q.replace(/'/g, "\\'") + '\')">' + s.icon + ' ' + s.text + '</button>';
+            });
+
             container.innerHTML = '<div class="ia-welcome">'
                 + '<div class="ia-welcome-icon">🤖</div>'
                 + '<div class="ia-welcome-title">AgroIA</div>'
-                + '<div class="ia-welcome-sub">Consultor pecuário com inteligência artificial real.<br>Usa os dados da sua fazenda para respostas precisas.</div>'
-                + '<div class="ia-suggestions">'
-                + '<button class="ia-suggest-btn" onclick="window.iaConsultor.enviarPergunta(\'Qual o resumo da minha fazenda?\')">📊 Resumo da fazenda</button>'
-                + '<button class="ia-suggest-btn" onclick="window.iaConsultor.enviarPergunta(\'Qual pasto está melhor para receber gado?\')">🌿 Melhor pasto</button>'
-                + '<button class="ia-suggest-btn" onclick="window.iaConsultor.enviarPergunta(\'Quanto estou gastando por arroba?\')">💰 Custo por @</button>'
-                + '<button class="ia-suggest-btn" onclick="window.iaConsultor.enviarPergunta(\'O que preciso fazer de manejo esta semana?\')">💉 Manejo pendente</button>'
-                + '</div>'
+                + '<div class="ia-welcome-sub">' + welcomeMsg + '</div>'
+                + '<div class="ia-suggestions">' + sugHtml + '</div>'
                 + '</div>';
             return;
         }
@@ -1039,5 +1123,572 @@ window.iaConsultor = {
         this._salvarHistorico();
         this._renderMensagens();
         window.app.showToast('Histórico limpo', 'info');
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  C0: BRIEFING DIÁRIO DE MERCADO — Busca dados reais via Gemini
+    // ══════════════════════════════════════════════════════════════
+    buscarBriefingDiario: function (forceRefresh) {
+        var self = this;
+        // Check cache first
+        if (!forceRefresh) {
+            var cached = this.getMercado();
+            if (cached && cached._timestamp) {
+                var horasPassadas = (Date.now() - cached._timestamp) / (1000 * 60 * 60);
+                if (horasPassadas < this.MERCADO_CACHE_HORAS) {
+                    console.log('IA Mercado: usando cache (' + horasPassadas.toFixed(1) + 'h)');
+                    this.gerarInsightsProativos();
+                    this._atualizarBadge();
+                    return;
+                }
+            }
+        }
+
+        if (!this._temConexao()) {
+            console.log('IA Mercado: sem API key, usando cache antigo');
+            this.gerarInsightsProativos();
+            return;
+        }
+
+        console.log('IA Mercado: buscando briefing diário...');
+
+        var prompt = 'Busque informações ATUAIS e REAIS do mercado pecuário brasileiro de HOJE. '
+            + 'Responda EXCLUSIVAMENTE em formato JSON válido, sem markdown, sem explicação, SÓ o JSON:\n'
+            + '{\n'
+            + '  "data": "YYYY-MM-DD",\n'
+            + '  "arrobaSP": 0.00,\n'
+            + '  "arrobaBA": 0.00,\n'
+            + '  "arrobaGO": 0.00,\n'
+            + '  "arrobaMT": 0.00,\n'
+            + '  "arrobaMS": 0.00,\n'
+            + '  "tendencia": "alta ou estavel ou queda",\n'
+            + '  "variacao7d": "+X.X%",\n'
+            + '  "bezerro": 0.00,\n'
+            + '  "novilha": 0.00,\n'
+            + '  "vaca": 0.00,\n'
+            + '  "rt": 0.00,\n'
+            + '  "dolar": 0.00,\n'
+            + '  "milho60kg": 0.00,\n'
+            + '  "soja60kg": 0.00,\n'
+            + '  "escalas": "X dias",\n'
+            + '  "exportacao": "forte ou normal ou fraca",\n'
+            + '  "noticias": [\n'
+            + '    {"titulo": "...", "resumo": "..."},\n'
+            + '    {"titulo": "...", "resumo": "..."},\n'
+            + '    {"titulo": "...", "resumo": "..."}\n'
+            + '  ],\n'
+            + '  "analise": "Resumo em 2 frases da situação do mercado hoje"\n'
+            + '}\n'
+            + 'Use dados do CEPEA, B3, Canal Rural, BeefPoint, Scot Consultoria. Preços em R$.';
+
+        var apiKey = this.API_KEY;
+        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+
+        var body = {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+            tools: [{ googleSearch: {} }]
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                try {
+                    var text = data.candidates[0].content.parts[0].text;
+                    // Clean markdown wrapping if present
+                    text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+                    var mercado = JSON.parse(text);
+                    mercado._timestamp = Date.now();
+                    localStorage.setItem(self.MERCADO_CACHE_KEY, JSON.stringify(mercado));
+                    console.log('IA Mercado: briefing atualizado!', mercado);
+                    self.gerarInsightsProativos();
+                    self._atualizarBadge();
+                } catch (e) {
+                    console.warn('IA Mercado: erro ao parsear JSON', e);
+                    self.gerarInsightsProativos(); // usa cache antigo
+                }
+            })
+            .catch(function (err) {
+                console.warn('IA Mercado: erro na API', err);
+                self.gerarInsightsProativos(); // usa cache antigo
+            });
+    },
+
+    getMercado: function () {
+        try {
+            return JSON.parse(localStorage.getItem(this.MERCADO_CACHE_KEY) || 'null');
+        } catch (e) { return null; }
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  C1: PAINEL DE INSIGHTS NA HOME — Cruza mercado + fazenda
+    // ══════════════════════════════════════════════════════════════
+    gerarInsightsProativos: function () {
+        var container = document.getElementById('ia-insights-home');
+        if (!container) return;
+
+        var mercado = this.getMercado();
+        var insights = [];
+        var events = window.data ? window.data.events : [];
+
+        // ── Dados internos da fazenda ──
+        var lotesMap = {};
+        events.forEach(function (ev) {
+            if (ev.type === 'LOTE') lotesMap[ev.nome] = ev;
+        });
+        var lotesAtivos = [];
+        for (var n in lotesMap) {
+            if (lotesMap[n].status === 'ATIVO') lotesAtivos.push(lotesMap[n]);
+        }
+        var totalCabecas = 0;
+        var pesoTotal = 0;
+        var pesados = 0;
+        lotesAtivos.forEach(function (l) {
+            var qtd = l.qtdAnimais || 0;
+            totalCabecas += qtd;
+            if (l.pesoMedio && qtd > 0) {
+                pesoTotal += l.pesoMedio * qtd;
+                pesados += qtd;
+            }
+        });
+        var pesoMedio = pesados > 0 ? pesoTotal / pesados : 0;
+        var totalArrobas = pesoTotal > 0 ? pesoTotal / 30 : 0;
+
+        // ── Preço da arroba (mercado real ou config) ──
+        var precoArroba = 0;
+        if (mercado && mercado.arrobaBA) {
+            precoArroba = mercado.arrobaBA;
+        } else if (mercado && mercado.arrobaSP) {
+            precoArroba = mercado.arrobaSP;
+        } else if (window.contas && window.contas.getPrecoArroba) {
+            precoArroba = window.contas.getPrecoArroba() || 0;
+        }
+
+        // ── INSIGHT 1: Cotação do dia ──
+        if (mercado && mercado.arrobaSP) {
+            var icone = mercado.tendencia === 'alta' ? '📈' : mercado.tendencia === 'queda' ? '📉' : '➡️';
+            var cor = mercado.tendencia === 'alta' ? '#16a34a' : mercado.tendencia === 'queda' ? '#dc2626' : '#ca8a04';
+            insights.push({
+                icon: icone,
+                title: 'Arroba Hoje (CEPEA/SP)',
+                value: 'R$ ' + Number(mercado.arrobaSP).toFixed(2),
+                sub: (mercado.variacao7d || '') + ' na semana | Tendência: ' + (mercado.tendencia || '—'),
+                color: cor,
+                action: 'Como está o mercado da arroba hoje? Analise tendências e me aconselhe.'
+            });
+        }
+
+        // ── INSIGHT 2: Valor do rebanho ──
+        if (totalArrobas > 0 && precoArroba > 0) {
+            var valorRebanho = totalArrobas * precoArroba;
+            insights.push({
+                icon: '🐂',
+                title: 'Valor do Rebanho em Pé',
+                value: 'R$ ' + valorRebanho.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
+                sub: totalCabecas + ' cab × ' + pesoMedio.toFixed(0) + 'kg = ' + totalArrobas.toFixed(0) + '@ × R$' + precoArroba.toFixed(0),
+                color: '#2563eb',
+                action: 'Analise o valor do meu rebanho e me diga se é hora de vender algum lote.'
+            });
+        }
+
+        // ── INSIGHT 3: Lote pronto pra venda ──
+        var lotePronto = null;
+        lotesAtivos.forEach(function (l) {
+            if (l.pesoMedio && l.pesoMedio / 30 >= 16) {
+                if (!lotePronto || l.pesoMedio > lotePronto.pesoMedio) lotePronto = l;
+            }
+        });
+        if (lotePronto && precoArroba > 0) {
+            var arrobasLote = (lotePronto.pesoMedio / 30) * (lotePronto.qtdAnimais || 0);
+            var valorLote = arrobasLote * precoArroba;
+            var tendMsg = '';
+            if (mercado && mercado.tendencia === 'alta') tendMsg = ' | Mercado em ALTA!';
+            else if (mercado && mercado.tendencia === 'queda') tendMsg = ' | ⚠️ Mercado caindo';
+            insights.push({
+                icon: '💰',
+                title: 'Lote Pronto: ' + lotePronto.nome,
+                value: 'R$ ' + valorLote.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
+                sub: (lotePronto.qtdAnimais || 0) + ' cab × ' + (lotePronto.pesoMedio / 30).toFixed(1) + '@ = ' + arrobasLote.toFixed(0) + '@' + tendMsg,
+                color: '#16a34a',
+                action: 'Analise o lote "' + lotePronto.nome + '" com ' + (lotePronto.qtdAnimais || 0) + ' cabeças a ' + lotePronto.pesoMedio + 'kg. Devo vender agora?'
+            });
+        }
+
+        // ── INSIGHT 4: Relação de Troca ──
+        if (mercado && mercado.rt) {
+            var rtStatus = mercado.rt < 8 ? 'BOA' : mercado.rt > 10 ? 'RUIM' : 'Regular';
+            var rtCor = mercado.rt < 8 ? '#16a34a' : mercado.rt > 10 ? '#dc2626' : '#ca8a04';
+            insights.push({
+                icon: '🔄',
+                title: 'Relação de Troca (RT)',
+                value: mercado.rt.toFixed(1) + ' arrobas/bezerro',
+                sub: rtStatus + ' — ' + (mercado.rt < 8 ? 'Bom momento pra repor!' : mercado.rt > 10 ? 'Reposição cara, cuidado!' : 'Dentro do normal'),
+                color: rtCor,
+                action: 'A relação de troca está em ' + mercado.rt + '. É bom momento pra comprar reposição?'
+            });
+        }
+
+        // ── INSIGHT 5: Notícias do mercado ──
+        if (mercado && mercado.noticias && mercado.noticias.length > 0) {
+            var noticia = mercado.noticias[0];
+            insights.push({
+                icon: '📰',
+                title: noticia.titulo,
+                value: '',
+                sub: noticia.resumo,
+                color: '#6d28d9',
+                action: 'Me fale mais sobre: "' + noticia.titulo + '" e como afeta minha fazenda.'
+            });
+        }
+
+        // ── INSIGHT 6: Custos x Mercado ──
+        if (window.indicadores && precoArroba > 0) {
+            try {
+                var margem = window.indicadores.calcMargemArroba ? window.indicadores.calcMargemArroba() : null;
+                if (margem && margem.custoMedio > 0) {
+                    var margemValor = precoArroba - margem.custoMedio;
+                    var margemOk = margemValor > 0;
+                    insights.push({
+                        icon: margemOk ? '✅' : '🚨',
+                        title: 'Margem por Arroba',
+                        value: 'R$ ' + margemValor.toFixed(2) + '/@',
+                        sub: 'Custo: R$' + margem.custoMedio.toFixed(0) + '/@ | Mercado: R$' + precoArroba.toFixed(0) + '/@ | ' + (margemOk ? 'Positiva!' : 'NEGATIVA!'),
+                        color: margemOk ? '#16a34a' : '#dc2626',
+                        action: 'Meu custo de produção é R$' + margem.custoMedio.toFixed(0) + '/@ e a arroba está R$' + precoArroba.toFixed(0) + '. Analise minha margem.'
+                    });
+                }
+            } catch (e) { }
+        }
+
+        // ── INSIGHT 7: Estoque baixo ──
+        if (window.estoque && window.estoque.getStockItems) {
+            var estoqueItems = window.estoque.getStockItems();
+            var baixos = estoqueItems.filter(function (e) { return e.qty <= (e.min || 0); });
+            if (baixos.length > 0) {
+                var nomes = baixos.slice(0, 3).map(function (b) { return b.name; }).join(', ');
+                insights.push({
+                    icon: '📦',
+                    title: 'Estoque Baixo: ' + baixos.length + ' itens',
+                    value: '',
+                    sub: nomes + (baixos.length > 3 ? ' e mais ' + (baixos.length - 3) : ''),
+                    color: '#ea580c',
+                    action: 'Tenho ' + baixos.length + ' itens com estoque baixo. Quais priorizar?'
+                });
+            }
+        }
+
+        // ── INSIGHT 8: Sazonalidade ──
+        var mes = new Date().getMonth(); // 0-11
+        var sazonMsg = '';
+        if (mes >= 8 && mes <= 10) sazonMsg = '📈 Set-Nov: ENTRESSAFRA — preços em ALTA historicamente!';
+        else if (mes >= 2 && mes <= 4) sazonMsg = '📉 Mar-Mai: SAFRA de capim — preços tendem a cair';
+        else if (mes >= 5 && mes <= 7) sazonMsg = '⚖️ Jun-Ago: Período de transição — atenção ao clima';
+        else sazonMsg = '🎄 Dez-Fev: Demanda forte (festas + verão)';
+
+        if (sazonMsg) {
+            insights.push({
+                icon: '📅',
+                title: 'Sazonalidade',
+                value: '',
+                sub: sazonMsg,
+                color: '#0891b2',
+                action: 'Estamos em qual fase do ciclo pecuário? O que devo fazer nos próximos 3 meses?'
+            });
+        }
+
+        // ── INSIGHT 9: Insumos (milho, soja) ──
+        if (mercado && mercado.milho60kg) {
+            insights.push({
+                icon: '🌽',
+                title: 'Insumos',
+                value: 'Milho: R$ ' + Number(mercado.milho60kg).toFixed(2) + '/sc',
+                sub: (mercado.soja60kg ? 'Soja: R$ ' + Number(mercado.soja60kg).toFixed(2) + '/sc | ' : '') + 'Dólar: R$ ' + (mercado.dolar || '—'),
+                color: '#d97706',
+                action: 'Analise os preços dos insumos (milho, soja) e como afetam meu custo de confinamento.'
+            });
+        }
+
+        // ── RENDER ──
+        if (insights.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Limit display to max 4, but keep all for scrolling
+        var html = '<div class="ia-insights-section">'
+            + '<div class="ia-insights-header">'
+            + '<span class="ia-insights-icon">🤖</span>'
+            + '<span class="ia-insights-title">AgroIA — Análise do Dia</span>'
+            + (mercado && mercado.data ? '<span class="ia-insights-date">' + mercado.data + '</span>' : '')
+            + '</div>'
+            + '<div class="ia-insights-grid">';
+
+        insights.forEach(function (ins) {
+            html += '<div class="ia-insight-card" style="border-left: 4px solid ' + ins.color + ';" '
+                + 'onclick="window.iaConsultor._abrirComPergunta(\'' + ins.action.replace(/'/g, "\\'") + '\')">'
+                + '<div class="ia-insight-top">'
+                + '<span class="ia-insight-emoji">' + ins.icon + '</span>'
+                + '<span class="ia-insight-card-title">' + ins.title + '</span>'
+                + '</div>'
+                + (ins.value ? '<div class="ia-insight-value" style="color:' + ins.color + ';">' + ins.value + '</div>' : '')
+                + '<div class="ia-insight-sub">' + ins.sub + '</div>'
+                + '<div class="ia-insight-action">Saber mais →</div>'
+                + '</div>';
+        });
+
+        html += '</div></div>';
+        container.innerHTML = html;
+    },
+
+    _abrirComPergunta: function (pergunta) {
+        this.toggle();
+        var self = this;
+        setTimeout(function () {
+            self.enviarPergunta(pergunta);
+        }, 400);
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  C2: TOOLTIP CONTEXTUAL NO FAB — Muda por tela
+    // ══════════════════════════════════════════════════════════════
+    _tooltipMap: {
+        'home': { msg: '📊 Como estão meus resultados?', q: 'Como estão os resultados da minha fazenda? Analise KPIs e me dê sugestões.' },
+        'lotes': { msg: '🐄 Qual lote devo vender primeiro?', q: 'Analise meus lotes e me diga qual tem melhor margem e deve ser vendido primeiro.' },
+        'pastos': { msg: '🌿 Meus pastos estão bem lotados?', q: 'Analise a lotação dos meus pastos com base na chuva e número de animais.' },
+        'rebanho': { msg: '📋 Resumo do meu rebanho', q: 'Dê um resumo completo do meu rebanho com análise.' },
+        'compra': { msg: '💡 É hora boa pra comprar?', q: 'Analise o mercado atual e me diga se é bom momento para comprar gado de reposição.' },
+        'venda': { msg: '💰 Devo vender agora ou esperar?', q: 'Analise o mercado e meus lotes. Devo vender agora ou esperar? Considere sazonalidade e tendência.' },
+        'estoque': { msg: '📦 Quanto tempo meu estoque dura?', q: 'Analise meu estoque de insumos e me diga quanto tempo cada item dura no consumo atual.' },
+        'fluxo': { msg: '💸 Como está minha saúde financeira?', q: 'Analise meu fluxo de caixa, contas a pagar e receitas projetadas. Como está minha saúde financeira?' },
+        'manejo': { msg: '💉 Próximos manejos recomendados?', q: 'Quais manejos sanitários devo fazer esta semana? Verifique vacinas e carências.' },
+        'mapa': { msg: '🗺️ Análise de lotação dos pastos', q: 'Analise a distribuição dos animais nos pastos e sugira rotação ideal.' },
+        'calendario': { msg: '📅 Vacinas e carências pendentes?', q: 'Quais vacinas estão pendentes? Há carências ativas que preciso observar?' },
+        'contas': { msg: '📋 Resumo das contas a pagar', q: 'Analise minhas contas a pagar, vencidas e futuras. O que priorizar?' },
+        'config': { msg: '⚙️ Precisa de ajuda?', q: 'Me ajude a configurar o app AgroMacro corretamente.' },
+        'cabecas': { msg: '🐂 Análise individual do rebanho', q: 'Analise os dados individuais do meu rebanho.' },
+        'balanco': { msg: '📈 Explicar meu balanço', q: 'Explique meu balanço financeiro de forma simples. O que está bom e o que precisa melhorar?' },
+        'obras': { msg: '🔨 Custos de infraestrutura', q: 'Analise os custos de obras e infraestrutura da fazenda.' },
+        'funcionarios': { msg: '👷 Gestão da equipe', q: 'Analise os custos com funcionários e produtividade da equipe.' },
+        'rastreabilidade': { msg: '📋 GTA e SISBOV em dia?', q: 'Analise a rastreabilidade do meu rebanho. GTAs e SISBOV estão em dia?' }
+    },
+
+    atualizarContextoTela: function (pageId) {
+        this._telaAtual = pageId;
+        var self = this;
+
+        // Clear previous tooltip
+        if (this._tooltipTimer) {
+            clearTimeout(this._tooltipTimer);
+            this._tooltipTimer = null;
+        }
+        var oldTooltip = document.getElementById('ia-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        var mapEntry = this._tooltipMap[pageId];
+        if (!mapEntry) return;
+
+        // Add market data to tooltip if available
+        var msg = mapEntry.msg;
+        var mercado = this.getMercado();
+        if (pageId === 'home' && mercado && mercado.arrobaSP) {
+            var icone = mercado.tendencia === 'alta' ? '↑' : mercado.tendencia === 'queda' ? '↓' : '→';
+            msg = '📊 CEPEA: R$' + Number(mercado.arrobaSP).toFixed(0) + '/@ ' + icone;
+        } else if (pageId === 'venda' && mercado && mercado.tendencia) {
+            msg = mercado.tendencia === 'alta' ? '📈 Mercado em ALTA — bom momento!' : mercado.tendencia === 'queda' ? '📉 Mercado caindo — analise antes' : '➡️ Mercado estável';
+        } else if (pageId === 'compra' && mercado && mercado.rt) {
+            msg = '🔄 RT: ' + mercado.rt.toFixed(1) + ' — ' + (mercado.rt < 8 ? 'Bom pra comprar!' : 'Caro!');
+        }
+
+        // Show tooltip after short delay
+        setTimeout(function () {
+            var fab = document.getElementById('ia-fab');
+            if (!fab) return;
+
+            var tooltip = document.createElement('div');
+            tooltip.id = 'ia-tooltip';
+            tooltip.className = 'ia-tooltip';
+            tooltip.innerHTML = '<span>' + msg + '</span>';
+            tooltip.onclick = function () {
+                tooltip.remove();
+                self._abrirComPergunta(mapEntry.q);
+            };
+            document.body.appendChild(tooltip);
+
+            // Auto-hide after 6s
+            self._tooltipTimer = setTimeout(function () {
+                if (tooltip.parentNode) {
+                    tooltip.classList.add('ia-tooltip-hide');
+                    setTimeout(function () { if (tooltip.parentNode) tooltip.remove(); }, 500);
+                }
+            }, 6000);
+        }, 800);
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  C4: BADGE DE NOTIFICAÇÃO NO FAB
+    // ══════════════════════════════════════════════════════════════
+    _atualizarBadge: function () {
+        var count = 0;
+        var mercado = this.getMercado();
+        var events = window.data ? window.data.events : [];
+
+        // Boi pronto + mercado em alta
+        var lotesMap = {};
+        events.forEach(function (ev) { if (ev.type === 'LOTE') lotesMap[ev.nome] = ev; });
+        for (var n in lotesMap) {
+            var l = lotesMap[n];
+            if (l.status === 'ATIVO' && l.pesoMedio && l.pesoMedio / 30 >= 16) {
+                count++;
+                break; // count once
+            }
+        }
+
+        // Mercado trending
+        if (mercado && (mercado.tendencia === 'alta' || mercado.tendencia === 'queda')) count++;
+
+        // Contas vencidas
+        var hoje = new Date().toISOString().split('T')[0];
+        var vencidas = events.filter(function (e) {
+            return e.type === 'CONTA_PAGAR' && !e.pago && e.vencimento && e.vencimento < hoje;
+        });
+        if (vencidas.length > 0) count++;
+
+        // Estoque baixo
+        if (window.estoque && window.estoque.getStockItems) {
+            var baixos = window.estoque.getStockItems().filter(function (e) { return e.qty <= (e.min || 0); });
+            if (baixos.length > 0) count++;
+        }
+
+        // Notícias novas
+        if (mercado && mercado.noticias && mercado.noticias.length > 0) count++;
+
+        this._badgeCount = count;
+        var badge = document.getElementById('ia-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  C6: PÓS-AÇÃO INTELIGENTE — Sugestão após registrar dados
+    // ══════════════════════════════════════════════════════════════
+    notificarPosAcao: function (tipo, dados) {
+        var mercado = this.getMercado();
+        var msg = '';
+        var pergunta = '';
+
+        switch (tipo) {
+            case 'compra':
+                msg = '🤖 Compra registrada! ';
+                if (mercado && mercado.rt) {
+                    msg += 'RT atual: ' + mercado.rt.toFixed(1) + '. ';
+                }
+                msg += 'Quer que eu analise?';
+                pergunta = 'Registrei uma compra de ' + (dados.qtd || '?') + ' cabeças por R$ ' + (dados.valor || '?') + '. Analise a relação de troca e se foi bom negócio.';
+                break;
+            case 'venda':
+                msg = '🤖 Venda registrada! ';
+                if (mercado && mercado.arrobaSP) {
+                    msg += 'CEPEA: R$' + Number(mercado.arrobaSP).toFixed(0) + '/@. ';
+                }
+                msg += 'Quer análise da margem?';
+                pergunta = 'Registrei uma venda de ' + (dados.qtd || '?') + ' cabeças por R$ ' + (dados.valor || '?') + '. Calcule a margem por arroba e me diga se foi bom preço.';
+                break;
+            case 'pesagem':
+                msg = '🤖 Peso atualizado! ';
+                if (dados.gmd) msg += 'GMD: ' + dados.gmd.toFixed(3) + ' kg/dia. ';
+                msg += 'Quer projeção de abate?';
+                pergunta = 'Atualizei o peso do lote "' + (dados.lote || '') + '" para ' + (dados.peso || '?') + ' kg (GMD: ' + (dados.gmd || '?') + '). Quando atinge 16@? Qual o custo estimado até lá?';
+                break;
+            case 'estoque':
+                msg = '📦 ' + (dados.nome || 'Item') + ' atualizado. ';
+                if (dados.diasRestantes) msg += 'Dura ~' + dados.diasRestantes + ' dias.';
+                pergunta = 'Atualizei o estoque de ' + (dados.nome || 'um item') + '. Analise meu estoque e me diga o que priorizar para compra.';
+                break;
+            default:
+                return;
+        }
+
+        // Show toast with IA suggestion
+        this._mostrarToastIA(msg, pergunta);
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  SMART NAVIGATION — Navega pra tela certa + abre chat com pergunta
+    // ══════════════════════════════════════════════════════════════
+    _abrirComPergunta: function (pergunta, telaDestino) {
+        var self = this;
+
+        // Smart navigation: detect the right screen from the question context
+        if (!telaDestino) {
+            var q = (pergunta || '').toLowerCase();
+            if (q.indexOf('lote') >= 0 || q.indexOf('peso') >= 0 || q.indexOf('gmd') >= 0 || q.indexOf('arroba') >= 0) {
+                telaDestino = 'lotes';
+            } else if (q.indexOf('estoque') >= 0 || q.indexOf('sal ') >= 0 || q.indexOf('insumo') >= 0) {
+                telaDestino = 'estoque';
+            } else if (q.indexOf('venda') >= 0 || q.indexOf('compra') >= 0 || q.indexOf('fluxo') >= 0 || q.indexOf('financ') >= 0 || q.indexOf('margem') >= 0 || q.indexOf('custo') >= 0) {
+                telaDestino = 'fluxo';
+            } else if (q.indexOf('pasto') >= 0 || q.indexOf('rotação') >= 0 || q.indexOf('lotação') >= 0) {
+                telaDestino = 'pastos';
+            } else if (q.indexOf('mercado') >= 0 || q.indexOf('cepea') >= 0 || q.indexOf('b3') >= 0 || q.indexOf('hedge') >= 0 || q.indexOf('cpr') >= 0 || q.indexOf('travar') >= 0) {
+                telaDestino = 'home';
+            } else if (q.indexOf('mapa') >= 0) {
+                telaDestino = 'mapa';
+            } else if (q.indexOf('resultado') >= 0 || q.indexOf('balanço') >= 0 || q.indexOf('dre') >= 0) {
+                telaDestino = 'resultados';
+            }
+        }
+
+        // Navigate to the target screen first
+        if (telaDestino && window.app && window.app.navigate) {
+            window.app.navigate(telaDestino);
+        }
+
+        // Open chat and send the question
+        setTimeout(function () {
+            if (!self.isOpen) {
+                self.toggle();
+            }
+            // Wait for chat UI to render, then inject the question
+            setTimeout(function () {
+                var input = document.getElementById('ia-input');
+                if (input) {
+                    input.value = pergunta;
+                    // Trigger send
+                    self.enviar();
+                }
+            }, 300);
+        }, 200);
+    },
+
+    _mostrarToastIA: function (msg, pergunta) {
+        var existing = document.getElementById('ia-toast');
+        if (existing) existing.remove();
+
+        var self = this;
+        var toast = document.createElement('div');
+        toast.id = 'ia-toast';
+        toast.className = 'ia-toast';
+        toast.innerHTML = '<div class="ia-toast-text">' + msg + '</div>'
+            + '<button class="ia-toast-btn" onclick="window.iaConsultor._abrirComPergunta(\'' + pergunta.replace(/'/g, "\\'") + '\'); this.parentNode.remove();">Analisar</button>'
+            + '<button class="ia-toast-close" onclick="this.parentNode.remove();">✕</button>';
+        document.body.appendChild(toast);
+
+        // Auto-hide after 10s
+        setTimeout(function () {
+            if (toast.parentNode) {
+                toast.classList.add('ia-toast-hide');
+                setTimeout(function () { if (toast.parentNode) toast.remove(); }, 500);
+            }
+        }, 10000);
     }
 };

@@ -879,6 +879,34 @@ window.lotes = {
             + '<button class="btn-sm" style="background:#DC2626;" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.lotes.excluirLote(\'' + loteNome + '\')">🗑️ Inativar</button>'
             + '</div>';
 
+        // ── C3: IA Quick-Actions ──
+        var mercado = window.iaConsultor ? window.iaConsultor.getMercado() : null;
+        var arrobasLote = lote.pesoMedio ? ((lote.pesoMedio / 30) * (lote.qtdAnimais || 0)).toFixed(0) : '?';
+        var precoRef = (mercado && (mercado.arrobaBA || mercado.arrobaSP)) ? (mercado.arrobaBA || mercado.arrobaSP) : 0;
+        var valorLoteCalc = precoRef && lote.pesoMedio ? ((lote.pesoMedio / 30) * (lote.qtdAnimais || 0) * precoRef) : 0;
+
+        html += '<div class="ia-lote-actions">'
+            + '<div class="ia-lote-actions-title">🤖 AgroIA — Análise Rápida</div>';
+
+        // Vale vender? (with market context)
+        var qVender = 'Analise o lote "' + loteNome + '" com ' + (lote.qtdAnimais || 0) + ' cabeças a ' + (lote.pesoMedio || '?') + 'kg (' + arrobasLote + '@).';
+        if (precoRef) qVender += ' CEPEA: R$' + precoRef.toFixed(0) + '/@ (tendência: ' + ((mercado && mercado.tendencia) || '?') + ').';
+        qVender += ' Devo vender agora ou esperar? Considere sazonalidade e escalas.';
+        html += '<button class="ia-lote-action-btn" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.iaConsultor._abrirComPergunta(\'' + qVender.replace(/'/g, "\\'") + '\')">💰 Vale vender?</button>';
+
+        // Custo por @
+        html += '<button class="ia-lote-action-btn" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.iaConsultor._abrirComPergunta(\'Calcule o custo por arroba produzida do lote ' + loteNome + '. Inclua compra, nutrição, sanidade e mão de obra.\')">📊 Custo por @</button>';
+
+        // Projeção 30d
+        html += '<button class="ia-lote-action-btn" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.iaConsultor._abrirComPergunta(\'Projete o lote ' + loteNome + ' para daqui 30 dias. Peso atual: ' + (lote.pesoMedio || '?') + 'kg. Quanto vai pesar? Quantas arrobas? Quanto valerá?\')">📈 Projeção 30d</button>';
+
+        // Hedge / CPR
+        if (valorLoteCalc > 0) {
+            html += '<button class="ia-lote-action-btn" onclick="document.getElementById(\'modal-detalhes-lote\').classList.remove(\'active\'); window.iaConsultor._abrirComPergunta(\'Meu lote ' + loteNome + ' vale R$ ' + valorLoteCalc.toFixed(0) + ' (' + arrobasLote + '@). Explique passo a passo como posso proteger esse valor: Hedge na B3, CPR, Venda a Termo. Qual é melhor pro meu caso?\')">🔒 Travar preço</button>';
+        }
+
+        html += '</div>';
+
         html += '</div>';
 
         // Show modal

@@ -192,6 +192,11 @@ window.app = {
         }
 
         // Render data-driven views
+        // ── IA: Update contextual tooltip for this page ──
+        if (window.iaConsultor && window.iaConsultor.atualizarContextoTela) {
+            window.iaConsultor.atualizarContextoTela(pageId);
+        }
+
         switch (pageId) {
             case 'home':
                 this.renderKPIs();
@@ -201,6 +206,10 @@ window.app = {
                 if (window.graficos) window.graficos.renderGraficosHome();
                 if (window.clima) window.clima.carregarPrevisao();
                 if (window.resultados) window.resultados.renderDashboard();
+                // IA: Buscar briefing de mercado e gerar insights
+                if (window.iaConsultor && window.iaConsultor.buscarBriefingDiario) {
+                    window.iaConsultor.buscarBriefingDiario();
+                }
                 break;
             case 'rebanho':
                 if (window.rebanho) window.rebanho.renderList();

@@ -108,6 +108,10 @@ window.financeiro = {
         }
 
         document.getElementById('form-compra').reset();
+        // C6: IA post-action suggestion
+        if (window.iaConsultor && window.iaConsultor.notificarPosAcao) {
+            window.iaConsultor.notificarPosAcao('compra', { qtd: qty, valor: total, peso: peso });
+        }
         setTimeout(function () { window.app.navigate('fluxo'); }, 400);
     },
 
@@ -172,6 +176,10 @@ window.financeiro = {
 
         window.app.showToast('✅ Venda registrada! R$ ' + precoArroba.toFixed(2) + '/@');
         document.getElementById('form-venda').reset();
+        // C6: IA post-action suggestion
+        if (window.iaConsultor && window.iaConsultor.notificarPosAcao) {
+            window.iaConsultor.notificarPosAcao('venda', { qtd: qty, valor: total, arrobas: totalArrobas });
+        }
         setTimeout(function () { window.app.navigate('fluxo'); }, 400);
     },
 
