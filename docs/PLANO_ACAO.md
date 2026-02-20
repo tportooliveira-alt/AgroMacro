@@ -19,6 +19,31 @@
 
 ---
 
+## 🔴 FASE 0 — BANCO DE DADOS + LOGIN (~2h) ← PRIORIDADE MÁXIMA
+
+### 0.1 Migrar localStorage → Firebase Firestore
+**Problema:** Dados ficam no navegador. Se limpar cache, perde tudo.
+- [ ] Criar coleções no Firestore: `lotes`, `eventos`, `estoque`, `contas`, `config`
+- [ ] Migrar `data.js` para salvar/ler do Firestore
+- [ ] Manter fallback offline (dados locais sincronizam quando tem internet)
+- [ ] Dados seguros na nuvem, acessíveis de qualquer dispositivo
+
+### 0.2 Login com Usuário e Senha
+**Problema:** App aberto, qualquer um acessa tudo.
+- [ ] Firebase Authentication (email/senha)
+- [ ] Tela de login na abertura do app
+- [ ] Perfil Gerência: acesso total (financeiro, config, dados)
+- [ ] Perfil Peão: só operacional (manejo, estoque, mapa)
+- [ ] Logout no Config
+- [ ] Cada fazenda = 1 conta, múltiplos usuários
+
+### 0.3 Limpeza de código
+- [ ] Remover estilos inline → classes CSS
+- [ ] Remover código morto e comentários antigos
+- [ ] Padronizar estrutura dos módulos
+
+---
+
 ## 🚀 FASE 1 — TURBINAR A IA (~1h30)
 
 ### 1.1 Ensinar ações novas ao Boteco
