@@ -111,17 +111,24 @@ window.iaConsultor = {
 
     // ══ Testar conexão IA ══
     testarChave: function () {
-        var key = (document.getElementById('config-api-key').value || '').trim();
+        // Salvar TODAS as chaves primeiro (não sobrescrever!)
+        this.salvarTodasChaves();
+
+        var key = this.API_KEY;
         if (!key) {
-            window.app.showToast('Cole sua chave API primeiro.', 'error');
+            // Se não tem Gemini, testa Groq como alternativa
+            if (this.GROQ_KEY) {
+                this._testarGroq();
+                return;
+            }
+            window.app.showToast('Cole pelo menos uma chave API.', 'error');
             return;
         }
-        this.API_KEY = key;
-        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key }));
 
         var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + key;
-        window.app.showToast('🧪 Testando conexão...', 'success');
+        window.app.showToast('🧪 Testando Gemini...', 'success');
 
+        var self = this;
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -133,14 +140,39 @@ window.iaConsultor = {
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.candidates) {
-                    window.app.showToast('✅ IA conectada com sucesso!', 'success');
+                    window.app.showToast('✅ Gemini conectado!', 'success');
                 } else if (data.error) {
-                    window.app.showToast('❌ Erro: ' + (data.error.message || 'Chave inválida'), 'error');
+                    var msg = data.error.message || '';
+                    if (msg.indexOf('quota') >= 0 || msg.indexOf('exceeded') >= 0) {
+                        window.app.showToast('⚠️ Gemini com quota esgotada (vai usar backup). Testando Groq...', 'warning');
+                        if (self.GROQ_KEY) self._testarGroq();
+                    } else {
+                        window.app.showToast('❌ Gemini: ' + msg, 'error');
+                    }
                 }
             })
             .catch(function () {
-                window.app.showToast('📴 Sem conexão com a internet.', 'error');
+                window.app.showToast('📴 Sem internet.', 'error');
             });
+    },
+
+    _testarGroq: function () {
+        if (!this.GROQ_KEY) return;
+        window.app.showToast('🧪 Testando Groq...', 'success');
+        fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.GROQ_KEY },
+            body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: 'Diga apenas: OK' }], max_tokens: 10 })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.choices) {
+                    window.app.showToast('✅ Groq conectado! IA vai funcionar via cascata.', 'success');
+                } else {
+                    window.app.showToast('❌ Groq: ' + (data.error ? data.error.message : 'Erro'), 'error');
+                }
+            })
+            .catch(function () { window.app.showToast('📴 Groq sem resposta.', 'error'); });
     },
 
     // ══ COLETA CONTEXTO REAL DA FAZENDA ══
