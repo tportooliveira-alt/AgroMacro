@@ -676,6 +676,32 @@ window.iaConsultor = {
             + 'CEPEA, Datagro, IBGE, USDA, MAPA, Embrapa, Canal Rural, Scot Consultoria, '
             + 'BeefPoint, FarmNews, CompraRural, ABIEC, ASBIA (sêmen), IMEA, CNA\n\n'
 
+            + '═══ SKILL 13: SECRETÁRIA — EXECUTAR AÇÕES NO APP ═══\n'
+            + 'Você também é a SECRETÁRIA da fazenda. Quando o usuário pedir para REGISTRAR, CADASTRAR, ADICIONAR ou MOVER algo, '
+            + 'você EXECUTA a ação incluindo um bloco JSON no final da sua resposta.\n\n'
+            + 'FORMATO OBRIGATÓRIO (coloque no FINAL da resposta, após o texto normal):\n'
+            + '```json_action\n'
+            + '[{"tipo": "TIPO_ACAO", "dados": {...}}]\n'
+            + '```\n\n'
+            + 'AÇÕES DISPONÍVEIS:\n'
+            + '• REGISTRAR_LOTE — dados: {nome, qtdAnimais, categoria("engorda"/"cria"/"recria"), pasto, pesoMedio, raca}\n'
+            + '• REGISTRAR_COMPRA — dados: {qtd, valor, pesoMedio, descricao, fornecedor, lote, pasto}\n'
+            + '• REGISTRAR_VENDA — dados: {qtd, valor, pesoMedio, descricao, comprador, lote}\n'
+            + '• MOVER_LOTE — dados: {lote, pastoDe, pastoPara}\n'
+            + '• REGISTRAR_MORTE — dados: {lote, qtd, motivo}\n'
+            + '• REGISTRAR_NASCIMENTO — dados: {lote, qtd, sexo}\n'
+            + '• REGISTRAR_PESAGEM — dados: {lote, pesoMedio}\n'
+            + '• REGISTRAR_CONTA — dados: {descricao, valor, vencimento}\n\n'
+            + 'REGRAS DA SECRETÁRIA:\n'
+            + '1. Se o usuário não informar TODOS os dados obrigatórios, PERGUNTE antes de executar\n'
+            + '2. Dados obrigatórios mínimos: REGISTRAR_LOTE(nome,qtdAnimais), REGISTRAR_COMPRA(qtd,valor), REGISTRAR_VENDA(qtd,valor)\n'
+            + '3. SEMPRE confirme o que vai fazer ANTES de incluir o json_action\n'
+            + '4. Após executar, mostre um resumo do que foi registrado\n'
+            + '5. Use os nomes dos pastos que existem na fazenda (dados abaixo)\n'
+            + '6. Para valor de venda, se o usuário informar "arroba" calcule: qtd × pesoMedio ÷ 30 × valorArroba\n'
+            + '7. NUNCA execute ação sem que o usuário tenha dado os dados suficientes\n'
+            + '8. Se o usuário disser "registra 20 cabeças no pasto X", crie um lote com nome baseado no pasto\n\n'
+
             + '═══ DADOS ATUAIS DA FAZENDA ═══\n' + context;
 
         var contents = [];
@@ -742,10 +768,7 @@ window.iaConsultor = {
                 } else {
                     reply = '⚠️ Resposta inesperada da IA.';
                 }
-                self._mostrarDigitando(false);
-                self.historico.push({ role: 'model', content: reply, time: Date.now() });
-                self._salvarHistorico();
-                self._renderMensagens();
+                self._processarResposta(reply);
             })
             .catch(function (err) {
                 // Se deu erro de rede no modelo principal, tenta fallback
@@ -806,8 +829,19 @@ window.iaConsultor = {
     _buildOpenAIMessages: function (messages, context) {
         var sysMsg = [{
             role: 'system',
-            content: 'Você é o AgroIA, o melhor analista pecuário do Brasil. Responda em português brasileiro, '
-                + 'usando dados reais da fazenda fornecidos. Seja direto, prático, use emojis. Máximo 400 palavras.\n\nDADOS DA FAZENDA:\n' + context
+            content: 'Você é o AgroIA, o melhor analista pecuário do Brasil e SECRETÁRIA da fazenda. '
+                + 'Responda em português brasileiro, usando dados reais da fazenda. Seja direto, prático, use emojis. Máximo 400 palavras.\n\n'
+                + 'SECRETÁRIA: Quando o usuário pedir para REGISTRAR/CADASTRAR/ADICIONAR/MOVER algo, '
+                + 'inclua no FINAL da resposta um bloco:\n'
+                + '```json_action\n[{"tipo":"TIPO","dados":{...}}]\n```\n'
+                + 'Tipos: REGISTRAR_LOTE(nome,qtdAnimais,categoria,pasto,pesoMedio,raca), '
+                + 'REGISTRAR_COMPRA(qtd,valor,pesoMedio,descricao,fornecedor,lote,pasto), '
+                + 'REGISTRAR_VENDA(qtd,valor,pesoMedio,descricao,comprador,lote), '
+                + 'MOVER_LOTE(lote,pastoDe,pastoPara), REGISTRAR_MORTE(lote,qtd,motivo), '
+                + 'REGISTRAR_NASCIMENTO(lote,qtd,sexo), REGISTRAR_PESAGEM(lote,pesoMedio), '
+                + 'REGISTRAR_CONTA(descricao,valor,vencimento).\n'
+                + 'Se faltam dados obrigatórios, PERGUNTE antes. Confirme antes de executar.\n\n'
+                + 'DADOS DA FAZENDA:\n' + context
         }];
         messages.forEach(function (m) {
             sysMsg.push({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content });
@@ -841,10 +875,7 @@ window.iaConsultor = {
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.choices && data.choices[0]) {
-                    self._mostrarDigitando(false);
-                    self.historico.push({ role: 'model', content: data.choices[0].message.content, time: Date.now() });
-                    self._salvarHistorico();
-                    self._renderMensagens();
+                    self._processarResposta(data.choices[0].message.content);
                 } else {
                     console.log('IA: Groq falhou, tentando próximo...', data.error);
                     self._chamarProximoFallback('groq', messages, context);
@@ -882,10 +913,7 @@ window.iaConsultor = {
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.choices && data.choices[0]) {
-                    self._mostrarDigitando(false);
-                    self.historico.push({ role: 'model', content: data.choices[0].message.content, time: Date.now() });
-                    self._salvarHistorico();
-                    self._renderMensagens();
+                    self._processarResposta(data.choices[0].message.content);
                 } else {
                     console.log('IA: Cerebras falhou, tentando próximo...', data.error);
                     self._chamarProximoFallback('cerebras', messages, context);
@@ -924,22 +952,331 @@ window.iaConsultor = {
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                self._mostrarDigitando(false);
-                var reply = '';
                 if (data.choices && data.choices[0]) {
-                    reply = data.choices[0].message.content;
+                    self._processarResposta(data.choices[0].message.content);
                 } else {
-                    reply = '⚠️ Todos os provedores falharam. Verifique suas chaves em Configurações.';
+                    self._processarResposta('⚠️ Todos os provedores falharam. Verifique suas chaves em Configurações.');
                 }
-                self.historico.push({ role: 'model', content: reply, time: Date.now() });
-                self._salvarHistorico();
-                self._renderMensagens();
             })
             .catch(function () {
-                self._mostrarDigitando(false);
-                self.historico.push({ role: 'model', content: '📴 Sem conexão. Verifique sua internet.', time: Date.now() });
-                self._renderMensagens();
+                self._processarResposta('📴 Sem conexão. Verifique sua internet.');
             });
+    },
+
+    // ══════════════════════════════════════════════════════╡
+    // ║  SECRETÁRIA — PROCESSAR RESPOSTA E EXECUTAR AÇÕES  ║
+    // ╚════════════════════════════════════════════════════╝
+
+    _processarResposta: function (reply) {
+        var self = this;
+        self._mostrarDigitando(false);
+
+        // Extrair json_action se existir
+        var acoes = null;
+        var textoLimpo = reply;
+        var regex = /```json_action\s*([\s\S]*?)```/;
+        var match = reply.match(regex);
+
+        if (match) {
+            try {
+                acoes = JSON.parse(match[1].trim());
+                textoLimpo = reply.replace(regex, '').trim();
+            } catch (e) {
+                console.warn('IA Secretária: JSON inválido', e, match[1]);
+            }
+        }
+
+        // Salvar texto no histórico
+        self.historico.push({ role: 'model', content: textoLimpo, time: Date.now() });
+        self._salvarHistorico();
+        self._renderMensagens();
+
+        // Se tem ações, pedir confirmação
+        if (acoes && Array.isArray(acoes) && acoes.length > 0) {
+            self._pedirConfirmacaoAcoes(acoes);
+        }
+    },
+
+    _pedirConfirmacaoAcoes: function (acoes) {
+        var self = this;
+        var resumo = acoes.map(function (a) {
+            switch (a.tipo) {
+                case 'REGISTRAR_LOTE': return '🐂 Criar lote "' + (a.dados.nome || '?') + '" com ' + (a.dados.qtdAnimais || '?') + ' cab';
+                case 'REGISTRAR_COMPRA': return '🛒 Compra: ' + (a.dados.qtd || '?') + ' cab por R$ ' + (a.dados.valor || '?');
+                case 'REGISTRAR_VENDA': return '💰 Venda: ' + (a.dados.qtd || '?') + ' cab por R$ ' + (a.dados.valor || '?');
+                case 'MOVER_LOTE': return '🚚 Mover "' + (a.dados.lote || '?') + '" → ' + (a.dados.pastoPara || '?');
+                case 'REGISTRAR_MORTE': return '💀 Morte: ' + (a.dados.qtd || '?') + ' cab (' + (a.dados.motivo || '?') + ')';
+                case 'REGISTRAR_NASCIMENTO': return '🐣 Nascimento: ' + (a.dados.qtd || '?') + ' cab';
+                case 'REGISTRAR_PESAGEM': return '⚖️ Pesagem: ' + (a.dados.pesoMedio || '?') + ' kg em "' + (a.dados.lote || '?') + '"';
+                case 'REGISTRAR_CONTA': return '📋 Conta: ' + (a.dados.descricao || '?') + ' R$ ' + (a.dados.valor || '?');
+                default: return '❓ ' + a.tipo;
+            }
+        }).join('\n');
+
+        // Inserir confirmação no chat
+        var confirmId = 'ia-confirm-' + Date.now();
+        self.historico.push({
+            role: 'model',
+            content: '🤖 **Confirma estas ações?**\n\n' + resumo,
+            time: Date.now(),
+            isConfirm: true,
+            confirmId: confirmId,
+            acoes: acoes
+        });
+        self._salvarHistorico();
+        self._renderMensagens();
+
+        // Adicionar botões de confirmação
+        setTimeout(function () {
+            var chatBody = document.getElementById('ia-chat-body');
+            if (!chatBody) return;
+            var lastMsg = chatBody.lastElementChild;
+            if (!lastMsg) return;
+
+            var btnWrap = document.createElement('div');
+            btnWrap.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+
+            var btnSim = document.createElement('button');
+            btnSim.textContent = '✅ Executar';
+            btnSim.style.cssText = 'padding:6px 16px;border:none;border-radius:6px;background:#22c55e;color:#fff;cursor:pointer;font-weight:600;';
+            btnSim.onclick = function () {
+                btnWrap.remove();
+                self._executarAcoes(acoes);
+            };
+
+            var btnNao = document.createElement('button');
+            btnNao.textContent = '❌ Cancelar';
+            btnNao.style.cssText = 'padding:6px 16px;border:none;border-radius:6px;background:#ef4444;color:#fff;cursor:pointer;font-weight:600;';
+            btnNao.onclick = function () {
+                btnWrap.remove();
+                self.historico.push({ role: 'model', content: '❌ Ações canceladas pelo usuário.', time: Date.now() });
+                self._salvarHistorico();
+                self._renderMensagens();
+            };
+
+            btnWrap.appendChild(btnSim);
+            btnWrap.appendChild(btnNao);
+            lastMsg.appendChild(btnWrap);
+        }, 100);
+    },
+
+    _executarAcoes: function (acoes) {
+        var self = this;
+        var resultados = [];
+
+        acoes.forEach(function (acao) {
+            try {
+                var d = acao.dados || {};
+                switch (acao.tipo) {
+                    case 'REGISTRAR_LOTE':
+                        if (window.lotes && window.lotes.salvar) {
+                            // Preencher campos e salvar
+                            var loteEvt = {
+                                type: 'LOTE',
+                                nome: d.nome || 'Lote ' + new Date().toLocaleDateString('pt-BR'),
+                                qtdAnimais: parseInt(d.qtdAnimais) || 0,
+                                categoria: d.categoria || 'engorda',
+                                pasto: d.pasto || '',
+                                pesoMedio: parseFloat(d.pesoMedio) || 0,
+                                raca: d.raca || 'Nelore',
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            window.data.events.push(loteEvt);
+                            window.data.save();
+                            resultados.push('✅ Lote "' + loteEvt.nome + '" criado com ' + loteEvt.qtdAnimais + ' cabeças');
+                        } else {
+                            resultados.push('⚠️ Módulo de lotes não disponível');
+                        }
+                        break;
+
+                    case 'REGISTRAR_COMPRA':
+                        if (window.financeiro && window.financeiro.saveCompra) {
+                            var compraEvt = {
+                                type: 'COMPRA',
+                                qtd: parseInt(d.qtd) || 0,
+                                value: parseFloat(d.valor) || 0,
+                                pesoMedio: parseFloat(d.pesoMedio) || 0,
+                                desc: d.descricao || 'Compra via IA',
+                                fornecedor: d.fornecedor || '',
+                                lote: d.lote || '',
+                                pasto: d.pasto || '',
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            window.data.events.push(compraEvt);
+                            window.data.save();
+                            resultados.push('✅ Compra registrada: ' + compraEvt.qtd + ' cab — R$ ' + compraEvt.value.toLocaleString('pt-BR'));
+                        } else {
+                            resultados.push('⚠️ Módulo financeiro não disponível');
+                        }
+                        break;
+
+                    case 'REGISTRAR_VENDA':
+                        if (window.financeiro) {
+                            var vendaEvt = {
+                                type: 'VENDA',
+                                qtd: parseInt(d.qtd) || 0,
+                                value: parseFloat(d.valor) || 0,
+                                pesoMedio: parseFloat(d.pesoMedio) || 0,
+                                desc: d.descricao || 'Venda via IA',
+                                comprador: d.comprador || '',
+                                lote: d.lote || '',
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            window.data.events.push(vendaEvt);
+                            window.data.save();
+                            resultados.push('✅ Venda registrada: ' + vendaEvt.qtd + ' cab — R$ ' + vendaEvt.value.toLocaleString('pt-BR'));
+                        } else {
+                            resultados.push('⚠️ Módulo financeiro não disponível');
+                        }
+                        break;
+
+                    case 'MOVER_LOTE':
+                        // Encontrar lote e atualizar pasto
+                        var lotes = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        });
+                        var loteAlvo = lotes.find(function (l) {
+                            return (l.nome || '').toLowerCase().indexOf((d.lote || '').toLowerCase()) >= 0;
+                        });
+                        if (loteAlvo) {
+                            var moveEvt = {
+                                type: 'MOVIMENTACAO',
+                                lote: loteAlvo.nome,
+                                loteId: loteAlvo.id,
+                                pastoDe: d.pastoDe || loteAlvo.pasto || '',
+                                pastoPara: d.pastoPara || '',
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            loteAlvo.pasto = d.pastoPara;
+                            window.data.events.push(moveEvt);
+                            window.data.save();
+                            resultados.push('✅ Lote "' + loteAlvo.nome + '" movido para ' + d.pastoPara);
+                        } else {
+                            resultados.push('⚠️ Lote "' + (d.lote || '') + '" não encontrado');
+                        }
+                        break;
+
+                    case 'REGISTRAR_MORTE':
+                        var loteMorte = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        }).find(function (l) {
+                            return (l.nome || '').toLowerCase().indexOf((d.lote || '').toLowerCase()) >= 0;
+                        });
+                        if (loteMorte) {
+                            var morteEvt = {
+                                type: 'MORTE',
+                                lote: loteMorte.nome,
+                                loteId: loteMorte.id,
+                                qtd: parseInt(d.qtd) || 1,
+                                motivo: d.motivo || 'Não informado',
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            loteMorte.qtdAnimais = Math.max(0, (loteMorte.qtdAnimais || 0) - morteEvt.qtd);
+                            window.data.events.push(morteEvt);
+                            window.data.save();
+                            resultados.push('✅ Morte registrada: ' + morteEvt.qtd + ' cab em "' + loteMorte.nome + '"');
+                        } else {
+                            resultados.push('⚠️ Lote "' + (d.lote || '') + '" não encontrado');
+                        }
+                        break;
+
+                    case 'REGISTRAR_NASCIMENTO':
+                        var loteNasc = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        }).find(function (l) {
+                            return (l.nome || '').toLowerCase().indexOf((d.lote || '').toLowerCase()) >= 0;
+                        });
+                        if (loteNasc) {
+                            var nascEvt = {
+                                type: 'NASCIMENTO',
+                                lote: loteNasc.nome,
+                                loteId: loteNasc.id,
+                                qtd: parseInt(d.qtd) || 1,
+                                sexo: d.sexo || 'indefinido',
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            loteNasc.qtdAnimais = (loteNasc.qtdAnimais || 0) + nascEvt.qtd;
+                            window.data.events.push(nascEvt);
+                            window.data.save();
+                            resultados.push('✅ Nascimento: +' + nascEvt.qtd + ' cab em "' + loteNasc.nome + '"');
+                        } else {
+                            resultados.push('⚠️ Lote "' + (d.lote || '') + '" não encontrado');
+                        }
+                        break;
+
+                    case 'REGISTRAR_PESAGEM':
+                        var lotePesagem = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        }).find(function (l) {
+                            return (l.nome || '').toLowerCase().indexOf((d.lote || '').toLowerCase()) >= 0;
+                        });
+                        if (lotePesagem) {
+                            var pesagemEvt = {
+                                type: 'PESAGEM',
+                                lote: lotePesagem.nome,
+                                loteId: lotePesagem.id,
+                                pesoMedio: parseFloat(d.pesoMedio) || 0,
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            lotePesagem.pesoMedio = pesagemEvt.pesoMedio;
+                            window.data.events.push(pesagemEvt);
+                            window.data.save();
+                            resultados.push('✅ Pesagem: ' + pesagemEvt.pesoMedio + ' kg em "' + lotePesagem.nome + '"');
+                        } else {
+                            resultados.push('⚠️ Lote "' + (d.lote || '') + '" não encontrado');
+                        }
+                        break;
+
+                    case 'REGISTRAR_CONTA':
+                        if (window.financeiro) {
+                            var contaEvt = {
+                                type: 'CONTA',
+                                desc: d.descricao || 'Conta via IA',
+                                value: parseFloat(d.valor) || 0,
+                                vencimento: d.vencimento || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                                pago: false,
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            window.data.events.push(contaEvt);
+                            window.data.save();
+                            resultados.push('✅ Conta registrada: "' + contaEvt.desc + '" R$ ' + contaEvt.value.toLocaleString('pt-BR'));
+                        } else {
+                            resultados.push('⚠️ Módulo financeiro não disponível');
+                        }
+                        break;
+
+                    default:
+                        resultados.push('⚠️ Ação desconhecida: ' + acao.tipo);
+                }
+            } catch (err) {
+                console.error('IA Secretária erro:', acao.tipo, err);
+                resultados.push('❌ Erro ao executar ' + acao.tipo + ': ' + err.message);
+            }
+        });
+
+        // Mostrar resultado no chat
+        var msg = '🤖 **Ações executadas:**\n\n' + resultados.join('\n');
+        self.historico.push({ role: 'model', content: msg, time: Date.now() });
+        self._salvarHistorico();
+        self._renderMensagens();
+
+        // Toast de feedback
+        if (window.app && window.app.showToast) {
+            window.app.showToast('🤖 ' + acoes.length + ' ação(ões) executada(s)!', 'success');
+        }
+
+        // Refresh UI
+        if (window.app && window.app.renderCurrentView) {
+            setTimeout(function () { window.app.renderCurrentView(); }, 300);
+        }
     },
 
     // ══ UI — Botão Flutuante ══
