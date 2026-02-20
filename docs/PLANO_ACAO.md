@@ -1,122 +1,210 @@
-# 📋 PLANO DE AÇÃO — AgroMacro
+# 📋 PLANO DE AÇÃO COMPLETO — AgroMacro
 
-**Última atualização:** 20/02/2026 16:40 BRT
+**Última atualização:** 20/02/2026 16:49 BRT  
+**Status:** App funcional, em fase de polimento e turbinagem
 
 ---
 
 ## ✅ CONCLUÍDO
 
-- [x] App AgroMacro completo (26+ funcionalidades)
+- [x] 26+ funcionalidades implementadas
 - [x] Firebase Hosting: [fazenda-antares.web.app](https://fazenda-antares.web.app)
-- [x] GitHub atualizado: `tportooliveira-alt/AgroMacro`
-- [x] IA Consultor Boteco (Gemini 2.0 Flash) funcionando
-- [x] Cascata multi-provedor (Gemini → Groq → Cerebras → OpenRouter)
-- [x] Cloudflare Worker deployado
-- [x] Mapa com 49 pastos KML + cores únicas por pasto
-- [x] Módulos: Rebanho, Lotes, Financeiro, Estoque, Manejo, Nutrição, Obras, Clima, Indicadores
-- [x] Dashboard de Resultados na Home
-- [x] Previsão do tempo com coordenadas da fazenda
-- [x] Reorganização da navegação:
-  - Home limpa (só Manejo Rápido + Abastecer Estoque)
-  - Hub Financeiro (Compra, Venda, Fluxo, Contas, Balanço)
-  - Hub Operações (Rastreabilidade, Pesagem, Estoque, Obras, Funcionários)
-- [x] Perfil Gerência/Campo — financeiro bloqueado para peões
-- [x] Cotação da arroba + detalhes do lote
+- [x] GitHub: `tportooliveira-alt/AgroMacro`
+- [x] IA Boteco (Gemini 2.0 Flash) + cascata multi-provedor
+- [x] Mapa com 49 pastos KML + cores únicas
+- [x] Perfil Gerência/Campo com bloqueio financeiro
+- [x] Hubs organizados: Home (peão), Financeiro (5 botões), Operações (5 botões)
+- [x] Dashboard de Resultados, Clima, KPIs, Alertas
+- [x] 30 módulos JS funcionais
 
 ---
 
-## 🚀 PRÓXIMAS MELHORIAS (por prioridade)
+## 🚀 FASE 1 — TURBINAR A IA (~1h30)
 
-### 1. 🤖 IA — Comandos por Voz/Texto na Tela Principal
-**Prioridade:** ALTA | **Esforço:** Médio
+### 1.1 Ensinar ações novas ao Boteco
+**Arquivo:** `js/ia-consultor.js`
 
-**O que:** Ao invés de só o botão flutuante do Boteco, criar uma barra de comandos rápidos na Home onde o usuário digita ou fala e a IA executa ações diretamente.
+Hoje o Boteco só faz:
+- ✅ REGISTRAR_CONTA (financeiro)
+- ✅ Responder perguntas gerais
 
-**Exemplos de comandos:**
-- "Vacinar lote recria" → abre manejo com lote pré-selecionado
-- "Quanto temos de ração?" → responde direto o estoque
-- "Mover lote engorda para pasto 12" → executa movimentação
-- "Quanto gastei esse mês?" → mostra resumo financeiro
+Precisa aprender:
+- [ ] `REGISTRAR_ESTOQUE` — "Comprei 50 sacos de sal mineral"
+- [ ] `CONSULTAR_ESTOQUE` — "Quanto tenho de ração?"
+- [ ] `BAIXAR_ESTOQUE` — "Usei 5 sacos de ração hoje"
+- [ ] `REGISTRAR_MANEJO` — "Vacinei o lote recria com Ivermectina"
+- [ ] `MOVER_LOTE` — "Mover lote engorda pro pasto 12"
+- [ ] `CONSULTAR_LOTES` — "Quantas cabeças no lote recria?"
+- [ ] `CONSULTAR_PASTOS` — "Quais pastos estão vazios?"
+- [ ] `REGISTRAR_PESO` — "Pesei lote engorda, média 380kg"
+- [ ] `RESUMO_DIA` — "Me dê o resumo do dia"
 
-**Implementação:**
-- Barra de input com microfone na Home (acima dos atalhos)
-- Parser de intenções na IA que chama funções do app
-- Respostas inline (sem abrir o chat completo)
+### 1.2 Barra de comandos inteligente na Home
+- [ ] Input de texto + botão microfone acima dos atalhos
+- [ ] Ao digitar, IA interpreta e executa ação direto
+- [ ] Respostas inline (card/toast) sem abrir chat completo
+- [ ] Sugestões de autocomplete baseadas no contexto
 
----
-
-### 2. 🎨 IA — Melhorar Interface do Boteco
-**Prioridade:** ALTA | **Esforço:** Médio
-
-**O que:** O botão flutuante do Boteco pode ser mais intuitivo e a interface do chat mais bonita.
-
-**Melhorias propostas:**
-- [ ] Botão com animação de "respiração" (pulse) pra chamar atenção
-- [ ] Avatar do Boteco mais bonito e temático (vaqueiro/boi)
-- [ ] Sugestões rápidas no chat (chips clicáveis): "Resumo do dia", "Alertas", "Estoque baixo"
-- [ ] Indicador de "pensando..." com animação
-- [ ] Histórico de conversa persistente (localStorage)
+### 1.3 Interface do chat Boteco
+- [ ] Botão com animação pulse (respiração)
+- [ ] Avatar temático do Boteco (vaqueiro)
+- [ ] Chips de sugestão rápida: "Resumo", "Estoque", "Alertas"
+- [ ] Indicador "pensando..." animado
 - [ ] Respostas com cards formatados (não só texto)
-- [ ] Modo escuro para o chat
-- [ ] Som de notificação quando Boteco responde
+- [ ] Histórico de conversa persistente
 
 ---
 
-### 3. 📱 UX — Melhorias Visuais Gerais
-**Prioridade:** MÉDIA | **Esforço:** Baixo-Médio
+## 🎨 FASE 2 — POLIMENTO VISUAL (~1h)
 
-- [ ] Animações de transição entre telas (slide)
+### 2.1 Responsividade Mobile
+- [ ] Testar TODOS os hubs no celular (touch-friendly)
+- [ ] Boteco não sobrepor botões importantes
+- [ ] Mapa: pinch/zoom suave no celular
+- [ ] Formulários com teclado numérico automático
+- [ ] Scroll snap nos cards de KPI
+
+### 2.2 Animações e Micro-interações
+- [ ] Transição suave entre telas (slide left/right)
 - [ ] Skeleton loading nos cards enquanto carrega
 - [ ] Pull-to-refresh na Home
 - [ ] Haptic feedback nos botões (vibração sutil)
-- [ ] Empty states bonitos (quando não há dados)
-- [ ] Tutorial de primeiro uso (onboarding)
-- [ ] Ícone de notificação com badge de alertas pendentes
-- [ ] Modo escuro global
+- [ ] Toast com animação de entrada/saída
+
+### 2.3 Empty States e Onboarding
+- [ ] Telas bonitas quando não há dados ("Nenhum lote cadastrado")
+- [ ] Tutorial de primeiro uso (3 slides de explicação)
+- [ ] Tooltips nos botões para novos usuários
+
+### 2.4 Modo Escuro
+- [ ] Toggle no Config
+- [ ] CSS variables para cores dinâmicas
+- [ ] Mapa adapta tema automaticamente
 
 ---
 
-### 4. 📊 Dados — Relatórios e Gráficos
-**Prioridade:** MÉDIA | **Esforço:** Médio
+## 🔧 FASE 3 — MELHORIAS ESTRUTURAIS (~2h)
 
-- [ ] Gráficos de evolução de peso por lote (Chart.js)
-- [ ] Gráfico de receita vs despesa mensal
-- [ ] Relatórios PDF melhorados com gráficos embutidos
-- [ ] Export para Excel (planilhas)
+### 3.1 CSS — Limpar estilos inline
+**Problema:** Os hubs de Operações e Financeiro usam estilos inline extensos
+- [ ] Criar classes CSS reutilizáveis para os cards de menu
+- [ ] Padronizar gradientes e sombras em variáveis CSS
+- [ ] Reduzir duplicação de código visual
+
+### 3.2 Navegação — Botões "Voltar" inteligentes
+**Problema:** Botões ← voltam sempre para Home
+- [ ] Compra/Venda/Fluxo/Contas/Balanço → voltar para hub Financeiro
+- [ ] Estoque/Obras/Funcionários/Rastreabilidade → voltar para hub Operações
+- [ ] Navegação com histórico (pilha de telas)
+
+### 3.3 Dados — Persistência robusta
+- [ ] Migrar localStorage → IndexedDB (mais espaço e confiável)
+- [ ] Backup automático diário para Firebase/Firestore
+- [ ] Importar/Exportar dados como arquivo .json
+- [ ] Sincronização entre dispositivos (mesmo login)
+
+### 3.4 Performance
+- [ ] Lazy load de módulos JS (não carregar tudo no boot)
+- [ ] Cache do Service Worker para assets estáticos
+- [ ] Comprimir imagens dos ícones/SVGs
+- [ ] Debounce nos inputs de pesquisa
+
+---
+
+## 📊 FASE 4 — RELATÓRIOS E GRÁFICOS (~1h)
+
+- [ ] Gráfico de evolução de peso por lote (Chart.js)
+- [ ] Gráfico receita vs despesa mensal
+- [ ] Relatórios PDF com gráficos embutidos
+- [ ] Export para Excel (.xlsx)
 - [ ] Dashboard comparativo mês a mês
 - [ ] Indicadores de tendência (↑↓) nos KPIs
+- [ ] Relatório de custo por cabeça/lote
 
 ---
 
-### 5. 📸 Funcionalidades Novas
-**Prioridade:** MÉDIA | **Esforço:** Alto
+## 📸 FASE 5 — FUNCIONALIDADES NOVAS (~3h)
 
-- [ ] Upload de fotos dos animais (câmera do celular)
-- [ ] Integração com balança Bluetooth (Modo Pesagem funcional)
-- [ ] Alertas proativos push (vacinação, contas vencendo)
+- [ ] Upload de fotos de animais (câmera do celular)
+- [ ] Balança Bluetooth funcional (Modo Pesagem)
+- [ ] Alertas push proativos (vacinação, contas vencendo)
+- [ ] QR Code para identificação individual
+- [ ] Módulo reprodutivo (IATF, touro, prenhez, parição)
 - [ ] Calendário visual de manejos programados
-- [ ] QR Code/RFID para identificação individual
-- [ ] Módulo de manejo reprodutivo (IATF, touro, prenhez)
+- [ ] Mapa de calor de ocupação dos pastos
+- [ ] Registro de mortalidade com motivo e foto
+- [ ] Controle de combustível (máquinas/tratores)
 
 ---
 
-### 6. 🌐 WhatsApp — Integração Completa
-**Prioridade:** BAIXA (quando sair do modo teste) | **Esforço:** Baixo
+## 🌐 FASE 6 — WHATSAPP E INTEGRAÇÕES (~1h)
 
-- [ ] Atualizar `WHATSAPP_TOKEN` no Cloudflare com token permanente
-- [ ] Verificação Meta Business (documentos da empresa)
-- [ ] Adicionar número real da fazenda
+- [ ] Token permanente no Cloudflare
+- [ ] Verificação Meta Business
+- [ ] Número real da fazenda no WhatsApp
 - [ ] Comandos WhatsApp: "estoque", "alertas", "resumo"
+- [ ] Notificações WhatsApp automáticas (vacina vencendo, conta vencida)
 
 ---
 
-### 7. 🔒 Segurança e Dados
-**Prioridade:** BAIXA | **Esforço:** Médio
+## 🔒 FASE 7 — SEGURANÇA (~1h)
 
-- [ ] Backup automático para Firebase/Firestore
 - [ ] Login com senha para perfil Gerência
-- [ ] Logs de auditoria (quem fez o quê)
+- [ ] Logs de auditoria (quem fez o quê, quando)
+- [ ] Criptografia de dados sensíveis
 - [ ] Blockchain para rastreabilidade SISBOV
+
+---
+
+## 📁 INVENTÁRIO DOS 30 MÓDULOS
+
+| # | Módulo | Arquivo | Status |
+|---|---|---|---|
+| 1 | Controller | `app.js` | ✅ Completo |
+| 2 | Rebanho | `rebanho.js` | ✅ |
+| 3 | Rebanho Ops | `rebanho-ops.js` | ✅ |
+| 4 | Lotes | `lotes.js` | ✅ |
+| 5 | Cabeças | `cabecas.js` | ✅ |
+| 6 | Pastos | `pastos.js` | ✅ |
+| 7 | Pasto Mgmt | `pasto-mgmt.js` | ✅ |
+| 8 | Manejo | `manejo.js` | ✅ |
+| 9 | Estoque | `estoque.js` | ✅ |
+| 10 | Financeiro | `financeiro.js` | ✅ |
+| 11 | Contas | `contas.js` | ✅ |
+| 12 | Nutrição | `nutricao.js` | ✅ |
+| 13 | Obras | `obras.js` | ✅ |
+| 14 | Funcionários | `funcionarios.js` | ✅ |
+| 15 | Rastreabilidade | `rastreabilidade.js` | ✅ |
+| 16 | Balança | `balanca.js` | 🔧 Interface básica |
+| 17 | Clima | `clima.js` | ✅ |
+| 18 | Mapa | `mapa.js` | ✅ |
+| 19 | Fazenda Data | `fazenda-data.js` | ✅ |
+| 20 | Gráficos | `graficos.js` | ✅ |
+| 21 | Indicadores | `indicadores.js` | ✅ |
+| 22 | Resultados | `resultados.js` | ✅ |
+| 23 | Relatórios | `relatorio.js` | ✅ |
+| 24 | IA Boteco | `ia-consultor.js` | 🔧 Precisa ações novas |
+| 25 | Fotos | `fotos.js` | 🔧 Estrutura pronta |
+| 26 | Blockchain | `blockchain.js` | 🔧 Estrutura pronta |
+| 27 | Calendário | `calendario.js` | ✅ |
+| 28 | Firebase Sync | `firebase-sync.js` | ✅ |
+| 29 | Ícones | `icons.js` | ✅ |
+| 30 | UX Helpers | `ux-helpers.js` | ✅ |
+
+---
+
+## ⏱️ ESTIMATIVA TOTAL
+
+| Fase | Tempo | Prioridade |
+|---|---|---|
+| Fase 1 — Turbinar IA | ~1h30 | 🔴 ALTA |
+| Fase 2 — Polimento Visual | ~1h | 🟠 ALTA |
+| Fase 3 — Estruturais | ~2h | 🟡 MÉDIA |
+| Fase 4 — Relatórios | ~1h | 🟡 MÉDIA |
+| Fase 5 — Funcionalidades | ~3h | 🟢 BAIXA |
+| Fase 6 — WhatsApp | ~1h | 🟢 BAIXA |
+| Fase 7 — Segurança | ~1h | 🟢 BAIXA |
+| **TOTAL** | **~10h30** | |
 
 ---
 
@@ -137,41 +225,8 @@
 
 | Secret | Onde está |
 |---|---|
-| GEMINI_API_KEY | Cloudflare Worker + App (localStorage) |
+| GEMINI_API_KEY | Cloudflare Worker + App |
 | WHATSAPP_TOKEN | Cloudflare Worker |
 | WHATSAPP_PHONE_ID | 1014854568378749 |
 | WHATSAPP_VERIFY_TOKEN | agromacro2026 |
 | Firebase | .firebaserc (fazenda-antares) |
-
----
-
-## 📁 MÓDULOS DO APP (30 arquivos JS)
-
-| Módulo | Arquivo | Status |
-|---|---|---|
-| Controller | `app.js` | ✅ |
-| Rebanho | `rebanho.js` + `rebanho-ops.js` | ✅ |
-| Lotes | `lotes.js` | ✅ |
-| Cabeças Individual | `cabecas.js` | ✅ |
-| Pastos | `pastos.js` + `pasto-mgmt.js` | ✅ |
-| Manejo | `manejo.js` | ✅ |
-| Estoque | `estoque.js` | ✅ |
-| Financeiro | `financeiro.js` + `contas.js` | ✅ |
-| Nutrição | `nutricao.js` | ✅ |
-| Obras | `obras.js` | ✅ |
-| Funcionários | `funcionarios.js` | ✅ |
-| Rastreabilidade | `rastreabilidade.js` | ✅ |
-| Balança | `balanca.js` | 🔧 Interface básica |
-| Clima | `clima.js` | ✅ |
-| Mapa | `mapa.js` + `fazenda-data.js` | ✅ |
-| Gráficos | `graficos.js` | ✅ |
-| Indicadores | `indicadores.js` + `resultados.js` | ✅ |
-| Relatórios | `relatorio.js` | ✅ |
-| IA Boteco | `ia-consultor.js` | ✅ |
-| Fotos | `fotos.js` | 🔧 Estrutura pronta |
-| Blockchain | `blockchain.js` | 🔧 Estrutura pronta |
-| Calendário | `calendario.js` | ✅ |
-| Firebase Sync | `firebase-sync.js` | ✅ |
-| Ícones | `icons.js` | ✅ |
-| UX Helpers | `ux-helpers.js` | ✅ |
-| Dados | `data.js` | ✅ |
