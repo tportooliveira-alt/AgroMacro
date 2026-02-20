@@ -121,66 +121,81 @@ window.iaConsultor = {
         // Salvar TODAS as chaves primeiro (não sobrescrever!)
         this.salvarTodasChaves();
 
-        var key = this.API_KEY;
-        if (!key) {
-            // Se não tem Gemini, testa Groq como alternativa
-            if (this.GROQ_KEY) {
-                this._testarGroq();
-                return;
-            }
+        if (!this._temConexao()) {
             window.app.showToast('Cole pelo menos uma chave API.', 'error');
             return;
         }
 
-        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + key;
-        window.app.showToast('🧪 Testando Gemini...', 'success');
-
         var self = this;
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: 'Diga apenas: OK' }] }],
-                generationConfig: { maxOutputTokens: 10 }
-            })
-        })
+        var resultados = [];
+
+        // Testar cada provedor configurado
+        if (this.API_KEY) {
+            resultados.push(this._testarProvedor('Gemini',
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + this.API_KEY,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Diga apenas: OK' }] }], generationConfig: { maxOutputTokens: 10 } }) },
+                function (data) { return !!(data.candidates); }
+            ));
+        }
+        if (this.GROQ_KEY) {
+            resultados.push(this._testarProvedor('Groq',
+                'https://api.groq.com/openai/v1/chat/completions',
+                { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.GROQ_KEY }, body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: 'Diga apenas: OK' }], max_tokens: 10 }) },
+                function (data) { return !!(data.choices); }
+            ));
+        }
+        if (this.CEREBRAS_KEY) {
+            resultados.push(this._testarProvedor('Cerebras',
+                'https://api.cerebras.ai/v1/chat/completions',
+                { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.CEREBRAS_KEY }, body: JSON.stringify({ model: 'llama3.3-70b', messages: [{ role: 'user', content: 'Diga apenas: OK' }], max_tokens: 10 }) },
+                function (data) { return !!(data.choices); }
+            ));
+        }
+        if (this.OPENROUTER_KEY) {
+            resultados.push(this._testarProvedor('OpenRouter',
+                'https://openrouter.ai/api/v1/chat/completions',
+                { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.OPENROUTER_KEY, 'HTTP-Referer': window.location.href, 'X-Title': 'AgroMacro' }, body: JSON.stringify({ model: 'google/gemma-3-4b-it:free', messages: [{ role: 'user', content: 'Diga apenas: OK' }], max_tokens: 10 }) },
+                function (data) { return !!(data.choices); }
+            ));
+        }
+
+        window.app.showToast('🧪 Testando ' + resultados.length + ' provedor(es)...', 'success');
+
+        Promise.all(resultados).then(function (results) {
+            var ok = results.filter(function (r) { return r.ok; });
+            var falhas = results.filter(function (r) { return !r.ok; });
+            if (ok.length > 0) {
+                var nomes = ok.map(function (r) { return r.name; }).join(', ');
+                window.app.showToast('✅ ' + ok.length + '/' + results.length + ' conectado(s): ' + nomes, 'success');
+            }
+            if (falhas.length > 0) {
+                falhas.forEach(function (f) {
+                    console.warn('IA Teste falhou: ' + f.name + ' — ' + f.erro);
+                });
+                if (ok.length === 0) {
+                    window.app.showToast('❌ Nenhum provedor conectou. Verifique as chaves.', 'error');
+                }
+            }
+        });
+    },
+
+    _testarProvedor: function (nome, url, fetchOptions, checkOk) {
+        return fetch(url, fetchOptions)
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (data.candidates) {
-                    window.app.showToast('✅ Gemini conectado!', 'success');
-                } else if (data.error) {
-                    var msg = data.error.message || '';
-                    if (msg.indexOf('quota') >= 0 || msg.indexOf('exceeded') >= 0) {
-                        window.app.showToast('⚠️ Gemini com quota esgotada (vai usar backup). Testando Groq...', 'warning');
-                        if (self.GROQ_KEY) self._testarGroq();
-                    } else {
-                        window.app.showToast('❌ Gemini: ' + msg, 'error');
-                    }
+                if (checkOk(data)) {
+                    return { name: nome, ok: true };
+                } else {
+                    var errMsg = data.error ? (data.error.message || JSON.stringify(data.error)) : 'Resposta inesperada';
+                    return { name: nome, ok: false, erro: errMsg };
                 }
             })
-            .catch(function () {
-                window.app.showToast('📴 Sem internet.', 'error');
+            .catch(function (err) {
+                return { name: nome, ok: false, erro: err.message || 'Sem resposta' };
             });
     },
 
-    _testarGroq: function () {
-        if (!this.GROQ_KEY) return;
-        window.app.showToast('🧪 Testando Groq...', 'success');
-        fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.GROQ_KEY },
-            body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: 'Diga apenas: OK' }], max_tokens: 10 })
-        })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.choices) {
-                    window.app.showToast('✅ Groq conectado! IA vai funcionar via cascata.', 'success');
-                } else {
-                    window.app.showToast('❌ Groq: ' + (data.error ? data.error.message : 'Erro'), 'error');
-                }
-            })
-            .catch(function () { window.app.showToast('📴 Groq sem resposta.', 'error'); });
-    },
+
 
     // ══ COLETA CONTEXTO REAL DA FAZENDA ══
     getContextoFazenda: function () {
@@ -328,11 +343,14 @@ window.iaConsultor = {
             // Via Cloudflare Worker (produção)
             this._chamarWorker(mensagensRecentes, contexto);
         } else if (this.API_KEY) {
-            // Via API direta
+            // Via API direta Gemini
             this._chamarGeminiDireto(mensagensRecentes, contexto);
+        } else if (this.GROQ_KEY || this.CEREBRAS_KEY || this.OPENROUTER_KEY) {
+            // Sem Gemini, mas tem outro provedor — cascateia direto
+            this._chamarProximoFallback('gemini', mensagensRecentes, contexto);
         } else {
             this._mostrarDigitando(false);
-            this.historico.push({ role: 'model', content: '⚙️ IA não configurada. Vá em Configurações e insira sua chave do Google AI Studio.', time: Date.now() });
+            this.historico.push({ role: 'model', content: '⚙️ IA não configurada. Vá em Configurações e insira pelo menos uma chave API.', time: Date.now() });
             this._renderMensagens();
         }
     },
@@ -1241,6 +1259,11 @@ window.iaConsultor = {
             + 'Use dados do CEPEA, B3, Canal Rural, BeefPoint, Scot Consultoria. Preços em R$.';
 
         var apiKey = this.API_KEY;
+        if (!apiKey) {
+            console.log('IA Mercado: sem chave Gemini, pulando briefing (requer Google Search)');
+            this.gerarInsightsProativos();
+            return;
+        }
         var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
 
         var body = {
@@ -1714,7 +1737,7 @@ window.iaConsultor = {
 
         // Open chat and send the question
         setTimeout(function () {
-            if (!self.isOpen) {
+            if (!self.aberto) {
                 self.toggle();
             }
             // Wait for chat UI to render, then inject the question
@@ -1723,7 +1746,7 @@ window.iaConsultor = {
                 if (input) {
                     input.value = pergunta;
                     // Trigger send
-                    self.enviar();
+                    self._enviarDoInput();
                 }
             }, 300);
         }, 200);
