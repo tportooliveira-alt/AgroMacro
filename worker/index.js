@@ -265,7 +265,7 @@ ${context || 'Nenhum dado disponível.'}`;
     // WHATSAPP — Enviar resposta
     // ══════════════════════════════════════════════════
     async sendWhatsAppReply(to, text, env) {
-        const url = `https://graph.facebook.com/v21.0/${env.WHATSAPP_PHONE_ID}/messages`;
+        const url = `https://graph.facebook.com/v22.0/${env.WHATSAPP_PHONE_ID}/messages`;
 
         console.log(`[WhatsApp] Enviando para ${to}, phone_id: ${env.WHATSAPP_PHONE_ID}, token_ok: ${!!env.WHATSAPP_TOKEN}`);
 
