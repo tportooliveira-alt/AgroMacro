@@ -91,15 +91,22 @@ window.iaConsultor = {
     // ══ Salvar TODAS as chaves ══
     salvarTodasChaves: function () {
         var get = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
-        this.API_KEY = get('config-api-key');
-        this.GROQ_KEY = get('config-groq-key');
-        this.CEREBRAS_KEY = get('config-cerebras-key');
-        this.OPENROUTER_KEY = get('config-openrouter-key');
+        // Só atualiza se o campo tiver valor (não apaga chave existente quando campo vazio)
+        var gemini = get('config-api-key') || this.API_KEY || '';
+        var groq = get('config-groq-key') || this.GROQ_KEY || '';
+        var cerebras = get('config-cerebras-key') || this.CEREBRAS_KEY || '';
+        var openrouter = get('config-openrouter-key') || this.OPENROUTER_KEY || '';
+
+        this.API_KEY = gemini;
+        this.GROQ_KEY = groq;
+        this.CEREBRAS_KEY = cerebras;
+        this.OPENROUTER_KEY = openrouter;
+
         localStorage.setItem('agromacro_ia_config', JSON.stringify({
-            apiKey: this.API_KEY,
-            groqKey: this.GROQ_KEY,
-            cerebrasKey: this.CEREBRAS_KEY,
-            openrouterKey: this.OPENROUTER_KEY
+            apiKey: gemini,
+            groqKey: groq,
+            cerebrasKey: cerebras,
+            openrouterKey: openrouter
         }));
         this._atualizarStatusProvedores();
         var count = this._contarProvedores();
