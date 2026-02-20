@@ -847,7 +847,7 @@ window.iaConsultor = {
             role: 'system',
             content: 'Você é o AgroIA, o melhor analista pecuário do Brasil e SECRETÁRIA da fazenda. '
                 + 'Responda em português brasileiro, usando dados reais da fazenda. Seja direto, prático, use emojis. Máximo 400 palavras.\n\n'
-                + 'SECRETÁRIA: Quando o usuário pedir para REGISTRAR/CADASTRAR/ADICIONAR/MOVER algo, '
+                + 'SECRETÁRIA: Quando o usuário pedir para REGISTRAR/CADASTRAR/ADICIONAR/MOVER/LANÇAR algo, '
                 + 'inclua no FINAL da resposta um bloco:\n'
                 + '```json_action\n[{"tipo":"TIPO","dados":{...}}]\n```\n'
                 + 'Tipos: REGISTRAR_LOTE(nome,qtdAnimais,categoria,pasto,pesoMedio,raca), '
@@ -855,7 +855,9 @@ window.iaConsultor = {
                 + 'REGISTRAR_VENDA(qtd,valor,pesoMedio,descricao,comprador,lote), '
                 + 'MOVER_LOTE(lote,pastoDe,pastoPara), REGISTRAR_MORTE(lote,qtd,motivo), '
                 + 'REGISTRAR_NASCIMENTO(lote,qtd,sexo), REGISTRAR_PESAGEM(lote,pesoMedio), '
-                + 'REGISTRAR_CONTA(descricao,valor,vencimento).\n'
+                + 'REGISTRAR_CONTA(descricao,valor,vencimento), '
+                + 'REGISTRAR_ESTOQUE(nome,quantidade,unidade,categoria,valorUnitario,valorTotal), '
+                + 'REGISTRAR_MANEJO(lote,tipoManejo,produtos,observacao).\n'
                 + 'Se faltam dados obrigatórios, PERGUNTE antes. Confirme antes de executar.\n\n'
                 + 'DADOS DA FAZENDA:\n' + context
         }];
@@ -1025,6 +1027,8 @@ window.iaConsultor = {
                 case 'REGISTRAR_NASCIMENTO': return '🐣 Nascimento: ' + (a.dados.qtd || '?') + ' cab';
                 case 'REGISTRAR_PESAGEM': return '⚖️ Pesagem: ' + (a.dados.pesoMedio || '?') + ' kg em "' + (a.dados.lote || '?') + '"';
                 case 'REGISTRAR_CONTA': return '📋 Conta: ' + (a.dados.descricao || '?') + ' R$ ' + (a.dados.valor || '?');
+                case 'REGISTRAR_ESTOQUE': return '📦 Estoque: ' + (a.dados.quantidade || '?') + ' ' + (a.dados.unidade || 'un') + ' de ' + (a.dados.nome || '?');
+                case 'REGISTRAR_MANEJO': return '💉 Manejo: ' + (a.dados.tipoManejo || '?') + ' em "' + (a.dados.lote || '?') + '"';
                 default: return '❓ ' + a.tipo;
             }
         }).join('\n');
@@ -1266,6 +1270,60 @@ window.iaConsultor = {
                             resultados.push('✅ Conta registrada: "' + contaEvt.desc + '" R$ ' + contaEvt.value.toLocaleString('pt-BR'));
                         } else {
                             resultados.push('⚠️ Módulo financeiro não disponível');
+                        }
+                        break;
+
+                    case 'REGISTRAR_ESTOQUE':
+                        if (window.estoque) {
+                            var cat = 'racao_sal';
+                            if (window.estoque.inferCategory) {
+                                cat = window.estoque.inferCategory(d.nome || '') || d.categoria || 'racao_sal';
+                            }
+                            var estoqueEvt = {
+                                type: 'ENTRADA',
+                                product: d.nome || 'Produto via IA',
+                                qty: parseFloat(d.quantidade) || 0,
+                                unit: d.unidade || 'kg',
+                                category: cat,
+                                unitPrice: parseFloat(d.valorUnitario) || 0,
+                                total: parseFloat(d.valorTotal) || 0,
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            if (!estoqueEvt.total && estoqueEvt.unitPrice && estoqueEvt.qty) {
+                                estoqueEvt.total = estoqueEvt.unitPrice * estoqueEvt.qty;
+                            }
+                            window.data.events.push(estoqueEvt);
+                            window.data.save();
+                            resultados.push('✅ Estoque: +' + estoqueEvt.qty + ' ' + estoqueEvt.unit + ' de "' + estoqueEvt.product + '" (R$ ' + (estoqueEvt.total || 0).toLocaleString('pt-BR') + ')');
+                        } else {
+                            resultados.push('⚠️ Módulo de estoque não disponível');
+                        }
+                        break;
+
+                    case 'REGISTRAR_MANEJO':
+                        var loteManejo = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        }).find(function (l) {
+                            return (l.nome || '').toLowerCase().indexOf((d.lote || '').toLowerCase()) >= 0;
+                        });
+                        if (loteManejo) {
+                            var manejoEvt = {
+                                type: 'MANEJO',
+                                lote: loteManejo.nome,
+                                loteId: loteManejo.id,
+                                tipoManejo: d.tipoManejo || 'sanitario',
+                                produtos: d.produtos || '',
+                                obs: d.observacao || 'Manejo via IA',
+                                qtdAnimais: loteManejo.qtdAnimais || 0,
+                                date: new Date().toISOString(),
+                                id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                            };
+                            window.data.events.push(manejoEvt);
+                            window.data.save();
+                            resultados.push('✅ Manejo "' + manejoEvt.tipoManejo + '" registrado em "' + loteManejo.nome + '"');
+                        } else {
+                            resultados.push('⚠️ Lote "' + (d.lote || '') + '" não encontrado');
                         }
                         break;
 

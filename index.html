@@ -71,17 +71,41 @@
                 <div class="kpi-title" style="margin-top:4px;">Ações Rápidas</div>
                 <div class="home-grid">
 
+                    <button class="home-card" onclick="window.app.navigate('compra')">
+                        <div class="home-card-icon" data-icon="manejoRapido"
+                            style="background: linear-gradient(135deg, #166534, #22c55e);">🛒</div>
+                        <span class="home-card-title">Compra</span>
+                        <span class="home-card-sub">de Gado</span>
+                    </button>
+                    <button class="home-card" onclick="window.app.navigate('venda')">
+                        <div class="home-card-icon" data-icon="manejoRapido"
+                            style="background: linear-gradient(135deg, #92400E, #D4A843);">💰</div>
+                        <span class="home-card-title">Venda</span>
+                        <span class="home-card-sub">de Gado</span>
+                    </button>
                     <button class="home-card" onclick="window.app.navigate('manejo')">
                         <div class="home-card-icon" data-icon="manejoRapido"
-                            style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);"></div>
+                            style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);">🩺</div>
                         <span class="home-card-title">Manejo</span>
                         <span class="home-card-sub">Rápido</span>
                     </button>
                     <button class="home-card" onclick="window.app.navigate('estoque')">
                         <div class="home-card-icon" data-icon="abastecer"
-                            style="background: linear-gradient(135deg, #78350F, #92400E);"></div>
+                            style="background: linear-gradient(135deg, #78350F, #92400E);">📦</div>
                         <span class="home-card-title">Abastecer</span>
                         <span class="home-card-sub">Estoque</span>
+                    </button>
+                    <button class="home-card gerencia-only" onclick="window.app.navigate('fluxo')">
+                        <div class="home-card-icon" data-icon="manejoRapido"
+                            style="background: linear-gradient(135deg, #7C3AED, #4F46E5);">📊</div>
+                        <span class="home-card-title">Fluxo</span>
+                        <span class="home-card-sub">de Caixa</span>
+                    </button>
+                    <button class="home-card gerencia-only" onclick="window.app.navigate('contas')">
+                        <div class="home-card-icon" data-icon="manejoRapido"
+                            style="background: linear-gradient(135deg, #B91C1C, #EF4444);">📋</div>
+                        <span class="home-card-title">Contas</span>
+                        <span class="home-card-sub">a Pagar</span>
                     </button>
                 </div>
 
