@@ -10,59 +10,7 @@ window.mapa = {
     activeFilter: 'todos',
 
     init: function () {
-        // Sincronizar pastos do KML no cadastro do app IMEDIATAMENTE
-        // (sem precisar abrir o mapa)
-        this.syncPastosEarly();
-    },
-
-    // ── Sincronizar FAZENDA_PASTOS com data.events sem precisar do mapa ──
-    syncPastosEarly: function () {
-        if (!window.data || !window.FAZENDA_PASTOS || !window.FAZENDA_PASTOS.length) return;
-
-        var existingPastos = {};
-        window.data.events.forEach(function (ev) {
-            if (ev.type === 'PASTO' && ev.nome) {
-                existingPastos[ev.nome.toLowerCase()] = true;
-            }
-        });
-
-        var created = 0;
-        window.FAZENDA_PASTOS.forEach(function (p) {
-            if (!p.nome) return;
-            if (existingPastos[p.nome.toLowerCase()]) return;
-
-            // Calcular área aproximada do polígono (Shoelace)
-            var area = 0;
-            if (p.coords && p.coords.length >= 3) {
-                var sum = 0;
-                for (var i = 0; i < p.coords.length; i++) {
-                    var j = (i + 1) % p.coords.length;
-                    var lat1 = p.coords[i][0] * Math.PI / 180;
-                    var lat2 = p.coords[j][0] * Math.PI / 180;
-                    var dLng = (p.coords[j][1] - p.coords[i][1]) * Math.PI / 180;
-                    sum += dLng * (2 + Math.sin(lat1) + Math.sin(lat2));
-                }
-                area = Math.abs(sum * 6378137 * 6378137 / 2) / 10000; // hectares
-                area = Math.round(area * 100) / 100;
-            }
-
-            window.data.saveEvent({
-                type: 'PASTO',
-                nome: p.nome,
-                area: area,
-                capacidade: 0,
-                tipoPasto: 'Braquiária',
-                statusPasto: 'disponivel',
-                obs: 'Auto-cadastrado do mapa KML',
-                date: new Date().toISOString(),
-                timestamp: new Date().toISOString()
-            });
-            created++;
-        });
-
-        if (created > 0) {
-            console.log('🗺️ ' + created + ' pastos cadastrados automaticamente do KML');
-        }
+        // Nada a fazer no boot — dados vêm de FAZENDA_PASTOS diretamente
     },
 
     // ── Inicializar o mapa Leaflet ──
@@ -245,41 +193,58 @@ window.mapa = {
     //  OCUPADOS — Mostrar cards dos lotes ocupados
     // ══════════════════════════════════════════════
     showOcupados: function () {
-        // Filtrar mapa para mostrar só ocupados
-        this.filterMap('gado', null);
+        // Filtrar mapa para mostrar só ocupados (se mapa existir)
+        if (this.drawnItems) this.filterMap('gado', null);
 
         // Identificar lotes em pastos ocupados
         var self = this;
         var lotesOcupados = [];
         var seen = {};
 
-        if (this.drawnItems) {
+        // Coletar nomes de todos os pastos (drawnItems OU FAZENDA_PASTOS)
+        var allPastoNomes = [];
+        var pastoSeen = {};
+
+        if (this.drawnItems && this.drawnItems.getLayers().length > 0) {
             this.drawnItems.eachLayer(function (layer) {
-                if (!layer.pastoNome) return;
-                var info = self.getPastoInfo(layer.pastoNome);
-                if (info.totalAnimais > 0) {
-                    info.lotes.forEach(function (loteNome) {
-                        if (!seen[loteNome]) {
-                            seen[loteNome] = true;
-                            // Buscar dados completos do lote
-                            var loteData = null;
-                            if (window.lotes && window.lotes.getLotes) {
-                                window.lotes.getLotes().forEach(function (l) {
-                                    if (l.nome === loteNome) loteData = l;
-                                });
-                            }
-                            lotesOcupados.push({
-                                nome: loteNome,
-                                pasto: layer.pastoNome,
-                                animais: loteData ? loteData.qtdAnimais : info.totalAnimais,
-                                categoria: loteData ? (loteData.categoria || 'Geral') : 'Geral',
-                                pesoMedio: loteData ? (loteData.pesoMedio || 0) : 0
-                            });
-                        }
-                    });
+                if (layer.pastoNome && !pastoSeen[layer.pastoNome.toLowerCase()]) {
+                    pastoSeen[layer.pastoNome.toLowerCase()] = true;
+                    allPastoNomes.push(layer.pastoNome);
+                }
+            });
+        } else if (window.FAZENDA_PASTOS) {
+            window.FAZENDA_PASTOS.forEach(function (p) {
+                if (p.nome && !pastoSeen[p.nome.toLowerCase()]) {
+                    pastoSeen[p.nome.toLowerCase()] = true;
+                    allPastoNomes.push(p.nome);
                 }
             });
         }
+
+        // Para cada pasto, verificar se tem animais
+        allPastoNomes.forEach(function (pastoNome) {
+            var info = self.getPastoInfo(pastoNome);
+            if (info.totalAnimais > 0) {
+                info.lotes.forEach(function (loteNome) {
+                    if (!seen[loteNome]) {
+                        seen[loteNome] = true;
+                        var loteData = null;
+                        if (window.lotes && window.lotes.getLotes) {
+                            window.lotes.getLotes().forEach(function (l) {
+                                if (l.nome === loteNome) loteData = l;
+                            });
+                        }
+                        lotesOcupados.push({
+                            nome: loteNome,
+                            pasto: pastoNome,
+                            animais: loteData ? loteData.qtdAnimais : info.totalAnimais,
+                            categoria: loteData ? (loteData.categoria || 'Geral') : 'Geral',
+                            pesoMedio: loteData ? (loteData.pesoMedio || 0) : 0
+                        });
+                    }
+                });
+            }
+        });
 
         // Remover painel anterior se existir
         var old = document.getElementById('ocupados-panel');
