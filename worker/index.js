@@ -267,6 +267,8 @@ ${context || 'Nenhum dado disponível.'}`;
     async sendWhatsAppReply(to, text, env) {
         const url = `https://graph.facebook.com/v21.0/${env.WHATSAPP_PHONE_ID}/messages`;
 
+        console.log(`[WhatsApp] Enviando para ${to}, phone_id: ${env.WHATSAPP_PHONE_ID}, token_ok: ${!!env.WHATSAPP_TOKEN}`);
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -281,16 +283,14 @@ ${context || 'Nenhum dado disponível.'}`;
             })
         });
 
+        const responseText = await response.text();
         if (!response.ok) {
-            const errText = await response.text();
-            console.error('[WhatsApp] Send failed:', errText);
-
-            // Se token expirado, logar aviso claro
+            console.error(`[WhatsApp] Send failed (${response.status}): ${responseText}`);
             if (response.status === 401) {
                 console.error('[WhatsApp] ⚠️ TOKEN EXPIRADO! Gere novo em developers.facebook.com');
             }
         } else {
-            console.log(`[WhatsApp] ✅ Resposta enviada para ${to}`);
+            console.log(`[WhatsApp] ✅ Resposta enviada para ${to}: ${responseText}`);
         }
     }
 };
