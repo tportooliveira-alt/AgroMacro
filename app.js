@@ -174,7 +174,7 @@ window.app = {
             'lotes': 'nav-rebanho', 'pastos': 'nav-rebanho',
             'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho', 'mapa': 'nav-rebanho',
             // Financeiro sub-views → nav-financeiro
-            'compra': 'nav-financeiro',
+            'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro',
             'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
             // Operações sub-views → nav-operacoes
             'operacoes': 'nav-operacoes', 'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes', 'rastreabilidade': 'nav-operacoes', 'balanca': 'nav-operacoes',
