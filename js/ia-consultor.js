@@ -1056,43 +1056,67 @@ window.iaConsultor = {
         container.innerHTML = '<div class="ia-config-box">'
             + '<div class="ia-welcome-icon">⚙️</div>'
             + '<div class="ia-welcome-title">Configurar IA</div>'
-            + '<div class="ia-welcome-sub">Para usar a IA, você precisa de uma API key gratuita do Google.</div>'
+            + '<div class="ia-welcome-sub">Configure suas chaves API (todas gratuitas!).</div>'
             + '<div class="ia-config-steps">'
-            + '<p><strong>Passo 1:</strong> Acesse <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#2563EB;">aistudio.google.com/apikey</a></p>'
-            + '<p><strong>Passo 2:</strong> Clique em "Create API key" (grátis)</p>'
-            + '<p><strong>Passo 3:</strong> Cole a key abaixo:</p>'
+            + '<p><strong>Cascata:</strong> Gemini → Groq → Cerebras → OpenRouter</p>'
+            + '<p style="font-size:11px;color:#636366;">Se um provedor falhar, o próximo assume automaticamente.</p>'
             + '</div>'
+            // Gemini
             + '<div class="form-group" style="margin-top:12px;">'
-            + '<input type="text" id="ia-config-key" placeholder="Cole sua API key Gemini aqui..." style="font-size:14px;">'
+            + '<label style="font-size:12px;font-weight:700;color:#059669;">🟢 Gemini (principal)</label>'
+            + '<p style="font-size:10px;color:#636366;margin:2px 0 6px;">Crie em <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#2563EB;">aistudio.google.com/apikey</a></p>'
+            + '<input type="text" id="ia-config-key" placeholder="Cole a API key Gemini..." style="font-size:14px;" value="' + (this.API_KEY || '') + '">'
             + '</div>'
-            + '<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.1);">'
-            + '<p style="font-size:12px;color:#636366;margin-bottom:8px;"><strong>🔄 Backup (opcional):</strong> Se Gemini cair, use Groq (14.400/dia grátis)</p>'
-            + '<p style="font-size:11px;color:#636366;margin-bottom:6px;">Crie em <a href="https://console.groq.com/keys" target="_blank" style="color:#2563EB;">console.groq.com/keys</a></p>'
-            + '<input type="text" id="ia-config-groq" placeholder="Chave Groq (opcional)" style="font-size:14px;">'
+            // Groq
+            + '<div class="form-group" style="margin-top:10px;">'
+            + '<label style="font-size:12px;font-weight:700;color:#F97316;">🟠 Groq (backup 1)</label>'
+            + '<p style="font-size:10px;color:#636366;margin:2px 0 6px;">Crie em <a href="https://console.groq.com/keys" target="_blank" style="color:#2563EB;">console.groq.com/keys</a> — 14.400 req/dia</p>'
+            + '<input type="text" id="ia-config-groq" placeholder="Chave Groq (opcional)" style="font-size:14px;" value="' + (this.GROQ_KEY || '') + '">'
             + '</div>'
-            + '<button class="submit-btn" onclick="window.iaConsultor._salvarConfig()" style="margin-top:12px;">✅ Ativar IA</button>'
-            + '<p style="margin-top:12px;font-size:11px;color:#636366;">💡 Keys ficam salvas apenas no seu celular.</p>'
+            // Cerebras
+            + '<div class="form-group" style="margin-top:10px;">'
+            + '<label style="font-size:12px;font-weight:700;color:#8B5CF6;">🟣 Cerebras (backup 2)</label>'
+            + '<p style="font-size:10px;color:#636366;margin:2px 0 6px;">Crie em <a href="https://cloud.cerebras.ai/" target="_blank" style="color:#2563EB;">cloud.cerebras.ai</a> — 1M tokens/dia</p>'
+            + '<input type="text" id="ia-config-cerebras" placeholder="Chave Cerebras (opcional)" style="font-size:14px;" value="' + (this.CEREBRAS_KEY || '') + '">'
+            + '</div>'
+            // OpenRouter
+            + '<div class="form-group" style="margin-top:10px;">'
+            + '<label style="font-size:12px;font-weight:700;color:#2563EB;">🔵 OpenRouter (backup 3)</label>'
+            + '<p style="font-size:10px;color:#636366;margin:2px 0 6px;">Crie em <a href="https://openrouter.ai/keys" target="_blank" style="color:#2563EB;">openrouter.ai/keys</a> — modelos grátis</p>'
+            + '<input type="text" id="ia-config-openrouter" placeholder="Chave OpenRouter (opcional)" style="font-size:14px;" value="' + (this.OPENROUTER_KEY || '') + '">'
+            + '</div>'
+            + '<button class="submit-btn" onclick="window.iaConsultor._salvarConfig()" style="margin-top:12px;">✅ Salvar Todas as Chaves</button>'
+            + '<p style="margin-top:12px;font-size:11px;color:#636366;">💡 Keys ficam salvas apenas no seu dispositivo.</p>'
             + '</div>';
     },
 
     _salvarConfig: function () {
-        var keyInput = document.getElementById('ia-config-key');
-        if (!keyInput) return;
+        var get = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
 
-        var key = keyInput.value.trim();
-        if (!key) {
-            window.app.showToast('Cole a API key primeiro', 'error');
+        var key = get('ia-config-key');
+        var groqKey = get('ia-config-groq');
+        var cerebrasKey = get('ia-config-cerebras');
+        var openrouterKey = get('ia-config-openrouter');
+
+        if (!key && !groqKey && !cerebrasKey && !openrouterKey) {
+            window.app.showToast('Cole pelo menos uma API key', 'error');
             return;
         }
 
-        var groqKey = '';
-        var groqInput = document.getElementById('ia-config-groq');
-        if (groqInput) groqKey = groqInput.value.trim();
-
         this.API_KEY = key;
         this.GROQ_KEY = groqKey;
-        localStorage.setItem('agromacro_ia_config', JSON.stringify({ apiKey: key, groqKey: groqKey }));
-        window.app.showToast('✅ IA ativada com sucesso!', 'success');
+        this.CEREBRAS_KEY = cerebrasKey;
+        this.OPENROUTER_KEY = openrouterKey;
+
+        localStorage.setItem('agromacro_ia_config', JSON.stringify({
+            apiKey: key,
+            groqKey: groqKey,
+            cerebrasKey: cerebrasKey,
+            openrouterKey: openrouterKey
+        }));
+
+        var count = this._contarProvedores();
+        window.app.showToast('🔑 ' + count + ' provedor(es) configurado(s)!', 'success');
 
         // Reset e mostrar welcome
         this.historico = [];
