@@ -51,7 +51,7 @@ window.funcionarios = {
         var nome = document.getElementById('func-nome').value.trim();
         var funcao = document.getElementById('func-funcao').value.trim();
         var telefone = document.getElementById('func-telefone').value.trim();
-        var diaria = parseFloat(document.getElementById('func-diaria').value) || 0;
+        var diaria = parseFloat(document.getElementById('func-valor').value) || 0;
 
         if (!nome) {
             window.app.showToast('Preencha o nome do funcionário.', 'error');

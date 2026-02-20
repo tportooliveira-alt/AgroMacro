@@ -122,12 +122,9 @@ window.estoque = {
                     if (stock[key]) stock[key].qty -= (item.qty || 0);
                 });
             }
-            if (ev.type === 'OBRA_REGISTRO' && ev.materials) {
-                ev.materials.forEach(function (mat) {
-                    var key = self.normalizeKey(mat.name);
-                    if (stock[key]) stock[key].qty -= (mat.qty || 0);
-                });
-            }
+            // NOTA: materiais de OBRA_REGISTRO NÃO são descontados aqui
+            // porque obras.save() já cria um SAIDA_ESTOQUE para os mesmos materiais.
+            // Descontar aqui causaria desconto duplo.
         });
 
         // ══ CONSUMO DIÁRIO AUTOMÁTICO ══
@@ -460,12 +457,9 @@ window.estoque = {
                 });
             }
 
-            if (ev.type === 'OBRA_REGISTRO' && ev.materials) {
-                ev.materials.forEach(function (mat) {
-                    var key = self.normalizeKey(mat.name);
-                    if (stock[key]) stock[key].qty -= (mat.qty || 0);
-                });
-            }
+            // NOTA: materiais de OBRA_REGISTRO NÃO são descontados aqui
+            // porque obras.save() já cria um SAIDA_ESTOQUE para os mesmos materiais.
+            // Descontar aqui causaria desconto duplo.
         });
 
         // ══ CONSUMO DIÁRIO AUTOMÁTICO ══
