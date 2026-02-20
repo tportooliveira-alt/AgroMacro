@@ -84,6 +84,11 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* ═══════ VIEW SYSTEM ═══════ */
+.view.hidden {
+    display: none !important;
+}
+
 html {
     font-size: 16px;
     scroll-behavior: smooth;
