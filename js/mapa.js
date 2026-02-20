@@ -153,22 +153,81 @@ window.mapa = {
     getDashboardStats: function () {
         var stats = { totalPastos: 0, totalCabecas: 0, ocupados: 0, vazios: 0, totalHectares: 0 };
         var self = this;
-        if (!this.drawnItems) return stats;
 
-        this.drawnItems.eachLayer(function (layer) {
-            if (!layer.pastoNome) return;
-            stats.totalPastos++;
-            var info = self.getPastoInfo(layer.pastoNome);
+        // Se o mapa já tem polígonos carregados, usa eles
+        if (this.drawnItems && this.drawnItems.getLayers().length > 0) {
+            this.drawnItems.eachLayer(function (layer) {
+                if (!layer.pastoNome) return;
+                stats.totalPastos++;
+                var info = self.getPastoInfo(layer.pastoNome);
+                stats.totalCabecas += info.totalAnimais;
+                if (info.totalAnimais > 0) {
+                    stats.ocupados++;
+                } else {
+                    stats.vazios++;
+                }
+                var area = parseFloat(self.calcArea(layer)) || 0;
+                stats.totalHectares += area;
+            });
+            return stats;
+        }
+
+        // FALLBACK: Usa FAZENDA_PASTOS + data.events direto (sem precisar do mapa)
+        var pastoNomes = [];
+
+        // Pegar nomes dos pastos do KML embutido
+        if (window.FAZENDA_PASTOS && window.FAZENDA_PASTOS.length > 0) {
+            var seen = {};
+            window.FAZENDA_PASTOS.forEach(function (p) {
+                if (!p.nome) return;
+                var key = p.nome.toLowerCase();
+                if (seen[key]) return;
+                seen[key] = true;
+                pastoNomes.push(p.nome);
+
+                // Calcular área do polígono
+                if (p.coords && p.coords.length >= 3) {
+                    var sum = 0;
+                    for (var i = 0; i < p.coords.length; i++) {
+                        var j = (i + 1) % p.coords.length;
+                        var lat1 = p.coords[i][0] * Math.PI / 180;
+                        var lat2 = p.coords[j][0] * Math.PI / 180;
+                        var dLng = (p.coords[j][1] - p.coords[i][1]) * Math.PI / 180;
+                        sum += dLng * (2 + Math.sin(lat1) + Math.sin(lat2));
+                    }
+                    var area = Math.abs(sum * 6378137 * 6378137 / 2) / 10000;
+                    stats.totalHectares += area;
+                }
+            });
+        }
+
+        // Também incluir pastos dos events, caso não estejam no KML
+        if (window.data && window.data.events) {
+            var seenEvt = {};
+            pastoNomes.forEach(function (n) { seenEvt[n.toLowerCase()] = true; });
+            window.data.events.forEach(function (ev) {
+                if (ev.type === 'PASTO' && ev.nome && !seenEvt[ev.nome.toLowerCase()]) {
+                    seenEvt[ev.nome.toLowerCase()] = true;
+                    pastoNomes.push(ev.nome);
+                    if (ev.area) stats.totalHectares += parseFloat(ev.area) || 0;
+                }
+            });
+        }
+
+        stats.totalPastos = pastoNomes.length;
+
+        // Contar animais por pasto
+        pastoNomes.forEach(function (nome) {
+            var info = self.getPastoInfo(nome);
             stats.totalCabecas += info.totalAnimais;
             if (info.totalAnimais > 0) {
                 stats.ocupados++;
             } else {
                 stats.vazios++;
             }
-            // Somar hectares de cada polígono
-            var area = parseFloat(self.calcArea(layer)) || 0;
-            stats.totalHectares += area;
         });
+
+        stats.totalHectares = Math.round(stats.totalHectares * 10) / 10;
         return stats;
     },
 

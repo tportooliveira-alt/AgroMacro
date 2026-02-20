@@ -276,7 +276,10 @@ window.app = {
                 this.populatePastosSelect('cab-pasto');
                 break;
             case 'mapa':
-                if (window.mapa) window.mapa.renderMap();
+                if (window.mapa) {
+                    window.mapa.updateDashboard();
+                    window.mapa.renderMap();
+                }
                 break;
             case 'config':
                 this.loadConfig();
