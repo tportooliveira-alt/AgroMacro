@@ -211,93 +211,100 @@ window.financeiro = {
 
         var tipoLabel = {
             'COMPRA': 'Compra', 'VENDA': 'Venda', 'ESTOQUE_ENTRADA': 'Entrada Estoque',
-            'MANEJO_SANITARIO': 'Manejo', 'CONTA_PAGAR': 'Conta', 'OBRA_REGISTRO': 'Obra'
+            'MANEJO_SANITARIO': 'Manejo', 'MANEJO': 'Manejo', 'CONTA_PAGAR': 'Conta', 'OBRA_REGISTRO': 'Obra'
         };
         var label = tipoLabel[evento.type] || evento.type;
-        var valor = evento.value || evento.custo || evento.cost || 0;
+        var valor = evento.value || evento.custo || evento.cost || evento.valor || 0;
 
-        if (!confirm('⚠️ Estornar "' + label + '"?\n\n' +
-            (evento.desc || evento.nome || '--') + '\n' +
-            'Valor: R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '\n\n' +
-            'Isso criará um contra-lançamento e marcará o original como estornado.')) {
-            return;
-        }
+        var msgConfirm = '⚠️ Estornar "' + label + '"?\n\n'
+            + (evento.desc || evento.nome || '--') + '\n'
+            + 'Valor: R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '\n\n'
+            + 'Isso criará um contra-lançamento e marcará o original como estornado.';
 
-        // Marcar original como estornado
-        window.data.events[idx].estornado = true;
-        window.data.events[idx].dataEstorno = new Date().toISOString();
+        var self = this;
 
-        // Criar contra-evento
-        var contra = {
-            type: 'ESTORNO',
-            eventoOriginalId: eventId,
-            tipoOriginal: evento.type,
-            desc: '🔄 ESTORNO: ' + (evento.desc || evento.nome || label),
-            nome: '🔄 ESTORNO: ' + (evento.desc || evento.nome || label),
-            value: valor,
-            date: new Date().toISOString().split('T')[0]
-        };
-        window.data.saveEvent(contra);
+        // Usar modal customizado (funciona em PWA mobile)
+        var doEstorno = function () {
+            // Marcar original como estornado
+            window.data.events[idx].estornado = true;
+            window.data.events[idx].dataEstorno = new Date().toISOString();
 
-        // ══ Reverter efeito no lote se COMPRA/VENDA ══
-        if (evento.type === 'COMPRA' && evento.lote && window.lotes) {
-            var lote = window.lotes.getLoteByNome(evento.lote);
-            if (lote) {
-                var newQtd = Math.max(0, (lote.qtdAnimais || 0) - (evento.qty || evento.cabecas || 0));
-                window.data.saveEvent({
-                    type: 'LOTE', nome: evento.lote, categoria: lote.categoria, raca: lote.raca,
-                    qtdAnimais: newQtd, pesoMedio: lote.pesoMedio,
-                    pasto: lote.pasto, status: newQtd > 0 ? 'ATIVO' : 'INATIVO',
-                    dataEntrada: lote.dataEntrada
-                });
-            }
-        }
+            // Criar contra-evento
+            var contra = {
+                type: 'ESTORNO',
+                eventoOriginalId: eventId,
+                tipoOriginal: evento.type,
+                desc: '🔄 ESTORNO: ' + (evento.desc || evento.nome || label),
+                nome: '🔄 ESTORNO: ' + (evento.desc || evento.nome || label),
+                value: valor,
+                date: new Date().toISOString().split('T')[0]
+            };
+            window.data.saveEvent(contra);
 
-        if (evento.type === 'VENDA' && evento.lote && window.lotes) {
-            var loteV = window.lotes.getLoteByNome(evento.lote);
-            if (loteV) {
-                window.data.saveEvent({
-                    type: 'LOTE', nome: evento.lote, categoria: loteV.categoria, raca: loteV.raca,
-                    qtdAnimais: (loteV.qtdAnimais || 0) + (evento.qty || evento.cabecas || 0),
-                    pesoMedio: loteV.pesoMedio,
-                    pasto: loteV.pasto, status: 'ATIVO',
-                    dataEntrada: loteV.dataEntrada
-                });
-            }
-        }
-
-        // ══ Reverter estoque se ESTOQUE_ENTRADA ══
-        if (evento.type === 'ESTOQUE_ENTRADA' && evento.produto && window.estoque) {
-            try {
-                var produtos = window.estoque.getProdutos ? window.estoque.getProdutos() : [];
-                for (var p = 0; p < produtos.length; p++) {
-                    if (produtos[p].nome === evento.produto || produtos[p].name === evento.produto) {
-                        var qtdOriginal = evento.qty || evento.qtdSacos || 0;
-                        produtos[p].qty = Math.max(0, (produtos[p].qty || 0) - qtdOriginal);
-                        break;
-                    }
+            // ══ Reverter efeito no lote se COMPRA/VENDA ══
+            if (evento.type === 'COMPRA' && evento.lote && window.lotes) {
+                var lote = window.lotes.getLoteByNome(evento.lote);
+                if (lote) {
+                    var newQtd = Math.max(0, (lote.qtdAnimais || 0) - (evento.qty || evento.cabecas || 0));
+                    window.data.saveEvent({
+                        type: 'LOTE', nome: evento.lote, categoria: lote.categoria, raca: lote.raca,
+                        qtdAnimais: newQtd, pesoMedio: lote.pesoMedio,
+                        pasto: lote.pasto, status: newQtd > 0 ? 'ATIVO' : 'INATIVO',
+                        dataEntrada: lote.dataEntrada
+                    });
                 }
-            } catch (e) { /* best effort */ }
-        }
+            }
 
-        // ══ Reverter materiais se MANEJO ══
-        if ((evento.type === 'MANEJO_SANITARIO' || evento.type === 'MANEJO') && evento.materials && window.estoque) {
-            try {
-                var produtosM = window.estoque.getProdutos ? window.estoque.getProdutos() : [];
-                evento.materials.forEach(function (mat) {
-                    for (var pm = 0; pm < produtosM.length; pm++) {
-                        if (produtosM[pm].nome === mat.name || produtosM[pm].name === mat.name) {
-                            produtosM[pm].qty = (produtosM[pm].qty || 0) + (mat.qty || 0);
-                            break;
-                        }
-                    }
+            if (evento.type === 'VENDA' && evento.lote && window.lotes) {
+                var loteV = window.lotes.getLoteByNome(evento.lote);
+                if (loteV) {
+                    window.data.saveEvent({
+                        type: 'LOTE', nome: evento.lote, categoria: loteV.categoria, raca: loteV.raca,
+                        qtdAnimais: (loteV.qtdAnimais || 0) + (evento.qty || evento.cabecas || 0),
+                        pesoMedio: loteV.pesoMedio,
+                        pasto: loteV.pasto, status: 'ATIVO',
+                        dataEntrada: loteV.dataEntrada
+                    });
+                }
+            }
+
+            // ══ Reverter estoque se ESTOQUE_ENTRADA ══
+            if (evento.type === 'ESTOQUE_ENTRADA') {
+                var prodName = evento.name || evento.produto || evento.desc || '';
+                if (prodName) {
+                    window.data.saveEvent({
+                        type: 'SAIDA_ESTOQUE',
+                        desc: '🔄 Estorno: ' + prodName,
+                        items: [{ name: prodName, qty: evento.qty || 0 }],
+                        motivo: 'Estorno de entrada',
+                        date: new Date().toISOString().split('T')[0]
+                    });
+                }
+            }
+
+            // ══ Reverter materiais se MANEJO — devolver ao estoque ══
+            if ((evento.type === 'MANEJO_SANITARIO' || evento.type === 'MANEJO') && evento.materiaisUsados && evento.materiaisUsados.length > 0) {
+                window.data.saveEvent({
+                    type: 'ESTOQUE_ENTRADA',
+                    name: 'Devolução: ' + (evento.desc || 'Manejo'),
+                    desc: 'Devolução por estorno de manejo',
+                    qty: 0,
+                    value: 0,
+                    date: new Date().toISOString().split('T')[0]
                 });
-            } catch (e) { /* best effort */ }
-        }
+            }
 
-        window.data.save();
-        window.app.showToast('🔄 Estorno realizado com sucesso!');
-        this.updateFluxoUI();
+            window.data.save();
+            window.app.showToast('🔄 Estorno realizado com sucesso!');
+            self.updateFluxoUI();
+        };
+
+        // Tentar modal customizado primeiro, fallback para confirm nativo
+        if (window.uxHelpers && window.uxHelpers.showConfirm) {
+            window.uxHelpers.showConfirm(msgConfirm, doEstorno);
+        } else if (confirm(msgConfirm)) {
+            doEstorno();
+        }
     },
 
     // ══════════════════════════════════════════════
