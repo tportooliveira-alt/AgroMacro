@@ -399,7 +399,9 @@ window.iaConsultor = {
             + '4. Para diagnósticos clínicos, SEMPRE recomende veterinário presencial\n'
             + '5. Formate com emojis e tópicos curtos (leitura no celular)\n'
             + '6. Máximo 400 palavras por resposta\n'
-            + '7. Quando cruzar dados da fazenda, mostre cálculos e raciocínio\n\n'
+            + '7. Quando cruzar dados da fazenda, mostre cálculos e raciocínio\n'
+            + '8. NUNCA diga "não tenho acesso a dados em tempo real" — quando Google Search estiver ativo, USE os dados reais. Quando não estiver, use os dados de referência abaixo e diga a fonte.\n'
+            + '9. Para preços, SEMPRE cite a fonte (CEPEA, Datagro, B3, Scot) e a data do dado\n\n'
 
             + '═══ MERCADO DA ARROBA ═══\n'
             + '• Indicador CEPEA/Esalq: referência histórica do boi gordo em SP\n'
@@ -725,17 +727,31 @@ window.iaConsultor = {
 
         var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + this.API_KEY;
 
+        // Detectar se pergunta é sobre mercado → ativar Google Search
+        var ultimaPergunta = (messages.length > 0 ? messages[messages.length - 1].content : '').toLowerCase();
+        var palavrasMercado = ['mercado', 'arroba', 'preço', 'preco', 'cotação', 'cotacao', 'cepea', 'b3', 'boi gordo',
+            'exportação', 'exportacao', 'dólar', 'dolar', 'china', 'frigorífico', 'frigorifico', 'abate',
+            'bezerro', 'novilha', 'vaca', 'milho', 'soja', 'quanto tá', 'quanto ta', 'quanto está',
+            'vender agora', 'hora de vender', 'tendência', 'tendencia', 'safra', 'entressafra'];
+        var usarGoogleSearch = palavrasMercado.some(function (p) { return ultimaPergunta.indexOf(p) >= 0; });
+
+        var bodyPayload = {
+            contents: contents,
+            generationConfig: {
+                temperature: 0.3,
+                topP: 0.8,
+                maxOutputTokens: 1500
+            }
+        };
+        if (usarGoogleSearch) {
+            bodyPayload.tools = [{ googleSearch: {} }];
+            console.log('IA: Google Search ativado — pergunta sobre mercado detectada');
+        }
+
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: contents,
-                generationConfig: {
-                    temperature: 0.3,
-                    topP: 0.8,
-                    maxOutputTokens: 1500
-                }
-            })
+            body: JSON.stringify(bodyPayload)
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -1337,6 +1353,79 @@ window.iaConsultor = {
         if (!texto) return;
         input.value = '';
         this.enviarPergunta(texto);
+    },
+
+    // ══ VOZ — Speech Recognition ══
+    _vozAtiva: false,
+    _recognition: null,
+
+    _toggleVoz: function () {
+        var self = this;
+        var btn = document.getElementById('ia-mic-btn');
+
+        // Check support
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            if (window.app && window.app.showToast) {
+                window.app.showToast('🎙️ Seu navegador não suporta reconhecimento de voz. Use Chrome.', 'error');
+            }
+            return;
+        }
+
+        if (self._vozAtiva && self._recognition) {
+            // Parar gravação
+            self._recognition.stop();
+            return;
+        }
+
+        // Iniciar gravação
+        self._recognition = new SpeechRecognition();
+        self._recognition.lang = 'pt-BR';
+        self._recognition.continuous = false;
+        self._recognition.interimResults = true;
+        self._recognition.maxAlternatives = 1;
+
+        self._vozAtiva = true;
+        if (btn) btn.classList.add('recording');
+
+        var input = document.getElementById('ia-input');
+
+        self._recognition.onresult = function (event) {
+            var transcript = '';
+            for (var i = 0; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            if (input) input.value = transcript;
+
+            // Se resultado final, envia
+            if (event.results[event.results.length - 1].isFinal) {
+                setTimeout(function () {
+                    self._enviarDoInput();
+                }, 300);
+            }
+        };
+
+        self._recognition.onend = function () {
+            self._vozAtiva = false;
+            if (btn) btn.classList.remove('recording');
+            self._recognition = null;
+        };
+
+        self._recognition.onerror = function (event) {
+            console.warn('Voz erro:', event.error);
+            self._vozAtiva = false;
+            if (btn) btn.classList.remove('recording');
+            if (event.error === 'not-allowed') {
+                if (window.app && window.app.showToast) {
+                    window.app.showToast('🎙️ Permita o microfone nas configurações do navegador.', 'error');
+                }
+            }
+        };
+
+        self._recognition.start();
+        if (window.app && window.app.showToast) {
+            window.app.showToast('🎙️ Ouvindo... fale agora!', 'info');
+        }
     },
 
     // ══ RENDER MENSAGENS (C5: Contextual Welcome + C7: Dynamic Suggestions) ══

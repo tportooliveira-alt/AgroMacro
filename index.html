@@ -1371,7 +1371,7 @@
     <script src="js/fotos.js?v=20260213a"></script>
     <script src="js/fazenda-data.js?v=20260219a"></script>
     <script src="js/mapa.js?v=20260219c"></script>
-    <script src="js/ia-consultor.js?v=20260219a"></script>
+    <script src="js/ia-consultor.js?v=20260220a"></script>
     <script src="js/ux-helpers.js?v=20260219a"></script>
     <script src="js/resultados.js?v=20260219a"></script>
     <script src="js/firebase-sync.js?v=20260219a"></script>
@@ -1444,7 +1444,7 @@
                     <span class="ia-header-icon">🤖</span>
                     <div>
                         <div class="ia-header-title">AgroIA</div>
-                        <div class="ia-header-sub">Consultor Pecuário • Gemini AI</div>
+                        <div class="ia-header-sub">Secretária & Consultor • Gemini AI</div>
                     </div>
                 </div>
                 <div class="ia-header-actions">
@@ -1459,8 +1459,9 @@
                 <span>AgroIA está analisando seus dados...</span>
             </div>
             <div class="ia-input-bar">
-                <input type="text" id="ia-input" class="ia-input"
-                    placeholder="Pergunte sobre seu rebanho, pastos, custos..." autocomplete="off">
+                <button id="ia-mic-btn" class="ia-mic-btn" onclick="window.iaConsultor._toggleVoz()"
+                    title="Falar por voz">🎙️</button>
+                <input type="text" id="ia-input" class="ia-input" placeholder="Fale ou digite..." autocomplete="off">
                 <button class="ia-send-btn" onclick="window.iaConsultor._enviarDoInput()">➤</button>
             </div>
         </div>

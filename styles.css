@@ -3573,6 +3573,39 @@ body.perfil-campo .gerencia-only {
     transform: scale(0.9);
 }
 
+/* Mic Button */
+.ia-mic-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #F2F2F7;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.ia-mic-btn.recording {
+    background: #ef4444;
+    animation: ia-mic-pulse 1s infinite;
+}
+
+@keyframes ia-mic-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+}
+
 /* Welcome Screen */
 .ia-welcome {
     text-align: center;
