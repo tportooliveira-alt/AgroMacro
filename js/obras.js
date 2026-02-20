@@ -64,10 +64,24 @@ window.obras = {
         var empreiteiroContato = (document.getElementById('obra-empreiteiro-contato') || {}).value || '';
         var empreiteiroValor = parseFloat((document.getElementById('obra-empreiteiro-valor') || {}).value) || 0;
 
-        // ══ Calcular custo total da obra ══
+        // ══ Calcular custo total da obra (workers + empreiteiro + materiais) ══
         var custoWorkers = 0;
         selectedWorkers.forEach(function (w) { custoWorkers += (w.subtotal || 0); });
-        var custoTotal = custoWorkers + empreiteiroValor;
+
+        // Calcular custo estimado dos materiais (baseado no preço médio do estoque)
+        var custoMateriais = 0;
+        if (materials.length > 0 && window.estoque) {
+            var stockItems = window.estoque.getStockItems();
+            materials.forEach(function (mat) {
+                stockItems.forEach(function (si) {
+                    if (si.name.toLowerCase() === mat.name.toLowerCase() && si.valorUnitario) {
+                        custoMateriais += (mat.qty || 0) * (si.valorUnitario || 0);
+                    }
+                });
+            });
+        }
+
+        var custoTotal = custoWorkers + empreiteiroValor + custoMateriais;
 
         var ev = {
             type: 'OBRA_REGISTRO',
@@ -84,12 +98,47 @@ window.obras = {
             } : null,
             value: custoTotal,
             custo: custoTotal,
+            custoWorkers: custoWorkers,
+            custoMateriais: custoMateriais,
+            custoEmpreiteiro: empreiteiroValor,
             date: inicio
         };
 
         window.data.saveEvent(ev);
 
-        window.app.showToast('✅ Obra ' + nome + ' registrada!');
+        // ══ BAIXA NO ESTOQUE — descontar materiais usados ══
+        if (materials.length > 0) {
+            window.data.saveEvent({
+                type: 'SAIDA_ESTOQUE',
+                desc: 'Obra: ' + nome,
+                items: materials,
+                motivo: 'Obra: ' + nome,
+                date: inicio
+            });
+        }
+
+        // ══ INTEGRAÇÃO FINANCEIRA — lançar no caixa ══
+        if (custoTotal > 0) {
+            window.data.saveEvent({
+                type: 'CONTA_PAGAR',
+                nome: 'Obra: ' + nome,
+                desc: 'MO: R$' + custoWorkers.toFixed(0) + ' + Mat: R$' + custoMateriais.toFixed(0) + ' + Emp: R$' + empreiteiroValor.toFixed(0),
+                valor: custoTotal,
+                value: custoTotal,
+                categoria: 'obras',
+                status: 'pago',
+                date: inicio
+            });
+        }
+
+        var detalhes = [];
+        if (custoWorkers > 0) detalhes.push('MO R$' + custoWorkers.toFixed(0));
+        if (custoMateriais > 0) detalhes.push('Mat R$' + custoMateriais.toFixed(0));
+        if (empreiteiroValor > 0) detalhes.push('Emp R$' + empreiteiroValor.toFixed(0));
+        var toastMsg = '✅ Obra ' + nome + ' registrada!';
+        if (detalhes.length > 0) toastMsg += ' Total: R$' + custoTotal.toFixed(2) + ' (' + detalhes.join(' + ') + ')';
+
+        window.app.showToast(toastMsg);
         document.getElementById('form-obra').reset();
         this.renderWorkers();
         this.renderHistory();

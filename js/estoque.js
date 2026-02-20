@@ -387,6 +387,8 @@ window.estoque = {
             return;
         }
 
+        var dataHoje = new Date().toISOString().split('T')[0];
+
         var ev = {
             type: 'ESTOQUE_ENTRADA',
             name: produto,
@@ -399,12 +401,27 @@ window.estoque = {
             valorSaco: valorSaco,
             value: custoTotal,
             category: categoria,
-            date: new Date().toISOString().split('T')[0]
+            date: dataHoje
         };
 
         window.data.saveEvent(ev);
+
+        // ══ INTEGRAÇÃO FINANCEIRA: Compra de material = saída de caixa ══
+        if (custoTotal > 0) {
+            window.data.saveEvent({
+                type: 'CONTA_PAGAR',
+                nome: 'Compra Estoque: ' + produto,
+                desc: qtdSacos + ' sacos de ' + produto + ' (' + totalKg + 'kg)',
+                valor: custoTotal,
+                value: custoTotal,
+                categoria: 'estoque',
+                status: 'pago',
+                date: dataHoje
+            });
+        }
+
         var msg = '✅ ' + qtdSacos + ' sacos de ' + produto + ' (' + totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 0 }) + 'kg)';
-        if (custoTotal > 0) msg += ' — R$ ' + custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' (R$' + custoKg.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '/kg)';
+        if (custoTotal > 0) msg += ' — R$ ' + custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' (R$' + custoKg.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '/kg) — Lançado no caixa';
         window.app.showToast(msg);
         document.getElementById('form-estoque').reset();
         document.getElementById('est-peso-saco').value = '25';
