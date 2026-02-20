@@ -51,6 +51,7 @@ window.app = {
         if (window.indicadores) window.indicadores.init();
         if (window.graficos) window.graficos.init();
         if (window.fotos) window.fotos.init();
+        if (window.mapa) window.mapa.init();
         if (window.iaConsultor) window.iaConsultor.init();
         if (window.uxHelpers) window.uxHelpers.init();
         if (window.resultados) window.resultados.init();

@@ -10,7 +10,59 @@ window.mapa = {
     activeFilter: 'todos',
 
     init: function () {
-        // Will be initialized when view-mapa is shown
+        // Sincronizar pastos do KML no cadastro do app IMEDIATAMENTE
+        // (sem precisar abrir o mapa)
+        this.syncPastosEarly();
+    },
+
+    // ── Sincronizar FAZENDA_PASTOS com data.events sem precisar do mapa ──
+    syncPastosEarly: function () {
+        if (!window.data || !window.FAZENDA_PASTOS || !window.FAZENDA_PASTOS.length) return;
+
+        var existingPastos = {};
+        window.data.events.forEach(function (ev) {
+            if (ev.type === 'PASTO' && ev.nome) {
+                existingPastos[ev.nome.toLowerCase()] = true;
+            }
+        });
+
+        var created = 0;
+        window.FAZENDA_PASTOS.forEach(function (p) {
+            if (!p.nome) return;
+            if (existingPastos[p.nome.toLowerCase()]) return;
+
+            // Calcular área aproximada do polígono (Shoelace)
+            var area = 0;
+            if (p.coords && p.coords.length >= 3) {
+                var sum = 0;
+                for (var i = 0; i < p.coords.length; i++) {
+                    var j = (i + 1) % p.coords.length;
+                    var lat1 = p.coords[i][0] * Math.PI / 180;
+                    var lat2 = p.coords[j][0] * Math.PI / 180;
+                    var dLng = (p.coords[j][1] - p.coords[i][1]) * Math.PI / 180;
+                    sum += dLng * (2 + Math.sin(lat1) + Math.sin(lat2));
+                }
+                area = Math.abs(sum * 6378137 * 6378137 / 2) / 10000; // hectares
+                area = Math.round(area * 100) / 100;
+            }
+
+            window.data.saveEvent({
+                type: 'PASTO',
+                nome: p.nome,
+                area: area,
+                capacidade: 0,
+                tipoPasto: 'Braquiária',
+                statusPasto: 'disponivel',
+                obs: 'Auto-cadastrado do mapa KML',
+                date: new Date().toISOString(),
+                timestamp: new Date().toISOString()
+            });
+            created++;
+        });
+
+        if (created > 0) {
+            console.log('🗺️ ' + created + ' pastos cadastrados automaticamente do KML');
+        }
     },
 
     // ── Inicializar o mapa Leaflet ──
