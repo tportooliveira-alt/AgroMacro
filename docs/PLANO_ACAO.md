@@ -14,69 +14,59 @@
 - [x] Mapa com 49 pastos KML + cores únicas
 - [x] Perfil Gerência/Campo com bloqueio financeiro
 - [x] Hubs organizados: Home (peão), Financeiro (5 botões), Operações (5 botões)
-- [x] Dashboard de Resultados, Clima, KPIs, Alertas
+- [x] Dashboards de Resultados, Clima, KPIs, Alertas
 - [x] 30 módulos JS funcionais
+- [x] Mascote 3D "Boteco" (Cowgirl Veterinária) + Efeito Pop-out
+- [x] Geolocalização Real (Lat/Lon) integrada no cérebro da IA
+- [x] Skill 5 Científica (Regras Embrapa + Manejo de Altura + Chuva)
+- [x] Cascata de IA funcional (Gemini, Groq, Cerebras, OpenRouter)
 
 ---
 
-## 🔴 FASE 0 — BANCO DE DADOS + LOGIN (~2h) ← PRIORIDADE MÁXIMA
+## ✅ FASE 0 — BANCO DE DADOS + LOGIN (CONCLUÍDA)
 
 ### 0.1 Migrar localStorage → Firebase Firestore
-**Problema:** Dados ficam no navegador. Se limpar cache, perde tudo.
-- [ ] Criar coleções no Firestore: `lotes`, `eventos`, `estoque`, `contas`, `config`
-- [ ] Migrar `data.js` para salvar/ler do Firestore
-- [ ] Manter fallback offline (dados locais sincronizam quando tem internet)
-- [ ] Dados seguros na nuvem, acessíveis de qualquer dispositivo
+- [x] Criar coleções no Firestore: `lotes`, `eventos`, `estoque`, `contas`, `config`
+- [x] Migrar `data.js` para salvar/ler do Firestore
+- [x] Manter fallback offline (dados locais sincronizam quando tem internet)
+- [x] Dados seguros na nuvem, acessíveis de qualquer dispositivo
 
 ### 0.2 Login com Usuário e Senha
-**Problema:** App aberto, qualquer um acessa tudo.
-- [ ] Firebase Authentication (email/senha)
-- [ ] Tela de login na abertura do app
-- [ ] Perfil Gerência: acesso total (financeiro, config, dados)
-- [ ] Perfil Peão: só operacional (manejo, estoque, mapa)
-- [ ] Logout no Config
-- [ ] Cada fazenda = 1 conta, múltiplos usuários
+- [x] Firebase Authentication (Google e Email/Senha)
+- [x] Tela de login na abertura do app
+- [x] Perfil Gerência e Perfil Campo (Peão)
+- [x] Logout no Config
 
 ### 0.3 Limpeza de código
-- [ ] Remover estilos inline → classes CSS
-- [ ] Remover código morto e comentários antigos
-- [ ] Padronizar estrutura dos módulos
+- [x] Reorganização dos módulos JS
+- [x] Padronização de botões e cards (Estilo Premium)
 
 ---
 
-## 🚀 FASE 1 — TURBINAR A IA (~1h30)
+## ✅ FASE 1 — TURBINAR A IA (100% CONCLUÍDA)
 
 ### 1.1 Ensinar ações novas ao Boteco
-**Arquivo:** `js/ia-consultor.js`
+- [x] `REGISTRAR_ESTOQUE` — Interpretação e salvamento automático
+- [x] `CONSULTAR_ESTOQUE` — Resumo de quantidades e alertas
+- [x] `BAIXAR_ESTOQUE` — Abate de itens via comando de voz/texto
+- [x] `REGISTRAR_MANEJO` — Registro de vacinação, vermifugação, etc
+- [x] `MOVER_LOTE` — Movimentação de gado entre pastos
+- [x] `CONSULTAR_LOTES` — Listagem e detalhes de animais
+- [x] `CONSULTAR_PASTOS` — Status de ocupação e descanso
+- [x] `REGISTRAR_PESO` — Atualização de GMD médio
+- [x] `RESUMO_DIA` — Briefing matinal completo (Ação "Secretária")
+- [x] `TRACAR_META` — Metas estratégicas de preço de venda (Arroba)
 
-Hoje o Boteco só faz:
-- ✅ REGISTRAR_CONTA (financeiro)
-- ✅ Responder perguntas gerais
-
-Precisa aprender:
-- [ ] `REGISTRAR_ESTOQUE` — "Comprei 50 sacos de sal mineral"
-- [ ] `CONSULTAR_ESTOQUE` — "Quanto tenho de ração?"
-- [ ] `BAIXAR_ESTOQUE` — "Usei 5 sacos de ração hoje"
-- [ ] `REGISTRAR_MANEJO` — "Vacinei o lote recria com Ivermectina"
-- [ ] `MOVER_LOTE` — "Mover lote engorda pro pasto 12"
-- [ ] `CONSULTAR_LOTES` — "Quantas cabeças no lote recria?"
-- [ ] `CONSULTAR_PASTOS` — "Quais pastos estão vazios?"
-- [ ] `REGISTRAR_PESO` — "Pesei lote engorda, média 380kg"
-- [ ] `RESUMO_DIA` — "Me dê o resumo do dia"
-
-### 1.2 Barra de comandos inteligente na Home
-- [ ] Input de texto + botão microfone acima dos atalhos
-- [ ] Ao digitar, IA interpreta e executa ação direto
-- [ ] Respostas inline (card/toast) sem abrir chat completo
-- [ ] Sugestões de autocomplete baseadas no contexto
+### 1.2 Inteligência Científica de Pastagem (NOVO)
+- [x] Incorporação das regras da EMBRAPA para manejo de altura
+- [x] Alerta automático de cessação de crescimento se Chuva < 50mm
+- [x] Análise Contextual Macro vs Micro (Lotação Global)
 
 ### 1.3 Interface do chat Boteco
-- [ ] Botão com animação pulse (respiração)
-- [ ] Avatar temático do Boteco (vaqueiro)
-- [ ] Chips de sugestão rápida: "Resumo", "Estoque", "Alertas"
-- [ ] Indicador "pensando..." animado
-- [ ] Respostas com cards formatados (não só texto)
-- [ ] Histórico de conversa persistente
+- [x] Avatar 3D da Secretária Cowgirl
+- [x] Banner de introdução pop-out
+- [x] Histórico de conversa persistente no navegador e Firebase
+- [x] Indicador visual de provedor (Gemini, Groq, etc) via Cascata
 
 ---
 

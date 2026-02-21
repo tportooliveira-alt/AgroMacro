@@ -9,27 +9,51 @@ window.app = {
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'toast-notification';
-            toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.25);transition:opacity 0.3s,transform 0.3s;max-width:90%;text-align:center;';
+            toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:90%;text-align:center;animation:toast-in 0.3s var(--ease-out) forwards;';
             document.body.appendChild(toast);
         }
         var bgColor = type === 'error' ? '#D32F2F' : type === 'warning' ? '#FF8F00' : '#2E7D32';
         toast.style.background = bgColor;
         toast.textContent = msg;
         toast.style.opacity = '1';
-        toast.style.transform = 'translateX(-50%) translateY(0)';
+        toast.style.animation = 'toast-in 0.3s var(--ease-out) forwards';
         clearTimeout(window._toastTimer);
         window._toastTimer = setTimeout(function () {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(-50%) translateY(-20px)';
+            toast.style.animation = 'toast-out 0.3s var(--ease-out) forwards';
         }, 3000);
     },
 
     init: function () {
-        console.log('AgroMacro v2.0');
+        console.log('AgroMacro v3.1');
 
-        // Data layer first
+        // Load theme immediately for instant visual
+        this.loadTheme();
+        // Data layer first (localStorage — always available)
         if (window.data) window.data.init();
 
+        // ══ PWA: Registrar Service Worker ══
+        this.registerServiceWorker();
+
+        // ══ PWA: Capturar prompt de instalação ══
+        var self = this;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            self._installPrompt = e;
+            self.showInstallBanner();
+        });
+
+        // Init Firebase Sync — this handles the auth gate
+        // After auth, it calls _initModules() via _showApp()
+        if (window.firebaseSync) {
+            window.firebaseSync.init();
+        } else {
+            // No Firebase — go straight to app
+            this._initModules();
+        }
+    },
+
+    // Called by firebaseSync._showApp() after auth gate passes
+    _initModules: function () {
         // Feature modules
         if (window.rebanho) window.rebanho.init();
         if (window.pastos) window.pastos.init();
@@ -56,25 +80,9 @@ window.app = {
         if (window.uxHelpers) window.uxHelpers.init();
         if (window.resultados) window.resultados.init();
 
-
         this.loadConfig();
         this.applyPerfil();
         this.navigate('home');
-
-        // ══ PWA: Registrar Service Worker ══
-        this.registerServiceWorker();
-
-        // ══ PWA: Capturar prompt de instalação ══
-        var self = this;
-        window.addEventListener('beforeinstallprompt', function (e) {
-            e.preventDefault();
-            self._installPrompt = e;
-            self.showInstallBanner();
-        });
-        // Init Firebase Sync
-        if (window.firebaseSync) {
-            window.firebaseSync.init();
-        }
     },
 
     // ══ PWA — Service Worker Registration ══
@@ -654,19 +662,46 @@ window.app = {
     },
 
     applyPerfil: function () {
-        // Interface unificada — sempre gerência
         var body = document.body;
         body.classList.remove('perfil-gerencia', 'perfil-campo');
-        body.classList.add('perfil-gerencia');
 
-        // Home: sempre mostra gerência
-        var homeGerencia = document.getElementById('home-gerencia');
-        if (homeGerencia) homeGerencia.style.display = 'block';
+        // Check Firebase profile first
+        var perfil = 'gerencia';
+        if (window.firebaseSync && window.firebaseSync.user) {
+            perfil = window.firebaseSync.getUserPerfil();
 
-        // Mostrar todos os elementos (sem restrição)
-        document.querySelectorAll('.gerencia-only').forEach(function (el) {
-            el.style.display = '';
-        });
+            // Load async to update if needed
+            var self = this;
+            window.firebaseSync.loadUserPerfil(function (asyncPerfil) {
+                if (asyncPerfil !== perfil) {
+                    self._enforceProfile(asyncPerfil);
+                }
+            });
+        }
+
+        this._enforceProfile(perfil);
+    },
+
+    _enforceProfile: function (perfil) {
+        var body = document.body;
+        body.classList.remove('perfil-gerencia', 'perfil-campo');
+        body.classList.add('perfil-' + perfil);
+
+        if (perfil === 'campo') {
+            // Hide financial elements
+            document.querySelectorAll('.gerencia-only').forEach(function (el) {
+                el.style.display = 'none';
+            });
+            var homeGerencia = document.getElementById('home-gerencia');
+            if (homeGerencia) homeGerencia.style.display = 'none';
+        } else {
+            // Show all
+            document.querySelectorAll('.gerencia-only').forEach(function (el) {
+                el.style.display = '';
+            });
+            var homeGerencia = document.getElementById('home-gerencia');
+            if (homeGerencia) homeGerencia.style.display = 'block';
+        }
     },
 
     // ── Config persistence ──
@@ -682,6 +717,14 @@ window.app = {
         };
         try {
             localStorage.setItem(this.CONFIG_KEY, JSON.stringify(config));
+
+            // Sync config to Firestore
+            if (window.firebaseSync && window.firebaseSync.db && window.firebaseSync.fazendaId) {
+                window.firebaseSync.db.collection('fazendas').doc(window.firebaseSync.fazendaId).update({
+                    config: config,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(function (e) { console.warn('[Config] Firestore sync failed:', e); });
+            }
         } catch (e) {
             console.error('Erro ao salvar config:', e);
         }
@@ -700,6 +743,53 @@ window.app = {
             localStorage.setItem(this.CONFIG_KEY, JSON.stringify(config));
         } catch (e) { console.error('Erro ao salvar arroba:', e); }
         this.showToast('✅ Preço da @ atualizado: R$ ' + preco.toFixed(2));
+    },
+
+    // ══ Theme System ══
+    THEME_KEY: 'agromacro_theme',
+
+    setTheme: function (mode) {
+        // mode: 'auto', 'light', 'dark'
+        localStorage.setItem(this.THEME_KEY, mode);
+        this._applyTheme(mode);
+        this._updateThemeToggleUI(mode);
+        this.showToast(mode === 'dark' ? '🌙 Modo escuro ativado' : mode === 'light' ? '☀️ Modo claro ativado' : '🌗 Tema automático');
+    },
+
+    loadTheme: function () {
+        var mode = localStorage.getItem(this.THEME_KEY) || 'auto';
+        this._applyTheme(mode);
+        // Update toggle UI after DOM is ready
+        var self = this;
+        setTimeout(function () { self._updateThemeToggleUI(mode); }, 200);
+    },
+
+    _applyTheme: function (mode) {
+        var html = document.documentElement;
+        if (mode === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+        } else if (mode === 'light') {
+            html.setAttribute('data-theme', 'light');
+        } else {
+            // Auto: remove attribute, let CSS media query handle it
+            html.removeAttribute('data-theme');
+        }
+        // Update theme-color meta for mobile browser chrome
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+            var isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            meta.content = isDark ? '#000000' : '#0F1318';
+        }
+    },
+
+    _updateThemeToggleUI: function (mode) {
+        var btns = document.querySelectorAll('#theme-toggle .theme-opt');
+        btns.forEach(function (btn) {
+            var isActive = btn.getAttribute('data-theme') === mode;
+            btn.style.background = isActive ? 'var(--primary)' : 'transparent';
+            btn.style.color = isActive ? 'white' : 'var(--text-2)';
+            btn.style.borderRadius = 'var(--radius-xs)';
+        });
     },
 
     loadArrobaPrice: function () {

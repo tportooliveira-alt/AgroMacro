@@ -8,6 +8,8 @@ window.firebaseSync = {
     isOnline: navigator.onLine,
     SYNC_KEY: 'agromacro_sync_config',
     unsubscribe: null,
+    _isRegisterMode: false,
+    _appReady: false,
 
     // ══ INIT ══
     init: function () {
@@ -48,16 +50,37 @@ window.firebaseSync = {
             console.log('[Sync] Offline — using local data');
         });
 
-        // Monitor auth state
+        // Monitor auth state — AUTH GATE
         this.auth.onAuthStateChanged(function (user) {
             self.user = user;
             if (user) {
                 console.log('[Auth] Logged in:', user.displayName || user.email);
                 self._loadSyncConfig();
                 self._updateLoginUI(true);
+
+                // Check if user has a fazenda linked
+                if (self.fazendaId) {
+                    self._showApp();
+                } else {
+                    // Check Firestore for user's fazendas
+                    self.getMinhasFazendas().then(function (fazendas) {
+                        if (fazendas.length === 1) {
+                            // Auto-select single farm
+                            self.trocarFazenda(fazendas[0].id, fazendas[0].nome);
+                            self._showApp();
+                        } else if (fazendas.length > 0) {
+                            self._showFazendaSelect(fazendas);
+                        } else {
+                            self._showFazendaSelect([]);
+                        }
+                    }).catch(function () {
+                        self._showFazendaSelect([]);
+                    });
+                }
             } else {
                 console.log('[Auth] Not logged in');
                 self._updateLoginUI(false);
+                self._showLogin();
             }
         });
 
@@ -71,6 +94,7 @@ window.firebaseSync = {
     loginGoogle: function () {
         var self = this;
         var provider = new firebase.auth.GoogleAuthProvider();
+        self._showLoginError('');
 
         // Try popup first, fallback to redirect for mobile
         this.auth.signInWithPopup(provider).catch(function (err) {
@@ -79,8 +103,253 @@ window.firebaseSync = {
                 return self.auth.signInWithRedirect(provider);
             }
             console.error('[Auth] Login error:', err);
-            if (window.app) window.app.showToast('Erro no login: ' + err.message, 'error');
+            self._showLoginError('Erro no login Google: ' + err.message);
         });
+    },
+
+    // ══ LOGIN COM EMAIL/SENHA ══
+    loginEmail: function () {
+        var self = this;
+        var email = (document.getElementById('login-email') || {}).value || '';
+        var senha = (document.getElementById('login-senha') || {}).value || '';
+        var nome = (document.getElementById('login-nome') || {}).value || '';
+
+        if (!email || !senha) {
+            self._showLoginError('Preencha email e senha.');
+            return;
+        }
+        if (senha.length < 6) {
+            self._showLoginError('Senha deve ter no mínimo 6 caracteres.');
+            return;
+        }
+
+        self._showLoginError('');
+
+        if (self._isRegisterMode) {
+            // CREATE ACCOUNT
+            this.auth.createUserWithEmailAndPassword(email, senha)
+                .then(function (cred) {
+                    if (nome && cred.user) {
+                        return cred.user.updateProfile({ displayName: nome });
+                    }
+                })
+                .catch(function (err) {
+                    var msg = self._translateAuthError(err.code);
+                    self._showLoginError(msg);
+                });
+        } else {
+            // SIGN IN
+            this.auth.signInWithEmailAndPassword(email, senha)
+                .catch(function (err) {
+                    var msg = self._translateAuthError(err.code);
+                    self._showLoginError(msg);
+                });
+        }
+    },
+
+    // ══ TOGGLE LOGIN/REGISTER MODE ══
+    toggleLoginMode: function () {
+        this._isRegisterMode = !this._isRegisterMode;
+        var nomeGroup = document.getElementById('login-nome-group');
+        var submitBtn = document.getElementById('login-submit-btn');
+        var toggleText = document.getElementById('login-toggle-text');
+        var toggleLink = document.getElementById('login-toggle-link');
+
+        if (this._isRegisterMode) {
+            if (nomeGroup) nomeGroup.style.display = 'block';
+            if (submitBtn) submitBtn.textContent = 'Criar Conta';
+            if (toggleText) toggleText.textContent = 'Já tem conta?';
+            if (toggleLink) toggleLink.textContent = 'Fazer login';
+        } else {
+            if (nomeGroup) nomeGroup.style.display = 'none';
+            if (submitBtn) submitBtn.textContent = 'Entrar';
+            if (toggleText) toggleText.textContent = 'Não tem conta?';
+            if (toggleLink) toggleLink.textContent = 'Criar conta';
+        }
+        this._showLoginError('');
+    },
+
+    // ══ SKIP LOGIN (offline mode) ══
+    skipLogin: function () {
+        this._showApp();
+    },
+
+    // ══ AUTH GATE HELPERS ══
+    _showLogin: function () {
+        var login = document.getElementById('login-screen');
+        var fazenda = document.getElementById('fazenda-select-screen');
+        if (login) login.classList.remove('hidden');
+        if (fazenda) fazenda.classList.add('hidden');
+    },
+
+    _showFazendaSelect: function (fazendas) {
+        var login = document.getElementById('login-screen');
+        var fazendaScreen = document.getElementById('fazenda-select-screen');
+        if (login) login.classList.add('hidden');
+        if (fazendaScreen) fazendaScreen.classList.remove('hidden');
+        this._renderFazendaSelectUI(fazendas);
+    },
+
+    _showApp: function () {
+        var login = document.getElementById('login-screen');
+        var fazenda = document.getElementById('fazenda-select-screen');
+        if (login) login.classList.add('hidden');
+        if (fazenda) fazenda.classList.add('hidden');
+
+        // Initialize app if not yet ready
+        if (!this._appReady) {
+            this._appReady = true;
+            if (window.app && window.app._initModules) {
+                window.app._initModules();
+            }
+        }
+    },
+
+    _showLoginError: function (msg) {
+        var el = document.getElementById('login-error');
+        if (!el) return;
+        if (msg) {
+            el.textContent = msg;
+            el.classList.add('visible');
+        } else {
+            el.textContent = '';
+            el.classList.remove('visible');
+        }
+    },
+
+    _translateAuthError: function (code) {
+        var map = {
+            'auth/invalid-email': 'Email inválido.',
+            'auth/user-disabled': 'Conta desativada.',
+            'auth/user-not-found': 'Usuário não encontrado.',
+            'auth/wrong-password': 'Senha incorreta.',
+            'auth/email-already-in-use': 'Este email já está em uso.',
+            'auth/weak-password': 'Senha muito fraca (mín. 6 caracteres).',
+            'auth/too-many-requests': 'Muitas tentativas. Aguarde um momento.',
+            'auth/invalid-credential': 'Email ou senha incorretos.'
+        };
+        return map[code] || 'Erro: ' + code;
+    },
+
+    // ══ RENDER FAZENDA SELECTION UI ══
+    _renderFazendaSelectUI: function (fazendas) {
+        var self = this;
+
+        // User bar
+        var userBar = document.getElementById('fazenda-user-bar');
+        if (userBar && this.user) {
+            userBar.innerHTML = ''
+                + (this.user.photoURL ? '<img src="' + this.user.photoURL + '" onerror="this.style.display=\'none\'">' : '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">👤</div>')
+                + '<div><div class="user-name">' + (this.user.displayName || 'Usuário') + '</div>'
+                + '<div class="user-email">' + (this.user.email || '') + '</div></div>';
+        }
+
+        // Content
+        var container = document.getElementById('fazenda-select-content');
+        if (!container) return;
+
+        var html = '';
+
+        if (fazendas && fazendas.length > 0) {
+            // ── Has farms: show list ──
+            html += '<div class="fazenda-option-card"><h3>🏠 Suas Fazendas</h3>';
+            fazendas.forEach(function (f) {
+                html += '<button class="fazenda-list-item" data-id="' + f.id + '" data-nome="' + (f.nome || '') + '">'
+                    + (f.nome || 'Sem nome')
+                    + '<div class="fazenda-meta">' + (f.membros ? f.membros.length : 0) + ' membro(s) • Código: ' + (f.codigo || '--') + '</div>'
+                    + '</button>';
+            });
+            html += '</div>';
+
+            // Join another farm
+            html += '<div class="fazenda-option-card"><h3>🔗 Entrar em Outra Fazenda</h3>'
+                + '<div class="form-group"><input type="text" id="fazenda-code-input" placeholder="Código de convite (ex: ABC123)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:12px;padding:12px 16px;text-transform:uppercase;"></div>'
+                + '<button class="login-btn-submit" style="background:linear-gradient(135deg,#2563EB,#3B82F6);" id="fazenda-join-btn">Entrar na Fazenda</button>'
+                + '</div>';
+
+        } else {
+            // ── No farms: INVITE-ONLY screen ──
+            html += '<div style="text-align:center;padding:20px 0;">';
+            html += '<div style="font-size:48px;margin-bottom:12px;">🔐</div>';
+            html += '<h3 style="color:#fff;font-size:18px;margin-bottom:8px;">Acesso por Convite</h3>';
+            html += '<p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6;margin-bottom:24px;">Para acessar o AgroMacro, você precisa de um<br><strong style="color:rgba(255,255,255,0.8);">código de convite</strong> do administrador da fazenda.</p>';
+            html += '</div>';
+
+            html += '<div class="fazenda-option-card">';
+            html += '<h3>🔗 Digite o Código de Acesso</h3>';
+            html += '<div class="form-group"><input type="text" id="fazenda-code-input" placeholder="Código de convite (ex: ABC123)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:12px;padding:14px 16px;text-transform:uppercase;font-size:16px;text-align:center;letter-spacing:2px;"></div>';
+            html += '<button class="login-btn-submit" style="background:linear-gradient(135deg,#2563EB,#3B82F6);" id="fazenda-join-btn">Entrar na Fazenda</button>';
+            html += '<div id="fazenda-join-error" style="color:#EF4444;font-size:12px;margin-top:8px;text-align:center;"></div>';
+            html += '</div>';
+
+            // Admin-only: create farm (hidden behind small link)
+            html += '<div id="fazenda-admin-section" style="display:none;margin-top:16px;">';
+            html += '<div class="fazenda-option-card"><h3>➕ Criar Nova Fazenda</h3>';
+            html += '<div class="form-group"><input type="text" id="fazenda-new-nome" placeholder="Nome da fazenda..." style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:12px;padding:12px 16px;"></div>';
+            html += '<button class="login-btn-submit" id="fazenda-create-btn">Criar Fazenda</button>';
+            html += '</div></div>';
+
+            html += '<p style="text-align:center;margin-top:20px;">';
+            html += '<a id="fazenda-show-admin" style="color:rgba(255,255,255,0.25);font-size:11px;cursor:pointer;text-decoration:none;">Sou administrador</a>';
+            html += '</p>';
+        }
+
+        // Logout
+        html += '<button style="margin-top:12px;padding:10px 20px;background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit;width:100%;max-width:380px;" onclick="window.firebaseSync.logout()">Sair da conta</button>';
+
+        container.innerHTML = html;
+
+        // Bind events — Farm list
+        container.querySelectorAll('.fazenda-list-item').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = this.getAttribute('data-id');
+                var nome = this.getAttribute('data-nome');
+                self.trocarFazenda(id, nome);
+                self._showApp();
+            });
+        });
+
+        // Bind — Create farm
+        var createBtn = document.getElementById('fazenda-create-btn');
+        if (createBtn) {
+            createBtn.addEventListener('click', function () {
+                var nome = (document.getElementById('fazenda-new-nome') || {}).value;
+                if (!nome) { if (window.app) window.app.showToast('Digite o nome da fazenda', 'error'); return; }
+                self.criarFazenda(nome).then(function () {
+                    self._showApp();
+                });
+            });
+        }
+
+        // Bind — Join by code
+        var joinBtn = document.getElementById('fazenda-join-btn');
+        if (joinBtn) {
+            joinBtn.addEventListener('click', function () {
+                var code = (document.getElementById('fazenda-code-input') || {}).value;
+                if (!code) {
+                    var errEl = document.getElementById('fazenda-join-error');
+                    if (errEl) errEl.textContent = 'Digite o código de convite';
+                    else if (window.app) window.app.showToast('Digite o código', 'error');
+                    return;
+                }
+                self.entrarFazenda(code).then(function () {
+                    self._showApp();
+                }).catch(function (err) {
+                    var errEl = document.getElementById('fazenda-join-error');
+                    if (errEl) errEl.textContent = 'Código inválido ou fazenda não encontrada';
+                    else if (window.app) window.app.showToast('Código inválido', 'error');
+                });
+            });
+        }
+
+        // Bind — Show admin section
+        var showAdmin = document.getElementById('fazenda-show-admin');
+        if (showAdmin) {
+            showAdmin.addEventListener('click', function () {
+                var sec = document.getElementById('fazenda-admin-section');
+                if (sec) sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+            });
+        }
     },
 
     // ══ LOGOUT ══
@@ -90,13 +359,14 @@ window.firebaseSync = {
             self.user = null;
             self.fazendaId = null;
             self.fazendaNome = null;
+            self._appReady = false;
             if (self.unsubscribe) {
                 self.unsubscribe();
                 self.unsubscribe = null;
             }
             localStorage.removeItem(self.SYNC_KEY);
-            if (window.app) window.app.showToast('Desconectado');
             self._updateLoginUI(false);
+            self._showLogin();
         });
     },
 
@@ -338,7 +608,7 @@ window.firebaseSync = {
 
     // ══ GET MINHAS FAZENDAS ══
     getMinhasFazendas: function () {
-        if (!this.user) return Promise.resolve([]);
+        if (!this.user || !this.db) return Promise.resolve([]);
 
         return this.db.collection('fazendas')
             .where('membros', 'array-contains', this.user.uid)
@@ -352,6 +622,54 @@ window.firebaseSync = {
                 });
                 return fazendas;
             });
+    },
+
+    // ══ GET USER PROFILE FROM FIRESTORE ══
+    getUserPerfil: function () {
+        if (!this.user || !this.db || !this.fazendaId) return 'gerencia';
+
+        // Check membrosInfo for this user's profile
+        var self = this;
+        try {
+            var cachedPerfil = localStorage.getItem('agromacro_user_perfil');
+            if (cachedPerfil) return cachedPerfil;
+        } catch (e) { }
+
+        return 'gerencia'; // Default until async load
+    },
+
+    // ══ LOAD USER PROFILE ASYNC ══
+    loadUserPerfil: function (callback) {
+        if (!this.user || !this.db || !this.fazendaId) {
+            if (callback) callback('gerencia');
+            return;
+        }
+
+        var self = this;
+        this.db.collection('fazendas').doc(this.fazendaId).get().then(function (doc) {
+            if (!doc.exists) { if (callback) callback('gerencia'); return; }
+
+            var data = doc.data();
+            var perfil = 'campo'; // Default for non-owners
+
+            // Owner is always gerencia
+            if (data.dono === self.user.uid) {
+                perfil = 'gerencia';
+            } else if (data.membrosInfo) {
+                // Check membrosInfo
+                for (var i = 0; i < data.membrosInfo.length; i++) {
+                    if (data.membrosInfo[i].uid === self.user.uid) {
+                        perfil = data.membrosInfo[i].perfil || 'campo';
+                        break;
+                    }
+                }
+            }
+
+            try { localStorage.setItem('agromacro_user_perfil', perfil); } catch (e) { }
+            if (callback) callback(perfil);
+        }).catch(function () {
+            if (callback) callback('gerencia');
+        });
     },
 
     // ══ TROCAR FAZENDA ══
@@ -427,6 +745,33 @@ window.firebaseSync = {
             } else {
                 indicator.style.display = 'none';
             }
+        }
+
+        // Update config section user info
+        var userInfo = document.getElementById('config-user-info');
+        var logoutBtn = document.getElementById('config-logout-btn');
+        if (userInfo) {
+            if (loggedIn && this.user) {
+                var html = '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;">';
+                if (this.user.photoURL) {
+                    html += '<img src="' + this.user.photoURL + '" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);" onerror="this.style.display=\'none\'">';
+                } else {
+                    html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;">👤</div>';
+                }
+                html += '<div>';
+                html += '<div style="font-size:14px;font-weight:700;color:var(--text-0);">' + (this.user.displayName || 'Usuário') + '</div>';
+                html += '<div style="font-size:11px;color:var(--text-2);">' + (this.user.email || '') + '</div>';
+                if (this.fazendaNome) {
+                    html += '<div style="font-size:11px;color:#059669;font-weight:600;margin-top:2px;">🌐 ' + this.fazendaNome + '</div>';
+                }
+                html += '</div></div>';
+                userInfo.innerHTML = html;
+            } else {
+                userInfo.innerHTML = '<p style="font-size:13px; color:var(--text-2);">Não logado — <a style="color:var(--primary);cursor:pointer;" onclick="window.firebaseSync._showLogin()">Fazer login</a></p>';
+            }
+        }
+        if (logoutBtn) {
+            logoutBtn.style.display = loggedIn ? 'block' : 'none';
         }
     },
 

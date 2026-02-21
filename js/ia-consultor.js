@@ -203,6 +203,11 @@ window.iaConsultor = {
         try {
             var events = window.data ? window.data.events : [];
 
+            // Localização Geográfica
+            if (window.clima && window.clima.LAT) {
+                ctx.push('📍 LOCALIZAÇÃO: Lat ' + window.clima.LAT.toFixed(4) + ', Lon ' + window.clima.LON.toFixed(4));
+            }
+
             // Rebanho
             var lotes = events.filter(function (e) { return e.type === 'LOTE' && e.status === 'ATIVO'; });
             var totalCabecas = lotes.reduce(function (a, l) { return a + (l.qtdAnimais || 0); }, 0);
@@ -213,17 +218,26 @@ window.iaConsultor = {
                 if (l.pesoMedio) ctx.push('    Peso médio: ' + l.pesoMedio + ' kg');
             });
 
-            // Pastos
+            // Pastos e Lotação Macro
             if (window.pastos && window.pastos.getPastos) {
                 var pastosData = window.pastos.getPastos();
-                ctx.push('\n🌿 PASTOS: ' + pastosData.length + ' áreas');
-                var totalHa = 0;
+                var totalHa = pastosData.reduce(function (a, p) { return a + (p.area || 0); }, 0);
+
+                // Cálculo de UA (Unidade Animal = 450kg)
+                var pesoVivoTotal = lotes.reduce(function (a, l) {
+                    return a + ((l.qtdAnimais || 0) * (l.pesoMedio || 0));
+                }, 0);
+                var totalUA = pesoVivoTotal / 450;
+                var lotacaoGeral = totalHa > 0 ? (totalUA / totalHa) : 0;
+
+                ctx.push('\n🌿 PASTAS EÁREA TOTAL: ' + totalHa.toFixed(1) + ' ha');
+                ctx.push('⚖️ LOTAÇÃO GERAL DA FAZENDA: ' + lotacaoGeral.toFixed(2) + ' UA/ha (Total: ' + totalUA.toFixed(1) + ' UA)');
+
+                ctx.push('\nDetalhamento por Piquete:');
                 pastosData.forEach(function (p) {
                     var ha = p.area || 0;
-                    totalHa += ha;
                     ctx.push('  • ' + p.nome + ': ' + ha.toFixed(1) + ' ha, status: ' + (p.status || 'ativo'));
                 });
-                ctx.push('  Total: ' + totalHa.toFixed(1) + ' hectares');
             }
 
             // Clima
@@ -306,6 +320,22 @@ window.iaConsultor = {
                     });
                 }
                 if (mercado.analise) ctx.push('  ANÁLISE: ' + mercado.analise);
+            }
+
+            // ── Metas estratégicas ativas ──
+            var metas = events.filter(function (e) {
+                return e.type === 'META_MERCADO' && e.status === 'ATIVA' && !e.estornado;
+            });
+            if (metas.length > 0) {
+                ctx.push('\n🎯 METAS ESTRATÉGICAS ATIVAS:');
+                var precoRef = mercado ? (mercado.arrobaBA || mercado.arrobaSP || 0) : 0;
+                metas.forEach(function (m) {
+                    var pct = precoRef > 0 ? ((precoRef / m.precoAlvo) * 100).toFixed(0) : '--';
+                    ctx.push('  • ' + (m.tipoMeta || 'venda').toUpperCase() + ': R$ ' + (m.precoAlvo || 0).toFixed(2) + '/@'
+                        + ' | ' + (m.qtdArrobas || 0) + '@ | ' + (m.modalidade || 'spot')
+                        + ' | Progresso: ' + pct + '%'
+                        + (m.dataLimite ? ' | Limite: ' + m.dataLimite : ''));
+                });
             }
 
         } catch (err) {
@@ -402,6 +432,11 @@ window.iaConsultor = {
             + '7. Quando cruzar dados da fazenda, mostre cálculos e raciocínio\n'
             + '8. NUNCA diga "não tenho acesso a dados em tempo real" — quando Google Search estiver ativo, USE os dados reais. Quando não estiver, use os dados de referência abaixo e diga a fonte.\n'
             + '9. Para preços, SEMPRE cite a fonte (CEPEA, Datagro, B3, Scot) e a data do dado\n\n'
+
+            + '═══ CONSCIÊNCIA GEOGRÁFICA ═══\n'
+            + '• Você sabe a localização exata da fazenda (Lat/Lon e Região).\n'
+            + '• Use os dados de Localização para ler o clima e mercado regional com mais precisão.\n'
+            + '• Ao usar Google Search, foque em notícias pecuárias da região específica da fazenda.\n\n'
 
             + '═══ MERCADO DA ARROBA ═══\n'
             + '• Indicador CEPEA/Esalq: referência histórica do boi gordo em SP\n'
@@ -534,15 +569,17 @@ window.iaConsultor = {
             + '  6. Considere: fêmeas retendo = bezerro caro agora = oferta apertada futura\n'
             + '  7. Cruze com dados da fazenda: tem pasto? Tem capim?\n\n'
 
-            + '▸ SKILL 5: ANÁLISE DE PASTO E ROTAÇÃO\n'
-            + 'Se perguntarem sobre pasto/lotação:\n'
-            + '  1. UA/ha: peso vivo ÷ 450 = Unidade Animal | Lotação = UAs ÷ hectares\n'
-            + '  2. Lotação ideal a pasto: 1,2-2,0 UA/ha (depende do capim e chuva)\n'
-            + '  3. Cruze com chuva acumulada 30d: <50mm = seca, deslotar\n'
-            + '  4. Rotação: mínimo 30 dias descanso por piquete (mais na seca)\n'
-            + '  5. Se lotação > 2 UA/ha E chuva < 50mm: ALERTA superpastejo\n'
-            + '  6. Calcule capacidade: total ha × lotação ideal = quantos animais cabem\n'
-            + '  7. Use dados dos pastos da fazenda + dados pluviométricos\n\n'
+            + '▸ SKILL 5: MANEJO CIENTÍFICO DE PASTO E ROTAÇÃO\n'
+            + 'REGRAS CIÊNTIFICAS (EMBRAPA/ACADEMIA):\n'
+            + '  1. PRIORIDADE MACRO: A Lotação Geral (< 0.8 UA/ha) indica folga global. 1 UA = 450kg.\n'
+            + '  2. ALTURA DE MANEJO: Fundamental para rebrote.\n'
+            + '     • Brachiaria: Entrada 30-40cm | Saída 20-25cm.\n'
+            + '     • Panicum (Mombaça): Entrada 80-90cm | Saída 40-50cm.\n'
+            + '  3. TEMPO DE DESCANSO: Essencial 21-35 dias (águas) para a planta se recuperar.\n'
+            + '  4. TEMPO DE OCUPAÇÃO: Ideal 1-3 dias. Máximo 7 dias. Passar disso degrada o pasto.\n'
+            + '  5. ALERTA DE CHUVA (REGRA DE OURO): Se Chuva Acumulada 30 dias < 50mm, o capim PARA de crescer. Alerte para reduzir carga (deslotar).\n'
+            + '  6. ANÁLISE CONTEXTUAL: Lotação momentânea alta (> 3 UA/ha) é ACEITÁVEL se for por apenas 1-3 dias e a Lotação Geral da fazenda for baixa.\n'
+            + '  7. SÓ EMITA ALERTA DE SUPERPASTEJO SE: (Lotação Geral > 1.8 UA/ha) OU (Ocupação > 10 dias) OU (Chuva < 30mm e carga alta).\n\n'
 
             + '▸ SKILL 6: SAÚDE FINANCEIRA DA FAZENDA\n'
             + 'Se perguntarem "como estou financeiramente?":\n'
@@ -678,6 +715,25 @@ window.iaConsultor = {
             + 'CEPEA, Datagro, IBGE, USDA, MAPA, Embrapa, Canal Rural, Scot Consultoria, '
             + 'BeefPoint, FarmNews, CompraRural, ABIEC, ASBIA (sêmen), IMEA, CNA\n\n'
 
+            + '▸ SKILL 14: METAS ESTRATÉGICAS DE MERCADO\n'
+            + 'Quando o usuário pedir para TRAÇAR META, DEFINIR ESTRATÉGIA ou PLANEJAR VENDA:\n'
+            + '  1. Pergunte: qual o PREÇO ALVO da arroba? (ex: R$340/@)\n'
+            + '  2. Pergunte: qual a DATA LIMITE? (ex: até junho 2026)\n'
+            + '  3. Pergunte: qual MODALIDADE? (spot, a termo, futuro B3, PUT)\n'
+            + '  4. Calcule: com o rebanho atual, quantas arrobas tem disponível?\n'
+            + '  5. Calcule: receita estimada a preço alvo vs preço atual\n'
+            + '  6. Analise: contexto do ciclo pecuário — estamos subindo ou descendo?\n'
+            + '  7. Recomende: janela ideal de venda baseada em sazonalidade\n'
+            + '  8. SALVE A META com TRACAR_META para acompanhamento futuro\n'
+            + '  9. A cada consulta futura, compare preço atual vs meta e avise progresso\n\n'
+            + '  EXEMPLO DE META SALVA:\n'
+            + '  {tipo:"venda", precoAlvo:340, dataLimite:"2026-06-30", modalidade:"a_termo",\n'
+            + '   lote:"engorda", qtdArrobas:500, observacao:"Esperar entressafra"}\n\n'
+            + '  QUANDO CONSULTAR MERCADO, SEMPRE cruze com metas ativas:\n'
+            + '  • Se preço atual >= meta → "🎯 META ATINGIDA! Hora de executar!"\n'
+            + '  • Se preço 90-99% da meta → "📈 Quase lá! Preço a X% da meta"\n'
+            + '  • Se preço < 80% da meta → "⏳ Mercado ainda não chegou. Acompanhe."\n\n'
+
             + '═══ SKILL 13: SECRETÁRIA — EXECUTAR AÇÕES NO APP ═══\n'
             + 'Você também é a SECRETÁRIA da fazenda. Quando o usuário pedir para REGISTRAR, CADASTRAR, ADICIONAR ou MOVER algo, '
             + 'você EXECUTA a ação incluindo um bloco JSON no final da sua resposta.\n\n'
@@ -686,6 +742,7 @@ window.iaConsultor = {
             + '[{"tipo": "TIPO_ACAO", "dados": {...}}]\n'
             + '```\n\n'
             + 'AÇÕES DISPONÍVEIS:\n'
+            + '═ REGISTRO (criam/modificam dados) ═\n'
             + '• REGISTRAR_LOTE — dados: {nome, qtdAnimais, categoria("engorda"/"cria"/"recria"), pasto, pesoMedio, raca}\n'
             + '• REGISTRAR_COMPRA — dados: {qtd, valor, pesoMedio, descricao, fornecedor, lote, pasto}\n'
             + '• REGISTRAR_VENDA — dados: {qtd, valor, pesoMedio, descricao, comprador, lote}\n'
@@ -693,7 +750,17 @@ window.iaConsultor = {
             + '• REGISTRAR_MORTE — dados: {lote, qtd, motivo}\n'
             + '• REGISTRAR_NASCIMENTO — dados: {lote, qtd, sexo}\n'
             + '• REGISTRAR_PESAGEM — dados: {lote, pesoMedio}\n'
-            + '• REGISTRAR_CONTA — dados: {descricao, valor, vencimento}\n\n'
+            + '• REGISTRAR_CONTA — dados: {descricao, valor, vencimento}\n'
+            + '• REGISTRAR_ESTOQUE — dados: {nome, quantidade, unidade("kg"/"saco"/"litro"/"dose"/"un"), valorUnitario, valorTotal, categoria}\n'
+            + '• BAIXAR_ESTOQUE — dados: {nome, quantidade, motivo}\n'
+            + '• REGISTRAR_MANEJO — dados: {lote, tipoManejo("sanitario"/"reprodutivo"/"pesagem"/"vermifugacao"), produtos, observacao}\n'
+            + '• TRACAR_META — dados: {tipo("venda"/"compra"), precoAlvo, dataLimite, modalidade("spot"/"a_termo"/"futuro"/"put"), lote, qtdArrobas, observacao}\n\n'
+            + '═ CONSULTA (só leitura, retornam dados no chat) ═\n'
+            + '• CONSULTAR_ESTOQUE — dados: {} (mostra estoque atual)\n'
+            + '• CONSULTAR_LOTES — dados: {} (mostra lotes e cabeças)\n'
+            + '• CONSULTAR_PASTOS — dados: {} (mostra pastos e ocupação)\n'
+            + '• CONSULTAR_MERCADO — dados: {} (mostra preços atuais + progresso das metas)\n'
+            + '• RESUMO_DIA — dados: {} (resumo geral do dia: eventos, alertas, KPIs)\n\n'
             + 'REGRAS DA SECRETÁRIA:\n'
             + '1. Se o usuário não informar TODOS os dados obrigatórios, PERGUNTE antes de executar\n'
             + '2. Dados obrigatórios mínimos: REGISTRAR_LOTE(nome,qtdAnimais), REGISTRAR_COMPRA(qtd,valor), REGISTRAR_VENDA(qtd,valor)\n'
@@ -702,7 +769,13 @@ window.iaConsultor = {
             + '5. Use os nomes dos pastos que existem na fazenda (dados abaixo)\n'
             + '6. Para valor de venda, se o usuário informar "arroba" calcule: qtd × pesoMedio ÷ 30 × valorArroba\n'
             + '7. NUNCA execute ação sem que o usuário tenha dado os dados suficientes\n'
-            + '8. Se o usuário disser "registra 20 cabeças no pasto X", crie um lote com nome baseado no pasto\n\n'
+            + '8. Se o usuário disser "registra 20 cabeças no pasto X", crie um lote com nome baseado no pasto\n'
+            + '9. Para CONSULTAS (CONSULTAR_*), NÃO peça confirmação — execute direto e mostre os dados\n'
+            + '10. Para BAIXAR_ESTOQUE, o nome do produto deve corresponder ao que já existe no estoque\n'
+            + '11. Para REGISTRAR_ESTOQUE, se o user diz "comprei 50 sacos de sal", use: nome="Sal Mineral", quantidade=50, unidade="saco"\n'
+            + '12. Para RESUMO_DIA, compile tudo: lotes, estoque baixo, contas vencendo, manejos pendentes\n'
+            + '13. Para TRACAR_META, precisa de pelo menos precoAlvo. Use dados do rebanho para calcular arrobas automaticamente\n'
+            + '14. Para CONSULTAR_MERCADO, mostre preços atuais E compare com metas ativas. Use Google Search para dados frescos\n\n'
 
             + '═══ DADOS ATUAIS DA FAZENDA ═══\n' + context;
 
@@ -847,18 +920,21 @@ window.iaConsultor = {
             role: 'system',
             content: 'Você é o AgroIA, o melhor analista pecuário do Brasil e SECRETÁRIA da fazenda. '
                 + 'Responda em português brasileiro, usando dados reais da fazenda. Seja direto, prático, use emojis. Máximo 400 palavras.\n\n'
-                + 'SECRETÁRIA: Quando o usuário pedir para REGISTRAR/CADASTRAR/ADICIONAR/MOVER/LANÇAR algo, '
+                + 'SECRETÁRIA: Quando o usuário pedir para REGISTRAR/CADASTRAR/ADICIONAR/MOVER/LANÇAR/CONSULTAR algo, '
                 + 'inclua no FINAL da resposta um bloco:\n'
                 + '```json_action\n[{"tipo":"TIPO","dados":{...}}]\n```\n'
-                + 'Tipos: REGISTRAR_LOTE(nome,qtdAnimais,categoria,pasto,pesoMedio,raca), '
+                + 'REGISTRO: REGISTRAR_LOTE(nome,qtdAnimais,categoria,pasto,pesoMedio,raca), '
                 + 'REGISTRAR_COMPRA(qtd,valor,pesoMedio,descricao,fornecedor,lote,pasto), '
                 + 'REGISTRAR_VENDA(qtd,valor,pesoMedio,descricao,comprador,lote), '
                 + 'MOVER_LOTE(lote,pastoDe,pastoPara), REGISTRAR_MORTE(lote,qtd,motivo), '
                 + 'REGISTRAR_NASCIMENTO(lote,qtd,sexo), REGISTRAR_PESAGEM(lote,pesoMedio), '
                 + 'REGISTRAR_CONTA(descricao,valor,vencimento), '
                 + 'REGISTRAR_ESTOQUE(nome,quantidade,unidade,categoria,valorUnitario,valorTotal), '
+                + 'BAIXAR_ESTOQUE(nome,quantidade,motivo), '
+                + 'TRACAR_META(tipo,precoAlvo,dataLimite,modalidade,lote,qtdArrobas,observacao), '
                 + 'REGISTRAR_MANEJO(lote,tipoManejo,produtos,observacao).\n'
-                + 'Se faltam dados obrigatórios, PERGUNTE antes. Confirme antes de executar.\n\n'
+                + 'CONSULTA: CONSULTAR_ESTOQUE({}), CONSULTAR_LOTES({}), CONSULTAR_PASTOS({}), CONSULTAR_MERCADO({}), RESUMO_DIA({}).\n'
+                + 'Para CONSULTAS não peça confirmação, execute direto. Para REGISTROS, confirme antes se faltam dados.\n\n'
                 + 'DADOS DA FAZENDA:\n' + context
         }];
         messages.forEach(function (m) {
@@ -1017,7 +1093,21 @@ window.iaConsultor = {
 
     _pedirConfirmacaoAcoes: function (acoes) {
         var self = this;
-        var resumo = acoes.map(function (a) {
+
+        // Separate read-only CONSULTA actions from write actions
+        var consultaTypes = ['CONSULTAR_ESTOQUE', 'CONSULTAR_LOTES', 'CONSULTAR_PASTOS', 'CONSULTAR_MERCADO', 'RESUMO_DIA'];
+        var consultas = acoes.filter(function (a) { return consultaTypes.indexOf(a.tipo) >= 0; });
+        var registros = acoes.filter(function (a) { return consultaTypes.indexOf(a.tipo) < 0; });
+
+        // Execute CONSULTA actions immediately (read-only, no confirmation needed)
+        if (consultas.length > 0) {
+            self._executarAcoes(consultas);
+        }
+
+        // If no write actions remain, we're done
+        if (registros.length === 0) return;
+
+        var resumo = registros.map(function (a) {
             switch (a.tipo) {
                 case 'REGISTRAR_LOTE': return '🐂 Criar lote "' + (a.dados.nome || '?') + '" com ' + (a.dados.qtdAnimais || '?') + ' cab';
                 case 'REGISTRAR_COMPRA': return '🛒 Compra: ' + (a.dados.qtd || '?') + ' cab por R$ ' + (a.dados.valor || '?');
@@ -1027,7 +1117,9 @@ window.iaConsultor = {
                 case 'REGISTRAR_NASCIMENTO': return '🐣 Nascimento: ' + (a.dados.qtd || '?') + ' cab';
                 case 'REGISTRAR_PESAGEM': return '⚖️ Pesagem: ' + (a.dados.pesoMedio || '?') + ' kg em "' + (a.dados.lote || '?') + '"';
                 case 'REGISTRAR_CONTA': return '📋 Conta: ' + (a.dados.descricao || '?') + ' R$ ' + (a.dados.valor || '?');
-                case 'REGISTRAR_ESTOQUE': return '📦 Estoque: ' + (a.dados.quantidade || '?') + ' ' + (a.dados.unidade || 'un') + ' de ' + (a.dados.nome || '?');
+                case 'REGISTRAR_ESTOQUE': return '📦 Estoque: +' + (a.dados.quantidade || '?') + ' ' + (a.dados.unidade || 'un') + ' de ' + (a.dados.nome || '?');
+                case 'BAIXAR_ESTOQUE': return '📦 Saída: -' + (a.dados.quantidade || '?') + ' de ' + (a.dados.nome || '?');
+                case 'TRACAR_META': return '🎯 Meta: ' + (a.dados.tipo || 'venda') + ' a R$ ' + (a.dados.precoAlvo || '?') + '/@';
                 case 'REGISTRAR_MANEJO': return '💉 Manejo: ' + (a.dados.tipoManejo || '?') + ' em "' + (a.dados.lote || '?') + '"';
                 default: return '❓ ' + a.tipo;
             }
@@ -1041,7 +1133,7 @@ window.iaConsultor = {
             time: Date.now(),
             isConfirm: true,
             confirmId: confirmId,
-            acoes: acoes
+            acoes: registros
         });
         self._salvarHistorico();
         self._renderMensagens();
@@ -1061,7 +1153,7 @@ window.iaConsultor = {
             btnSim.style.cssText = 'padding:6px 16px;border:none;border-radius:6px;background:#22c55e;color:#fff;cursor:pointer;font-weight:600;';
             btnSim.onclick = function () {
                 btnWrap.remove();
-                self._executarAcoes(acoes);
+                self._executarAcoes(registros);
             };
 
             var btnNao = document.createElement('button');
@@ -1327,6 +1419,287 @@ window.iaConsultor = {
                         }
                         break;
 
+                    case 'TRACAR_META':
+                        var metaEvt = {
+                            type: 'META_MERCADO',
+                            tipoMeta: d.tipo || 'venda',
+                            precoAlvo: parseFloat(d.precoAlvo) || 0,
+                            dataLimite: d.dataLimite || '',
+                            modalidade: d.modalidade || 'spot',
+                            lote: d.lote || '',
+                            qtdArrobas: parseFloat(d.qtdArrobas) || 0,
+                            obs: d.observacao || '',
+                            status: 'ATIVA',
+                            date: new Date().toISOString(),
+                            id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                        };
+                        // Auto-calculate arrobas from herd if not provided
+                        if (!metaEvt.qtdArrobas) {
+                            var lotesCalc = (window.data.events || []).filter(function (e) {
+                                return e.type === 'LOTE' && !e.estornado;
+                            });
+                            var totalPeso = 0;
+                            lotesCalc.forEach(function (l) {
+                                if (l.pesoMedio && l.qtdAnimais) totalPeso += l.pesoMedio * l.qtdAnimais;
+                            });
+                            metaEvt.qtdArrobas = Math.round(totalPeso / 30);
+                        }
+                        window.data.events.push(metaEvt);
+                        window.data.save();
+                        var receitaEst = metaEvt.qtdArrobas * metaEvt.precoAlvo;
+                        resultados.push('🎯 Meta traçada: ' + metaEvt.tipoMeta.toUpperCase()
+                            + '\n  💲 Preço alvo: R$ ' + metaEvt.precoAlvo.toFixed(2) + '/@'
+                            + '\n  📦 Arrobas: ' + metaEvt.qtdArrobas + '@'
+                            + '\n  💰 Receita estimada: R$ ' + receitaEst.toLocaleString('pt-BR')
+                            + (metaEvt.dataLimite ? '\n  📅 Até: ' + metaEvt.dataLimite : '')
+                            + '\n  📋 Modalidade: ' + metaEvt.modalidade);
+                        break;
+
+                    case 'CONSULTAR_MERCADO':
+                        var mercadoTxt = '📊 **Mercado Atual:**\n\n';
+                        var mercadoData = self.getMercado ? self.getMercado() : null;
+                        if (mercadoData) {
+                            if (mercadoData.arrobaSP) mercadoTxt += '• Arroba CEPEA/SP: **R$ ' + Number(mercadoData.arrobaSP).toFixed(2) + '**\n';
+                            if (mercadoData.arrobaBA) mercadoTxt += '• Arroba BA: **R$ ' + Number(mercadoData.arrobaBA).toFixed(2) + '**\n';
+                            if (mercadoData.arrobaGO) mercadoTxt += '• Arroba GO: **R$ ' + Number(mercadoData.arrobaGO).toFixed(2) + '**\n';
+                            if (mercadoData.arrobaMT) mercadoTxt += '• Arroba MT: **R$ ' + Number(mercadoData.arrobaMT).toFixed(2) + '**\n';
+                            if (mercadoData.arrobaMS) mercadoTxt += '• Arroba MS: **R$ ' + Number(mercadoData.arrobaMS).toFixed(2) + '**\n';
+                            if (mercadoData.tendencia) mercadoTxt += '• Tendência: **' + mercadoData.tendencia + '** (' + (mercadoData.variacao7d || '') + ')\n';
+                            if (mercadoData.bezerro) mercadoTxt += '• Bezerro: R$ ' + Number(mercadoData.bezerro).toFixed(2) + '\n';
+                            if (mercadoData.dolar) mercadoTxt += '• Dólar: R$ ' + Number(mercadoData.dolar).toFixed(2) + '\n';
+                            if (mercadoData.milho60kg) mercadoTxt += '• Milho 60kg: R$ ' + Number(mercadoData.milho60kg).toFixed(2) + '\n';
+                            if (mercadoData.escalas) mercadoTxt += '• Escalas: ' + mercadoData.escalas + '\n';
+                            mercadoTxt += '\n_Última atualização: ' + (mercadoData.data || 'cache') + '_\n';
+                        } else {
+                            mercadoTxt += '⚠️ Dados de mercado não disponíveis no cache.\n';
+                            mercadoTxt += '💡 Pergunte "como está o mercado?" para buscar dados atualizados via Google.\n';
+                        }
+
+                        // Check active metas
+                        var metasAtivas = (window.data.events || []).filter(function (e) {
+                            return e.type === 'META_MERCADO' && e.status === 'ATIVA' && !e.estornado;
+                        });
+                        if (metasAtivas.length > 0) {
+                            mercadoTxt += '\n🎯 **Metas Ativas:**\n\n';
+                            var precoRef = mercadoData ? (mercadoData.arrobaBA || mercadoData.arrobaSP || 0) : 0;
+                            metasAtivas.forEach(function (m) {
+                                var pct = precoRef > 0 ? ((precoRef / m.precoAlvo) * 100).toFixed(0) : '--';
+                                var statusMeta = '';
+                                if (precoRef >= m.precoAlvo) {
+                                    statusMeta = '🎯 **META ATINGIDA!** Hora de executar!';
+                                } else if (precoRef >= m.precoAlvo * 0.9) {
+                                    statusMeta = '📈 Quase lá! Preço a ' + pct + '% da meta';
+                                } else {
+                                    statusMeta = '⏳ Mercado a ' + pct + '% da meta';
+                                }
+                                mercadoTxt += '• ' + (m.tipoMeta || 'venda').toUpperCase() + ': R$ ' + (m.precoAlvo || 0).toFixed(2) + '/@ | ' + statusMeta + '\n';
+                                if (m.dataLimite) mercadoTxt += '  📅 Limite: ' + m.dataLimite + '\n';
+                                if (m.qtdArrobas) mercadoTxt += '  📦 ' + m.qtdArrobas + '@ | Receita alvo: R$ ' + (m.qtdArrobas * m.precoAlvo).toLocaleString('pt-BR') + '\n';
+                            });
+                        }
+                        resultados.push(mercadoTxt);
+                        break;
+
+                    case 'BAIXAR_ESTOQUE':
+                        if (window.estoque) {
+                            var nomeItem = (d.nome || '').toLowerCase();
+                            var estoqueItems = (window.data.events || []).filter(function (e) {
+                                return (e.type === 'ENTRADA' || e.type === 'ESTOQUE_ITEM') && !e.estornado;
+                            });
+                            // Find matching item
+                            var itemAlvo = null;
+                            var saldos = {};
+                            estoqueItems.forEach(function (e) {
+                                var key = (e.product || e.nome || '').toLowerCase();
+                                if (!saldos[key]) saldos[key] = { nome: e.product || e.nome, qtd: 0, unidade: e.unit || e.unidade || 'un' };
+                                saldos[key].qtd += (e.qty || e.qtd || 0);
+                            });
+                            // Check saídas
+                            (window.data.events || []).filter(function (e) {
+                                return e.type === 'SAIDA' && !e.estornado;
+                            }).forEach(function (e) {
+                                var key = (e.product || e.nome || '').toLowerCase();
+                                if (saldos[key]) saldos[key].qtd -= (e.qty || e.qtd || 0);
+                            });
+
+                            var keys = Object.keys(saldos);
+                            var matched = keys.find(function (k) { return k.indexOf(nomeItem) >= 0 || nomeItem.indexOf(k) >= 0; });
+                            if (matched && saldos[matched]) {
+                                var qtdBaixar = parseFloat(d.quantidade) || 1;
+                                var saidaEvt = {
+                                    type: 'SAIDA',
+                                    product: saldos[matched].nome,
+                                    qty: qtdBaixar,
+                                    unit: saldos[matched].unidade,
+                                    motivo: d.motivo || 'Uso via IA',
+                                    date: new Date().toISOString(),
+                                    id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                                };
+                                window.data.events.push(saidaEvt);
+                                window.data.save();
+                                var saldoFinal = Math.max(0, saldos[matched].qtd - qtdBaixar);
+                                resultados.push('✅ Saída: -' + qtdBaixar + ' ' + saldos[matched].unidade + ' de "' + saldos[matched].nome + '" (saldo: ' + saldoFinal + ')');
+                            } else {
+                                resultados.push('⚠️ Produto "' + (d.nome || '') + '" não encontrado no estoque');
+                            }
+                        } else {
+                            resultados.push('⚠️ Módulo de estoque não disponível');
+                        }
+                        break;
+
+                    case 'CONSULTAR_ESTOQUE':
+                        var estoqueAll = (window.data.events || []);
+                        var saldosEst = {};
+                        estoqueAll.filter(function (e) {
+                            return (e.type === 'ENTRADA' || e.type === 'ESTOQUE_ITEM') && !e.estornado;
+                        }).forEach(function (e) {
+                            var key = (e.product || e.nome || '').toLowerCase();
+                            if (!saldosEst[key]) saldosEst[key] = { nome: e.product || e.nome, qtd: 0, unidade: e.unit || e.unidade || 'un' };
+                            saldosEst[key].qtd += (e.qty || e.qtd || 0);
+                        });
+                        estoqueAll.filter(function (e) {
+                            return e.type === 'SAIDA' && !e.estornado;
+                        }).forEach(function (e) {
+                            var key = (e.product || e.nome || '').toLowerCase();
+                            if (saldosEst[key]) saldosEst[key].qtd -= (e.qty || e.qtd || 0);
+                        });
+                        var estKeys = Object.keys(saldosEst);
+                        if (estKeys.length > 0) {
+                            var estTxt = '📦 **Estoque Atual:**\n\n';
+                            estKeys.forEach(function (k) {
+                                var s = saldosEst[k];
+                                var alerta = s.qtd <= 0 ? ' ⚠️ ZERADO!' : (s.qtd < 10 ? ' ⚠️ BAIXO' : '');
+                                estTxt += '• ' + s.nome + ': **' + Math.max(0, s.qtd) + ' ' + s.unidade + '**' + alerta + '\n';
+                            });
+                            resultados.push(estTxt);
+                        } else {
+                            resultados.push('📦 Estoque vazio — nenhum item cadastrado');
+                        }
+                        break;
+
+                    case 'CONSULTAR_LOTES':
+                        var lotesAtivos = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        });
+                        if (lotesAtivos.length > 0) {
+                            var totalCab = 0;
+                            var lotesTxt = '🐄 **Lotes Ativos:**\n\n';
+                            lotesAtivos.forEach(function (l) {
+                                var cab = l.qtdAnimais || 0;
+                                totalCab += cab;
+                                lotesTxt += '• **' + (l.nome || 'Sem nome') + '**: ' + cab + ' cab';
+                                if (l.categoria) lotesTxt += ' | ' + l.categoria;
+                                if (l.pasto) lotesTxt += ' | 📍 ' + l.pasto;
+                                if (l.pesoMedio) lotesTxt += ' | ⚖️ ' + l.pesoMedio + 'kg';
+                                lotesTxt += '\n';
+                            });
+                            lotesTxt += '\n**Total: ' + totalCab + ' cabeças em ' + lotesAtivos.length + ' lotes**';
+                            resultados.push(lotesTxt);
+                        } else {
+                            resultados.push('🐄 Nenhum lote ativo cadastrado');
+                        }
+                        break;
+
+                    case 'CONSULTAR_PASTOS':
+                        var pastosTxt = '🌿 **Pastos da Fazenda:**\n\n';
+                        var temPastos = false;
+                        if (window.pastos && window.pastos.getPastos) {
+                            var pastosData = window.pastos.getPastos();
+                            if (pastosData.length > 0) {
+                                temPastos = true;
+                                var totalHa = 0;
+                                // Get lotes for occupancy
+                                var lotesP = (window.data.events || []).filter(function (e) {
+                                    return e.type === 'LOTE' && !e.estornado;
+                                });
+                                pastosData.forEach(function (p) {
+                                    var ha = p.area || 0;
+                                    totalHa += ha;
+                                    var ocupacao = lotesP.filter(function (l) {
+                                        return (l.pasto || '').toLowerCase() === (p.nome || '').toLowerCase();
+                                    });
+                                    var nCab = ocupacao.reduce(function (a, l) { return a + (l.qtdAnimais || 0); }, 0);
+                                    var status = nCab > 0 ? '🟢 ' + nCab + ' cab' : '⚪ Vazio';
+                                    pastosTxt += '• **' + p.nome + '**: ' + ha.toFixed(1) + ' ha | ' + status + '\n';
+                                });
+                                pastosTxt += '\n**Total: ' + totalHa.toFixed(1) + ' ha em ' + pastosData.length + ' pastos**';
+                            }
+                        }
+                        if (!temPastos) {
+                            pastosTxt += 'Nenhum pasto cadastrado';
+                        }
+                        resultados.push(pastosTxt);
+                        break;
+
+                    case 'RESUMO_DIA':
+                        var hoje = new Date();
+                        var hojeStr = hoje.toISOString().split('T')[0];
+                        var resumo = '📋 **Resumo do Dia — ' + hoje.toLocaleDateString('pt-BR') + '**\n\n';
+
+                        // Events today
+                        var eventosHoje = (window.data.events || []).filter(function (e) {
+                            return e.date && e.date.indexOf(hojeStr) === 0;
+                        });
+                        if (eventosHoje.length > 0) {
+                            resumo += '📌 **Movimentações hoje:** ' + eventosHoje.length + '\n';
+                            eventosHoje.forEach(function (e) {
+                                resumo += '  • ' + (e.type || '?') + ': ' + (e.desc || e.product || e.nome || e.lote || '--') + '\n';
+                            });
+                            resumo += '\n';
+                        } else {
+                            resumo += '📌 Nenhuma movimentação registrada hoje\n\n';
+                        }
+
+                        // Rebanho KPIs
+                        var lotesR = (window.data.events || []).filter(function (e) {
+                            return e.type === 'LOTE' && !e.estornado;
+                        });
+                        var totalR = lotesR.reduce(function (a, l) { return a + (l.qtdAnimais || 0); }, 0);
+                        resumo += '🐄 **Rebanho:** ' + totalR + ' cabeças em ' + lotesR.length + ' lotes\n';
+
+                        // Contas vencidas
+                        var contasV = (window.data.events || []).filter(function (e) {
+                            return e.type === 'CONTA' && !e.pago && e.vencimento && e.vencimento <= hojeStr;
+                        });
+                        if (contasV.length > 0) {
+                            resumo += '\n⚠️ **' + contasV.length + ' conta(s) vencida(s):**\n';
+                            contasV.forEach(function (c) {
+                                resumo += '  • ' + (c.desc || 'Conta') + ' — R$ ' + (c.value || 0).toLocaleString('pt-BR') + '\n';
+                            });
+                        }
+
+                        // Estoque baixo
+                        var saldosR = {};
+                        (window.data.events || []).filter(function (e) {
+                            return (e.type === 'ENTRADA' || e.type === 'ESTOQUE_ITEM') && !e.estornado;
+                        }).forEach(function (e) {
+                            var key = (e.product || e.nome || '').toLowerCase();
+                            if (!saldosR[key]) saldosR[key] = { nome: e.product || e.nome, qtd: 0 };
+                            saldosR[key].qtd += (e.qty || e.qtd || 0);
+                        });
+                        (window.data.events || []).filter(function (e) {
+                            return e.type === 'SAIDA' && !e.estornado;
+                        }).forEach(function (e) {
+                            var key = (e.product || e.nome || '').toLowerCase();
+                            if (saldosR[key]) saldosR[key].qtd -= (e.qty || e.qtd || 0);
+                        });
+                        var baixos = Object.keys(saldosR).filter(function (k) { return saldosR[k].qtd <= 5; });
+                        if (baixos.length > 0) {
+                            resumo += '\n📦 **Estoque baixo:**\n';
+                            baixos.forEach(function (k) {
+                                resumo += '  • ' + saldosR[k].nome + ': ' + Math.max(0, saldosR[k].qtd) + '\n';
+                            });
+                        }
+
+                        // Clima
+                        if (window.clima) {
+                            var acum = window.clima.getAcumulado30Dias();
+                            resumo += '\n🌧️ **Chuva 30d:** ' + acum.toFixed(0) + ' mm';
+                        }
+
+                        resultados.push(resumo);
+                        break;
+
                     default:
                         resultados.push('⚠️ Ação desconhecida: ' + acao.tipo);
                 }
@@ -1403,8 +1776,8 @@ window.iaConsultor = {
         btn = document.createElement('button');
         btn.id = 'ia-fab';
         btn.className = 'ia-fab';
-        btn.innerHTML = '🤖<span id="ia-badge" class="ia-badge" style="display:none;">0</span>';
-        btn.title = 'Consultor IA';
+        btn.innerHTML = '<img src="img/boteco-avatar.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid var(--primary);"><span id="ia-badge" class="ia-badge" style="display:none;">0</span>';
+        btn.title = 'Boteco — Sua Secretária IA';
         btn.onclick = function () { window.iaConsultor.toggle(); };
         document.body.appendChild(btn);
     },
@@ -1562,9 +1935,15 @@ window.iaConsultor = {
                 welcomeMsg = 'Consultor pecuário com IA real.<br>Usa os dados da sua fazenda para respostas precisas.';
             }
 
-            // ── C7: Dynamic suggestions based on real data + financial education ──
-            var suggestions = [];
+            var introHtml = '<div class="ia-intro-banner">'
+                + '<img src="img/boteco-intro.png" class="ia-intro-img">'
+                + '<div class="ia-intro-text">Olá! Eu sou sua Secretária Digital. Como posso ajudar com a fazenda hoje?</div>'
+                + '</div>';
 
+            var welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'ia-message ia-message-bot';
+            welcomeDiv.innerHTML = introHtml + '<div>' + welcomeMsg + '</div>';
+            container.appendChild(welcomeDiv);
             // Data-driven suggestions
             if (mercado && mercado.arrobaSP) {
                 suggestions.push({ icon: '📈', text: 'Como está o mercado hoje?', q: 'Como está o mercado da arroba hoje? Analise tendência, escalas e me aconselhe.' });
