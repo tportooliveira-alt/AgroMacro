@@ -3,17 +3,95 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AgroMacro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroMacro Premium</title>
+
+    <!-- ══ Google Fonts Premium ══ -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+
+    <!-- ══ Tailwind CSS + Plugins ══ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+    <!-- ══ Estilos Originais AgroMacro ══ -->
     <link rel="stylesheet" href="styles.css?v=20260221a">
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
     <!-- Leaflet.js — Mapa Interativo (grátis) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-    <meta name="theme-color" content="#0F1318">
+
+    <!-- ══ Configuração Tema Stitch (Dark/Gold) ══ -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        tech: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#d5a944',
+                        secondary: '#b38a36',
+                        dark: {
+                            900: '#0d0a07',
+                            800: '#1a1410',
+                            700: '#261f18',
+                            600: '#332920'
+                        },
+                        accent: {
+                            green: '#13ec5b',
+                            red: '#ec1343'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            /* Forçando as variáveis originais a adotarem as cores do Stitch */
+            --bg-1: #0d0a07;
+            --bg-2: #1a1410;
+            --bg-3: #261f18;
+            --text-1: #f3f4f6;
+            --text-2: #9ca3af;
+            --primary: #d5a944;
+            --primary-dark: #b38a36;
+            --accent-green: #13ec5b;
+            --accent-red: #ec1343;
+            --border: #332920;
+        }
+
+        /* Oculta os scrollbars para look nativo Mobile App */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        html,
+        body {
+            background-color: var(--bg-1);
+            color: var(--text-1);
+            font-family: 'Manrope', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Material Symbols Custom Fill */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            transition: all 0.2s ease;
+        }
+    </style>
 </head>
 
 <body>
@@ -87,18 +165,23 @@
     </div>
 
     <!-- Header -->
-    <header class="app-header">
-        <div class="logo-container">
-            <svg class="logo-svg" width="32" height="32" viewBox="0 0 100 100">
-                <path
-                    d="M15 75 Q15 45 35 35 Q45 30 55 35 Q65 40 68 50 L85 45 Q88 42 90 45 L88 50 Q85 52 82 50 L70 54 Q72 62 68 70 L72 85 L65 85 L62 72 Q55 78 45 78 Q38 78 32 72 L30 85 L23 85 L27 70 Q22 62 22 55"
-                    fill="#D4A843" />
-                <circle cx="40" cy="42" r="3" fill="#0F1318" />
-            </svg>
-            <h1>AgroMacro</h1>
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between p-4 border-b bg-dark-900/80 backdrop-blur-md border-dark-600">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🐂</span>
+            <h1 class="text-primary text-xl font-extrabold tracking-tight"
+                style="font-family: 'Space Grotesk', sans-serif;">AgroMacro</h1>
         </div>
-        <button id="menu-btn" class="icon-btn" onclick="window.app.navigate('config')"><span data-icon="config"
-                style="width:20px;height:20px;display:inline-flex;"></span></button>
+        <div class="flex items-center gap-3">
+            <div class="text-right">
+                <p class="text-xs text-slate-400 font-medium" id="fazenda-nome-topbar">Fazenda Esperança</p>
+            </div>
+            <button
+                class="flex items-center justify-center p-2 rounded-full text-primary border border-primary/20 bg-dark-800"
+                onclick="window.app.navigate('config')">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+        </div>
     </header>
 
     <main id="app-container">
@@ -115,46 +198,90 @@
             <!-- HOME CAMPO REMOVIDO — Interface unificada -->
 
             <!-- ══ HOME GERÊNCIA (Produtor) — Layout completo ══ -->
-            <div id="home-gerencia" class="gerencia-only">
-                <!-- Botão Mapa destaque -->
-                <button class="mapa-home-btn" onclick="window.app.navigate('mapa')">
-                    <span class="mapa-home-icon">🗺️</span>
-                    <div class="mapa-home-text">
-                        <span class="mapa-home-title">Mapa da Fazenda</span>
-                        <span class="mapa-home-sub">Visualizar pastos no satélite</span>
+            <div id="home-gerencia" class="gerencia-only space-y-4 p-4">
+
+                <!-- Greeting Card -->
+                <div class="relative overflow-hidden rounded-xl p-5"
+                    style="background-color: rgba(19, 236, 91, 0.1); border: 1px solid rgba(19, 236, 91, 0.2);">
+                    <div class="relative z-10">
+                        <h2 class="text-xl font-bold" style="color: var(--accent-green);" id="greeting-text">Bom dia,
+                            Fazendeiro!</h2>
+                        <p class="text-sm mt-1" style="color: rgba(19, 236, 91, 0.7);" id="greeting-date">Segunda-feira,
+                            24 de Maio • Ensolarado</p>
                     </div>
-                    <span class="mapa-home-arrow">→</span>
-                </button>
-
-                <!-- Weather Widget -->
-                <div id="clima-widget" class="clima-widget" style="display:none;"></div>
-
-                <!-- KPI Dashboard -->
-                <div class="kpi-section">
-                    <div class="kpi-title">Painel da Fazenda</div>
-                    <div class="kpi-grid" id="kpi-grid"></div>
                 </div>
 
-                <!-- Quick Actions — Atalhos Rápidos -->
-                <div class="kpi-title" style="margin-top:4px;">Ações Rápidas</div>
-                <div class="home-grid">
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Map Card -->
+                    <div class="relative group aspect-[4/3] rounded-xl overflow-hidden border border-dark-600 bg-dark-800"
+                        onclick="window.app.navigate('mapa')">
+                        <div class="absolute inset-0 bg-cover bg-center"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdkrgOxFiNw3s4XWw07TxuU3p0C3WmVNBDSwx_cqgwGCYvRbeusmzY4tUIiLE67r28Rt0yb94CvhBaHPmm_8pKmwVsActmo7qoz2pU8_6o8aPcc6az92Ry53b7SJEuLxAAWZX09jVpEoOKiztfULvqzMjhK0q2QrQO6CQ6AWDTXFTTm4sEuCmHsL--f1-EPJBu8S-t4WT7zXC77rNv_2xbcKzaJMMDA2sdzCmoQ_1sxcE6YISGKV1Oikrtsn928byVErCp6VrkFfA_')">
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-3 left-3">
+                            <p class="text-white font-bold text-sm">Mapa da Fazenda</p>
+                            <div class="flex items-center gap-1 text-[10px] text-white/70">
+                                <span class="material-symbols-outlined text-xs">near_me</span>
+                                <span>Ver Talhões</span>
+                            </div>
+                        </div>
+                    </div>
 
-                    <button class="home-card" onclick="window.app.navigate('manejo')">
-                        <div class="home-card-icon" data-icon="manejoRapido"
-                            style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);">🩺</div>
-                        <span class="home-card-title">Manejo</span>
-                        <span class="home-card-sub">Rápido</span>
-                    </button>
-                    <button class="home-card" onclick="window.app.navigate('estoque')">
-                        <div class="home-card-icon" data-icon="abastecer"
-                            style="background: linear-gradient(135deg, #78350F, #92400E);">📦</div>
-                        <span class="home-card-title">Abastecer</span>
-                        <span class="home-card-sub">Estoque</span>
-                    </button>
+                    <!-- Weather / Climate Card -->
+                    <div class="aspect-[4/3] rounded-xl border border-blue-500/30 p-3 flex flex-col justify-between"
+                        style="background-color: rgba(59, 130, 246, 0.1);" onclick="window.app.navigate('clima')">
+                        <div id="clima-widget" class="clima-widget w-full h-full text-white">Carregando clima...</div>
+                    </div>
                 </div>
 
-                <!-- IA Insights Panel -->
-                <div id="ia-insights-home" style="margin-top:16px;"></div>
+                <!-- KPI Dashboard (Will be populated by app.js rendering) -->
+                <section>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3 px-1">Indicadores Chave
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3" id="kpi-grid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- Menina (Clara AI) Insight Card -->
+                <div class="border-2 border-primary/40 rounded-xl p-4 relative overflow-hidden mt-2 bg-dark-800">
+                    <div class="flex gap-4 relative z-10">
+                        <div
+                            class="w-14 h-14 rounded-full border-2 border-primary overflow-hidden shrink-0 bg-primary/10">
+                            <img alt="Dona Clara Agent" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFmHC7jCRMKTOlqmMt72br00L3RfuNRywqLEdkRerB9yPTdw7YcbCHltSaivWMYCU9OrStC3g4ouVhkfOslfMGvcGpnOAEc3nBOCYs6Z7vpHV9PPS8fFLrU2n5PrpT9QzoqOLnvbJoMX7ULqUWiT8eipMvtJlfJSP4ISUmbklAgEK9u6k4llYBAMwcJ7SKcn5USfKEgbeonNzF_BCz3rqXx96E9eWQGGEzpRd1pIi0MRvx4upT4LvFwnPaKOuzospwYCPJO4n9uUlX" />
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs font-bold text-primary uppercase">Dona Clara</span>
+                                    <span class="material-symbols-outlined text-[14px] text-primary">verified</span>
+                                </div>
+                            </div>
+                            <div id="ia-insights-home" class="text-sm text-slate-200 leading-relaxed font-medium">"Olá.
+                                Sou a Dona Clara, sua gerente de IA. Estou monitorando seus lotes e pastos."</div>
+                            <button onclick="app.navigate('ia-chefa')"
+                                class="mt-4 w-full bg-primary text-dark-900 font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-sm">forum</span>
+                                Falar com a Clara
+                            </button>
+                        </div>
+                    </div>
+                    <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+                </div>
+
+                <!-- ZootecIA Quick Access -->
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer border border-green-800/40"
+                    style="background:linear-gradient(135deg,rgba(21,128,61,0.15),rgba(22,163,74,0.08))"
+                    onclick="window.nutricaoIA.abrirModal('exigencias')">
+                    <div style="font-size:36px;line-height:1">🧬</div>
+                    <div style="flex:1">
+                        <div style="font-weight:700;font-size:14px;color:#4ADE80">ZootecIA — Nutrição Bovina</div>
+                        <div style="font-size:11px;color:#86EFAC;margin-top:2px">Formular ração · NRC 2016 · CQBAL 3.0 · Custo/arroba</div>
+                    </div>
+                    <span style="color:#4ADE80;font-size:20px">›</span>
+                </div>
 
                 <!-- Cotação do Rebanho em Pé -->
                 <div id="cotacao-rebanho" style="margin-top:16px;"></div>
@@ -162,11 +289,12 @@
                 <!-- Dashboard Gráficos -->
                 <div id="graficos-home" style="margin-top:16px;"></div>
 
-                <!-- Dashboard de Resultados -->
-                <div id="resultados-dashboard" style="margin-top:16px;"></div>
-
                 <!-- Atividade Recente -->
                 <div id="atividade-recente" style="margin-top:16px;"></div>
+
+                <!-- Spacer for Bottom Nav -->
+                <div class="h-20"></div>
+
             </div>
 
             <!-- Alerts Section (ambos perfis) -->
@@ -177,58 +305,158 @@
 
         </section>
 
-        <!-- ===================== FINANCEIRO (HUB) ===================== -->
-        <section id="view-financeiro" class="view hidden gerencia-only">
-            <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
-                <h2>Financeiro</h2>
+        <!-- ===================== FINANCEIRO (Stitch Cash Flow) ===================== -->
+        <section id="view-financeiro"
+            class="view hidden gerencia-only overflow-y-auto pb-24 relative min-h-screen bg-dark-900">
+            <!-- Header Título -->
+            <div
+                class="flex items-center bg-dark-900 p-4 justify-between border-b border-primary/20 sticky top-0 z-20 backdrop-blur-md">
+                <button
+                    class="flex items-center justify-center p-2 rounded-full text-primary border border-primary/20 bg-dark-800"
+                    onclick="window.app.navigate('home')">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <h2 class="text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
+                    Fluxo de Caixa</h2>
             </div>
 
-            <div class="hub-grid">
-                <!-- Compra de Gado -->
-                <button class="hub-card" onclick="window.app.navigate('compra')">
-                    <div class="hub-card-icon hub-icon-compra">🛒</div>
-                    <div>
-                        <div class="hub-card-title">Compra</div>
-                        <div class="hub-card-sub">de Gado</div>
-                    </div>
+            <!-- Ações Rápidas (Compensar a remoção do HUB antigo) -->
+            <div class="grid grid-cols-4 gap-2 px-4 pt-4">
+                <button onclick="window.app.navigate('compra')"
+                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
+                    <span class="text-xl">🛒</span><span
+                        class="text-[9px] font-bold text-slate-300 uppercase">Compra</span>
                 </button>
+                <button onclick="window.app.navigate('venda')"
+                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
+                    <span class="text-xl">💰</span><span
+                        class="text-[9px] font-bold text-slate-300 uppercase">Venda</span>
+                </button>
+                <button onclick="window.app.navigate('contas')"
+                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
+                    <span class="text-xl">📋</span><span
+                        class="text-[9px] font-bold text-slate-300 uppercase">Contas</span>
+                </button>
+                <button onclick="window.app.navigate('balanco')"
+                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
+                    <span class="text-xl">📈</span><span
+                        class="text-[9px] font-bold text-slate-300 uppercase">DRE</span>
+                </button>
+            </div>
 
-                <!-- Venda de Gado -->
-                <button class="hub-card" onclick="window.app.navigate('venda')">
-                    <div class="hub-card-icon hub-icon-venda">💰</div>
-                    <div>
-                        <div class="hub-card-title">Venda</div>
-                        <div class="hub-card-sub">de Gado</div>
+            <!-- Summary Cards -->
+            <div class="flex gap-3 p-4 overflow-x-auto no-scrollbar">
+                <!-- Entradas -->
+                <div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-xl p-4 border border-emerald-500/20"
+                    style="background-color: rgba(16, 185, 129, 0.1);">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-500 text-sm">trending_up</span>
+                        <p class="text-emerald-500 text-xs font-bold uppercase tracking-wider">Entradas</p>
                     </div>
+                    <p class="text-slate-100 text-xl font-extrabold leading-tight">R$ 45.200</p>
+                    <p class="text-emerald-500 text-xs font-medium">+12% este mês</p>
+                </div>
+                <!-- Saídas -->
+                <div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-xl p-4 border border-rose-500/20"
+                    style="background-color: rgba(244, 63, 94, 0.1);">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-rose-500 text-sm">trending_down</span>
+                        <p class="text-rose-500 text-xs font-bold uppercase tracking-wider">Saídas</p>
+                    </div>
+                    <p class="text-slate-100 text-xl font-extrabold leading-tight">R$ 12.850</p>
+                    <p class="text-rose-500 text-xs font-medium">-5% este mês</p>
+                </div>
+                <!-- Saldo -->
+                <div
+                    class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-xl p-4 border border-primary/20 bg-primary/10">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
+                        <p class="text-primary text-xs font-bold uppercase tracking-wider">Saldo</p>
+                    </div>
+                    <p class="text-slate-100 text-xl font-extrabold leading-tight">R$ 32.350</p>
+                    <p class="text-primary text-xs font-medium">+15% vs out.</p>
+                </div>
+            </div>
+            <!-- Filters -->
+            <div class="flex gap-3 px-4 py-2 overflow-x-auto no-scrollbar">
+                <button
+                    class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary/20 border border-primary/30 px-4">
+                    <span class="text-primary text-sm font-bold">Novembro 2026</span>
+                    <span class="material-symbols-outlined text-primary text-sm">expand_more</span>
                 </button>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-slate-300 text-sm font-bold uppercase tracking-[0.1em] px-4 pb-3 opacity-60">Transações
+                    Recentes</h3>
+                <div class="flex flex-col gap-[1px]">
+                    <div class="flex border-b border-border-dark flex-col gap-3 bg-dark-900 px-4 py-3">
+                        <div class="flex justify-between items-start">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">12 Nov 2026</span>
+                                <h4 class="text-slate-100 font-bold">Venda Lote Hereford #42</h4>
+                                <div class="flex gap-2 items-center">
+                                    <span
+                                        class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase text-emerald-500"
+                                        style="background-color: rgba(16, 185, 129, 0.1);">Venda de Gado</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-emerald-500 font-extrabold text-lg">+ R$ 18.400,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                <!-- Fluxo de Caixa -->
-                <button class="hub-card" onclick="window.app.navigate('fluxo')">
-                    <div class="hub-card-icon hub-icon-fluxo">📊</div>
-                    <div>
-                        <div class="hub-card-title">Fluxo</div>
-                        <div class="hub-card-sub">de Caixa</div>
+        <!-- ===================== CHAT IA CHEFA (Dona Clara 3D) ===================== -->
+        <section id="view-ia-chefa" class="view hidden font-tech flex flex-col h-[100dvh]">
+            <header class="sticky top-0 z-50 bg-dark-900/90 backdrop-blur-md border-b p-4"
+                style="border-color: rgba(19, 236, 91, 0.2);">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex-1 flex items-center gap-3">
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-full border-2 overflow-hidden bg-center bg-no-repeat bg-cover filter drop-shadow-[0_0_8px_rgba(19,236,91,0.5)]"
+                                style='border-color: #13ec5b; background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqHoszHRJJ2hKYb-omy_hhBoRlXnM_jTy-VKWb0RhVUGnP9Bpm3PYJY3MWWUyiNgnGcZRK5awApx7l6sjc-udFb7CgE0rHckhVu0F9_6GngbYnXcqk9eauRUE5tNlsRfCQWhLNzqQRF-rgAWDueOzOi5J6ZDeSaZU-VQ7MztqLR2cj7j1PPhtaRZEW7lWDXn7tDBQCabba2L26q8JXhr44MKw1-C1NDfX-PRiiIaWtTSNH-ESDiNfFeXuCJ1V_03JkoLdh-MAcVM5i");'>
+                            </div>
+                            <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-dark-900"
+                                style="background-color: #13ec5b;"></div>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold tracking-tight text-slate-100">Dona Clara 3D</h1>
+                            <span class="text-xs font-medium uppercase tracking-widest" style="color: #13ec5b;">Master
+                                AI • AgroMacro</span>
+                        </div>
                     </div>
-                </button>
-
-                <!-- Contas a Pagar -->
-                <button class="hub-card" onclick="window.app.navigate('contas')">
-                    <div class="hub-card-icon hub-icon-contas">📋</div>
-                    <div>
-                        <div class="hub-card-title">Contas</div>
-                        <div class="hub-card-sub">a Pagar</div>
+                </div>
+            </header>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
+                <!-- AI Message -->
+                <div class="flex flex-col gap-2 items-start max-w-[85%]">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter ml-4"
+                        style="color: rgba(19, 236, 91, 0.7);">Clara</span>
+                    <div class="bg-dark-800 border rounded-xl rounded-tl-none p-4 shadow-xl"
+                        style="border-color: rgba(19, 236, 91, 0.4);">
+                        <p class="text-sm leading-relaxed text-slate-200" id="ia-welcome-msg">
+                            Olá! Sou a Dona Clara 👩‍💼, a IA Gestora da Fazenda. Domino as áreas de Administração,
+                            Agronomia, Zootecnia e Financeiro. Como posso ajudar com as análises do AgroMacro hoje?
+                        </p>
                     </div>
-                </button>
-
-                <!-- Balanço / DRE -->
-                <button class="hub-card" onclick="window.app.navigate('balanco')">
-                    <div class="hub-card-icon hub-icon-balanco">📈</div>
-                    <div>
-                        <div class="hub-card-title">Balanço</div>
-                        <div class="hub-card-sub">DRE</div>
-                    </div>
-                </button>
+                </div>
+            </div>
+            <div class="fixed bottom-[70px] left-0 right-0 p-4 bg-dark-900 border-t"
+                style="border-color: rgba(19, 236, 91, 0.2);">
+                <div class="flex items-center gap-3 bg-dark-800/80 border rounded-full px-4 py-2 focus-within:border-[#13ec5b] filter drop-shadow-[0_0_8px_rgba(19,236,91,0.5)] transition-all"
+                    style="border-color: rgba(19, 236, 91, 0.3);">
+                    <input id="chat-input"
+                        class="flex-1 bg-transparent border-none text-slate-100 focus:ring-0 text-sm py-2"
+                        style="outline:none;" placeholder="Pergunte à Clara..." type="text" />
+                    <button id="chat-send"
+                        class="w-10 h-10 text-dark-900 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                        style="background-color: #13ec5b;">
+                        <span class="material-symbols-outlined font-bold">send</span>
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -275,6 +503,33 @@
                     <label>Data</label>
                     <input type="date" id="compra-data" required>
                 </div>
+                <!-- ═══ FORMA DE PAGAMENTO ═══ -->
+                <div class="form-group">
+                    <label>💳 Forma de Pagamento</label>
+                    <select id="compra-forma-pagamento" onchange="window.financeiro.togglePrazoFields('compra')">
+                        <option value="avista">💵 À Vista (entra no caixa agora)</option>
+                        <option value="prazo">📅 A Prazo (gera Conta a Pagar)</option>
+                        <option value="parcial">📆 Parcelado (paga parte agora)</option>
+                    </select>
+                </div>
+                <div id="compra-prazo-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>📅 Vencimento</label>
+                        <input type="date" id="compra-vencimento">
+                    </div>
+                </div>
+                <div id="compra-parcial-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>💵 Valor Pago Agora (R$)</label>
+                        <input type="number" id="compra-valor-pago" step="0.01" placeholder="Ex: 30000.00">
+                        <small style="color:#94A3B8;font-size:11px;">O restante vira Conta a Pagar
+                            automaticamente</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Vencimento do Saldo</label>
+                        <input type="date" id="compra-vencimento-parcial">
+                    </div>
+                </div>
                 <button type="submit" class="submit-btn">Registrar Compra</button>
             </form>
         </section>
@@ -315,6 +570,33 @@
                 <div class="form-group">
                     <label>Data</label>
                     <input type="date" id="venda-data" required>
+                </div>
+                <!-- ═══ FORMA DE PAGAMENTO ═══ -->
+                <div class="form-group">
+                    <label>💳 Forma de Pagamento</label>
+                    <select id="venda-forma-pagamento" onchange="window.financeiro.togglePrazoFields('venda')">
+                        <option value="avista">💵 À Vista (entra no caixa agora)</option>
+                        <option value="prazo">📅 A Prazo — Frigorífico paga depois</option>
+                        <option value="parcial">📆 Parcelado (recebe parte agora)</option>
+                    </select>
+                </div>
+                <div id="venda-prazo-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>📅 Vencimento do Recebimento</label>
+                        <input type="date" id="venda-vencimento">
+                    </div>
+                </div>
+                <div id="venda-parcial-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>💵 Valor Recebido Agora (R$)</label>
+                        <input type="number" id="venda-valor-recebido" step="0.01" placeholder="Ex: 15000.00">
+                        <small style="color:#94A3B8;font-size:11px;">O restante vira Conta a Receber
+                            automaticamente</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Vencimento do Saldo</label>
+                        <input type="date" id="venda-vencimento-parcial">
+                    </div>
                 </div>
                 <button type="submit" class="submit-btn">Registrar Venda</button>
             </form>
@@ -1467,106 +1749,38 @@
 
     </main>
 
-    <!-- ===================== MODAL: TROCAR PASTO ===================== -->
-    <div id="modal-trocar-pasto" class="agro-modal">
-        <div class="agro-modal-content">
-            <div class="agro-modal-header">
-                <h3>Trocar Pasto</h3>
-                <button class="modal-close" onclick="window.lotes.fecharModal('modal-trocar-pasto')">✕</button>
+    <!-- Bottom Navigation Bar (Stitch Fixed Base) -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-dark-900 border-t border-dark-600 px-4 pb-6 pt-3 flex justify-between items-center z-50">
+        <a class="flex flex-col items-center justify-center gap-1 text-primary cursor-pointer w-1/5"
+            onclick="app.navigate('home')" id="nav-home">
+            <span class="material-symbols-outlined text-2xl" id="nav-icon-home">home</span>
+            <span class="text-[10px] font-bold uppercase">Painel</span>
+        </a>
+        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5"
+            onclick="app.navigate('obras')" id="nav-operacoes">
+            <span class="material-symbols-outlined text-2xl" id="nav-icon-obra">precision_manufacturing</span>
+            <span class="text-[10px] font-medium uppercase">Operações</span>
+        </a>
+        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5 relative -top-3"
+            onclick="app.navigate('ia-chefa')" id="nav-ia-chefa">
+            <div
+                class="w-14 h-14 rounded-full bg-dark-900 border border-primary/30 flex items-center justify-center -mb-2 shadow-[0_0_15px_rgba(213,169,68,0.2)]">
+                <span class="material-symbols-outlined text-primary text-3xl font-extrabold"
+                    id="nav-icon-ia-chefa">psychology</span>
             </div>
-            <div class="agro-modal-body">
-                <p><strong>Lote:</strong> <span id="modal-tp-lote"></span></p>
-                <p><strong>Pasto Atual:</strong> <span id="modal-tp-atual"></span></p>
-                <div class="form-group">
-                    <label>Novo Pasto</label>
-                    <select id="modal-tp-novo-pasto">
-                        <option value="">Selecionar...</option>
-                    </select>
-                </div>
-            </div>
-            <div class="agro-modal-footer">
-                <button class="submit-btn" onclick="window.lotes.confirmarTrocaPasto()">✅ Confirmar Troca</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== MODAL: JUNTAR LOTES ===================== -->
-    <div id="modal-juntar-lotes" class="agro-modal">
-        <div class="agro-modal-content">
-            <div class="agro-modal-header">
-                <h3>Juntar Lotes</h3>
-                <button class="modal-close" onclick="window.lotes.fecharModal('modal-juntar-lotes')">✕</button>
-            </div>
-            <div class="agro-modal-body">
-                <p style="font-size:13px; color:#666; margin-bottom:12px;">Selecione 2 ou mais lotes para unir. Os
-                    animais serão somados e o peso será a média ponderada.</p>
-                <div id="modal-jl-lista" class="checkbox-list"></div>
-                <div class="form-group" style="margin-top:12px;">
-                    <label>Nome do Novo Lote</label>
-                    <input type="text" id="modal-jl-novo-nome" placeholder="Ex: Lote Unificado 2026">
-                </div>
-            </div>
-            <div class="agro-modal-footer">
-                <button class="submit-btn" onclick="window.lotes.confirmarJuntarLotes()">✅ Juntar Lotes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== MODAL: ABASTECER COCHO ===================== -->
-    <div id="modal-abastecer" class="agro-modal">
-        <div class="agro-modal-content">
-            <div class="agro-modal-header">
-                <h3>Abastecer Cocho</h3>
-                <button class="modal-close" onclick="window.lotes.fecharModal('modal-abastecer')">✕</button>
-            </div>
-            <div class="agro-modal-body">
-                <p><strong>Lote:</strong> <span id="modal-ab-lote"></span></p>
-                <p><strong>Produto:</strong> <span id="modal-ab-tipo"></span></p>
-                <input type="hidden" id="modal-ab-produto" value="">
-                <p id="modal-ab-consumo-info" style="font-size:12px; color:#666; margin-bottom:10px;"></p>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Quantidade de Sacos</label>
-                        <input type="number" id="modal-ab-sacos" placeholder="4"
-                            oninput="window.lotes.calcPrevisaoAbastecimento()">
-                    </div>
-                    <div class="form-group">
-                        <label>Kg por Saco</label>
-                        <input type="number" id="modal-ab-kg-saco" value="25" step="0.5"
-                            oninput="window.lotes.calcPrevisaoAbastecimento()">
-                    </div>
-                </div>
-                <div id="modal-ab-previsao" class="previsao-box"></div>
-            </div>
-            <div class="agro-modal-footer">
-                <button class="submit-btn" onclick="window.lotes.confirmarAbastecimento()">✅ Registrar
-                    Abastecimento</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation Bar — 5 Abas Organizadas -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="window.app.navigate('home')" id="nav-home">
-            <span class="nav-icon" data-icon="home"></span>
-            Home
-        </button>
-        <button class="nav-item" onclick="window.app.navigate('lotes')" id="nav-rebanho">
-            <span class="nav-icon" data-icon="rebanho"></span>
-            Rebanho
-        </button>
-        <button class="nav-item gerencia-only" onclick="window.app.navigate('financeiro')" id="nav-financeiro">
-            <span class="nav-icon" data-icon="financeiro"></span>
-            Financeiro
-        </button>
-        <button class="nav-item" onclick="window.app.navigate('operacoes')" id="nav-operacoes">
-            <span class="nav-icon" data-icon="operacoes"></span>
-            Operações
-        </button>
-        <button class="nav-item" onclick="window.app.navigate('config')" id="nav-config">
-            <span class="nav-icon" data-icon="config"></span>
-            Config
-        </button>
+            <span class="text-[10px] font-medium uppercase text-primary mt-1">Clara</span>
+        </a>
+        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5 gerencia-only"
+            onclick="app.navigate('financeiro')" id="nav-financeiro">
+            <span class="material-symbols-outlined text-2xl" id="nav-icon-financeiro">account_balance_wallet</span>
+            <span class="text-[10px] font-medium uppercase">Financeiro</span>
+        </a>
+        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5"
+            onclick="app.navigate('lotes')" id="nav-rebanho">
+            <span class="material-symbols-outlined text-2xl" id="nav-icon-rebanho">pets</span>
+            <span class="text-[10px] font-medium uppercase">Rebanho</span>
+        </a>
     </nav>
 
     <!-- Firebase SDKs -->
@@ -1582,7 +1796,7 @@
     <script src="js/lotes.js?v=20260211r"></script>
     <script src="js/obras.js?v=20260211r"></script>
     <script src="js/manejo.js?v=20260211r"></script>
-    <script src="js/financeiro.js?v=20260211r"></script>
+    <script src="js/financeiro.js?v=20260301f"></script>
     <script src="js/estoque.js?v=20260211r"></script>
     <script src="js/funcionarios.js?v=20260211r"></script>
     <script src="js/rebanho-ops.js?v=20260211s"></script>
@@ -1594,6 +1808,7 @@
     <script src="js/contas.js?v=20260211s"></script>
     <script src="js/indicadores.js?v=20260211s"></script>
     <script src="js/nutricao.js"></script>
+    <script src="js/nutricao-ia.js"></script>
     <script src="js/balanca.js"></script>
     <script src="js/blockchain.js"></script>
     <script src="js/cabecas.js?v=20260212a"></script>
@@ -1605,40 +1820,41 @@
     <script src="js/ux-helpers.js?v=20260219a"></script>
     <script src="js/resultados.js?v=20260219a"></script>
     <script src="js/firebase-sync.js?v=20260219a"></script>
+    <script src="js/ia-chefa.js?v=20260301a"></script>
 
     <script src="app.js?v=20260220b"></script>
 
     <!-- Theme & Greeting Init -->
     <script>
-        (function () {
-            var h = new Date().getHours();
+            (function () {
+                var h = new Date().getHours();
 
-            // Light mode only — no dark mode
+                // Light mode only — no dark mode
 
-            // Greeting
-            var greetEl = document.getElementById('greeting-text');
-            var dateEl = document.getElementById('greeting-date');
-            if (greetEl) {
-                if (h < 6) greetEl.textContent = 'Boa madrugada';
-                else if (h < 12) greetEl.textContent = 'Bom dia';
-                else if (h < 18) greetEl.textContent = 'Boa tarde';
-                else greetEl.textContent = 'Boa noite';
-            }
-            if (dateEl) {
-                var days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-                var months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                var now = new Date();
-                dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' de ' + months[now.getMonth()] + ' de ' + now.getFullYear();
-            }
+                // Greeting
+                var greetEl = document.getElementById('greeting-text');
+                var dateEl = document.getElementById('greeting-date');
+                if (greetEl) {
+                    if (h < 6) greetEl.textContent = 'Boa madrugada';
+                    else if (h < 12) greetEl.textContent = 'Bom dia';
+                    else if (h < 18) greetEl.textContent = 'Boa tarde';
+                    else greetEl.textContent = 'Boa noite';
+                }
+                if (dateEl) {
+                    var days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                    var months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                    var now = new Date();
+                    dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' de ' + months[now.getMonth()] + ' de ' + now.getFullYear();
+                }
 
-            // Inject SVG icons into all data-icon elements
-            if (window.ICONS) {
-                document.querySelectorAll('[data-icon]').forEach(function (el) {
-                    var key = el.getAttribute('data-icon');
-                    if (window.ICONS[key]) el.innerHTML = window.ICONS[key];
-                });
-            }
-        })();
+                // Inject SVG icons into all data-icon elements
+                if (window.ICONS) {
+                    document.querySelectorAll('[data-icon]').forEach(function (el) {
+                        var key = el.getAttribute('data-icon');
+                        if (window.ICONS[key]) el.innerHTML = window.ICONS[key];
+                    });
+                }
+            })();
     </script>
 
     <script>

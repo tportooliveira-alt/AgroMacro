@@ -1069,6 +1069,7 @@ window.lotes = {
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.manejoRapido(\'' + l.nome + '\', \'vacinacao\')">💉 Manejo</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto(\'' + l.nome + '\')">🔄 Mover</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.nutricao.abrirLeitura(\'' + l.nome + '\')">🍽️ Cocho</button>'
+                + '<button class="btn-sm" style="background:#15803D;" onclick="event.stopPropagation(); window.nutricaoIA.abrirModal(\'exigencias\')">🧬 Ração</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTransferencia(\'' + l.nome + '\')">↗️ Transferir</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirMortalidade(\'' + l.nome + '\')">💀 Baixa</button>'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.rebanhoOps.abrirTimeline(\'' + l.nome + '\')">📜 Histórico</button>'

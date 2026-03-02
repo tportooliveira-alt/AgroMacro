@@ -67,6 +67,7 @@ window.app = {
         if (window.pastoMgmt) window.pastoMgmt.init();
         if (window.clima) window.clima.init();
         if (window.nutricao) window.nutricao.init();
+        if (window.nutricaoIA) window.nutricaoIA.init();
         if (window.balanca) window.balanca.init();
         if (window.safebeef) window.safebeef.init();
         if (window.calendario) window.calendario.init();
@@ -554,6 +555,22 @@ window.app = {
                         if (dias > 60) {
                             alerts.push({ icon: '⚖️', msg: loteNome + ' sem pesagem há ' + dias + ' dias', type: 'warning' });
                         }
+                    }
+                });
+            } catch (e) { /* ignore */ }
+        }
+
+        // ══ 9. Produtos vencidos / vencendo ══
+        if (window.estoque && window.estoque.getVencimentos) {
+            try {
+                var vencimentos = window.estoque.getVencimentos();
+                vencimentos.forEach(function (v) {
+                    if (v.vencido) {
+                        alerts.push({ icon: '⏰', msg: v.nome + ' — VENCIDO em ' + new Date(v.dataStr + 'T00:00:00').toLocaleDateString('pt-BR'), type: 'danger' });
+                    } else if (v.diasRestantes <= 7) {
+                        alerts.push({ icon: '⏰', msg: v.nome + ' — vence em ' + v.diasRestantes + ' dia(s)!', type: 'danger' });
+                    } else {
+                        alerts.push({ icon: '⏰', msg: v.nome + ' — vence em ' + v.diasRestantes + ' dias (' + new Date(v.dataStr + 'T00:00:00').toLocaleDateString('pt-BR') + ')', type: 'warning' });
                     }
                 });
             } catch (e) { /* ignore */ }
