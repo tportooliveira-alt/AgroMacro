@@ -68,6 +68,7 @@ window.app = {
         if (window.clima) window.clima.init();
         if (window.nutricao) window.nutricao.init();
         if (window.nutricaoIA) window.nutricaoIA.init();
+        if (window.zooIndices) window.zooIndices.init();
         if (window.balanca) window.balanca.init();
         if (window.safebeef) window.safebeef.init();
         if (window.calendario) window.calendario.init();
