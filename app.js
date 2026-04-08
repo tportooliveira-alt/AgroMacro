@@ -83,6 +83,14 @@ window.app = {
         // Data layer first (localStorage — always available)
         if (window.data) window.data.init();
 
+        // Inicializar nova arquitetura refatorada
+        if (window.AuditLog) window.AuditLog.init();
+        if (window.WorkManager) window.WorkManager.init();
+        if (window.SyncManager) {
+            window.SyncManager.init();
+            this.setupSyncStatusUpdates();
+        }
+
         // ══ PWA: Registrar Service Worker ══
         this.registerServiceWorker();
 
@@ -1114,6 +1122,28 @@ window.app = {
         reader.readAsText(file);
         // Limpar input para poder selecionar o mesmo arquivo novamente
         event.target.value = '';
+    },
+
+    setupSyncStatusUpdates: function() {
+        var self = this;
+        var updateSyncStatus = function() {
+            var statusElement = document.getElementById('sync-status-display');
+            if (!statusElement) return;
+            if (!window.SyncManager) { statusElement.textContent = 'SyncManager nao disponivel'; return; }
+            var status = window.SyncManager.getStatus();
+            var config = window.SyncManager.getConfig();
+            var isOnline = window.SyncManager.isOnline();
+            var statusText = 'Status: ' + (status.status || 'idle');
+            if (!isOnline) statusText += ' (Offline)';
+            if (config.enabled) statusText += ' | Habilitado';
+            if (status.lastSync) statusText += ' | Ultima: ' + new Date(status.lastSync).toLocaleString();
+            if (status.eventsSynced > 0) statusText += ' | Eventos: ' + status.eventsSynced;
+            statusElement.textContent = statusText;
+        };
+        updateSyncStatus();
+        setInterval(updateSyncStatus, 30000);
+        window.addEventListener('online', updateSyncStatus);
+        window.addEventListener('offline', updateSyncStatus);
     },
 };
 

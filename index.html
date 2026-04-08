@@ -1538,6 +1538,24 @@
                     onclick="document.getElementById('import-file-input').click()">📥 Importar Dados (JSON)</button>
                 <input type="file" id="import-file-input" accept=".json" style="display:none;"
                     onchange="window.app.importData(event)">
+            </div>
+
+            <!-- Compartilhamento Automatico -->
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">🌐 Compartilhamento Automatico</div>
+                <p style="font-size:11px; color:var(--text-light); margin-bottom:10px;">
+                    Configure sincronizacao automatica. Dados sao compartilhados apenas com API configurada.
+                </p>
+                <button type="button" class="submit-btn" style="background:linear-gradient(135deg,#059669,#10B981);"
+                    onclick="window.SyncConfig.showConfigDialog()">⚙️ Configurar Sincronizacao</button>
+                <button type="button" class="submit-btn" style="margin-top:8px;background:#3B82F6;"
+                    onclick="if(window.SyncManager.isOnline()){window.SyncManager.syncNow().then(function(){alert('Sincronizado!');}).catch(function(e){alert('Erro: '+e.message);})}else{alert('Offline!');}">
+                    🔄 Sincronizar Agora
+                </button>
+                <div id="sync-status-display" style="margin-top:8px; font-size:11px; color:var(--text-light);"></div>
+            </div>
+
+            <div class="card-form" style="margin-top:16px;">
                 <button type="button" class="submit-btn danger-btn" onclick="window.app.resetData()">Zerar Todos os
                     Dados</button>
                 <p class="info-note" style="margin-top:15px;">Esta ação apaga todos os registros. Não pode ser desfeita.
@@ -1860,6 +1878,20 @@
     <script src="js/resultados.js?v=20260219a"></script>
     <script src="js/firebase-sync.js?v=20260219a"></script>
     <script src="js/ia-chefa.js?v=20260301a"></script>
+
+    <!-- Arquitetura Refatorada -->
+    <script src="refatoracao/domain/EventTypes.js"></script>
+    <script src="refatoracao/domain/EventValidator.js"></script>
+    <script src="refatoracao/models/AuthorEntity.js"></script>
+    <script src="refatoracao/models/NetworkAuthor.js"></script>
+    <script src="refatoracao/models/UIModel.js"></script>
+    <script src="refatoracao/repository/EventRepository.js"></script>
+    <script src="refatoracao/domain/AuditLog.js"></script>
+    <script src="refatoracao/domain/ConflictResolver.js"></script>
+    <script src="refatoracao/services/WorkManager.js"></script>
+    <script src="refatoracao/services/SyncManager.js"></script>
+    <script src="refatoracao/services/SyncConfig.js"></script>
+    <script src="refatoracao/architecture/index.js"></script>
 
     <script src="app.js?v=20260220b"></script>
 
