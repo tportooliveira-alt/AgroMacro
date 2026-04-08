@@ -123,7 +123,7 @@ def test_fluxo_financeiro():
         log("Abrindo fluxo")
         page.evaluate("window.app.navigate('fluxo')")
         page.wait_for_timeout(1200)
-        fluxo_texto = page.locator("#fluxo-content").inner_text()
+        fluxo_texto = page.locator("#fluxo-content").first.inner_text()
         assert "Compra de Gado" in fluxo_texto, "Fluxo nao mostra compra de gado"
         assert "Entrada de Insumo" in fluxo_texto, "Fluxo nao mostra insumo"
         assert "Venda de Gado" in fluxo_texto, "Fluxo nao mostra venda de gado"
