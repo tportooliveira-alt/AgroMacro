@@ -74,6 +74,214 @@ window.pastos = {
         }, 120);
     },
 
+    // ═══ NOVO: Card 3-em-1 Inline — Operação Rápida do Pasto ═══
+    renderCard3em1: function (pastoNome) {
+        var tabAtiva = localStorage.getItem('card3em1_tab') || 'manejo';
+        var html = '<div id="card-operacao-' + pastoNome + '" style="margin-top:10px;padding:12px;border:2px solid #2E7D32;border-radius:12px;background:linear-gradient(135deg,#F8FBF7,#FFFFFF);box-shadow:0 4px 12px rgba(46,125,50,0.15);">'
+            + '<div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#1B5E20;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span>⚡</span> OPERAÇÃO RÁPIDA — SEM SAIR DAQUI</div>'
+            + '<div style="display:flex;gap:6px;margin-bottom:10px;border-bottom:2px solid #E8F5E9;padding-bottom:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;">'
+            + '<button class="tab-btn-op" data-tab="manejo" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'manejo' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'manejo' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'manejo\')">💉 Manejo</button>'
+            + '<button class="tab-btn-op" data-tab="insumo" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'insumo' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'insumo' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'insumo\')">📦 Insumo</button>'
+            + '<button class="tab-btn-op" data-tab="troca" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'troca' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'troca' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'troca\')">🔄 Troca</button>'
+            + '<button class="tab-btn-op" data-tab="obra" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'obra' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'obra' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'obra\')">🔨 Obra</button>'
+            + '</div>'
+            + '<div id="tab-content-3em1">'
+            + this.renderTabContent3em1(pastoNome, tabAtiva)
+            + '</div>'
+            + '</div>';
+        return html;
+    },
+
+    switchTab3em1: function (pastoNome, tab) {
+        try { localStorage.setItem('card3em1_tab', tab); } catch (e) { }
+        var container = document.getElementById('card-operacao-' + pastoNome);
+        if (container) {
+            container.querySelector('#tab-content-3em1').innerHTML = this.renderTabContent3em1(pastoNome, tab);
+        }
+    },
+
+    renderTabContent3em1: function (pastoNome, tab) {
+        var html = '';
+        
+        if (tab === 'manejo') {
+            html += '<div style="padding:10px 0;">'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Tipo de Manejo</label>'
+                + '<select id="op-manejo-tipo" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;" onchange="window.pastos.updateManejoFields()">'
+                + '<option value="vacinacao">💉 Vacinação / Tratamento</option>'
+                + '<option value="nutricao">🌾 Alimentação / Suplementação</option>'
+                + '<option value="pesagem">⚖️ Pesagem</option>'
+                + '</select>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Produto / Descrição</label>'
+                + '<input id="op-manejo-descricao" type="text" placeholder="Ex: Vacina da febre" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;" id="op-manejo-lote-label">Lote</label>'
+                + '<input id="op-manejo-lote" type="text" placeholder="Opcional" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
+                + '<button style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarManejoRapido(\'' + pastoNome + '\')">✅ Registrar Manejo</button>'
+                + '</div>';
+        } else if (tab === 'insumo') {
+            html += '<div style="padding:10px 0;">'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Insumo do Estoque</label>'
+                + '<select id="op-insumo-produto" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;">'
+                + '<option value="">-- Selecione um insumo --</option>'
+                + (window.estoque ? window.estoque.getStockItems().map(function(i) { return '<option value="' + (i.nome || i.descricao || '') + '">' + (i.nome || i.descricao || '') + ' (' + (i.saldo || 0) + ' ' + (i.unidade || 'un') + ')</option>'; }).join('') : '')
+                + '</select>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Quantidade</label>'
+                + '<input id="op-insumo-qtd" type="number" placeholder="0" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Obs / Aplicação</label>'
+                + '<input id="op-insumo-obs" type="text" placeholder="Ex: Aplicado ao amanhecer" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
+                + '<button style="width:100%;padding:10px;background:#1B5E20;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarInsumoRapido(\'' + pastoNome + '\')">✅ Usar Insumo</button>'
+                + '</div>';
+        } else if (tab === 'troca') {
+            html += '<div style="padding:10px 0;">'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Pasto Destino</label>'
+                + '<select id="op-pasto-destino" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;">'
+                + '<option value="">-- Selecione destino --</option>'
+                + (window.pastos ? window.pastos.getPastos().filter(function(p) { return p.nome !== pastoNome; }).map(function(p) { return '<option value="' + p.nome + '">' + p.nome + '</option>'; }).join('') : '')
+                + '</select>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Lotes a Mover</label>'
+                + '<div id="op-lotes-movimentacao" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:120px;overflow-y:auto;">'
+                + '</div>'
+                + '<button style="width:100%;padding:10px;background:#0F766E;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarTrocaPastorRapido(\'' + pastoNome + '\')">✅ Trocar de Pasto</button>'
+                + '</div>';
+        } else if (tab === 'obra') {
+            html += '<div style="padding:10px 0;">'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Problema / Tarefa</label>'
+                + '<select id="op-obra-tipo" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;">'
+                + '<option value="conserto">🔧 Conserto de cerca/cocho</option>'
+                + '<option value="limpeza">🧹 Limpeza de área</option>'
+                + '<option value="abastecimento">💧 Abastecimento de água</option>'
+                + '<option value="outro">📝 Outro</option>'
+                + '</select>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Descrição Rápida</label>'
+                + '<input id="op-obra-descricao" type="text" placeholder="O que precisa ser feito?" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Prioridade</label>'
+                + '<select id="op-obra-prioridade" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;">'
+                + '<option value="media">Média</option>'
+                + '<option value="alta">🔴 Alta</option>'
+                + '<option value="baixa">Baixa</option>'
+                + '</select>'
+                + '<button style="width:100%;padding:10px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarObraRapida(\'' + pastoNome + '\')">✅ Registrar Obra</button>'
+                + '</div>';
+        }
+        
+        return html;
+    },
+
+    salvarManejoRapido: function (pastoNome) {
+        var tipo = document.getElementById('op-manejo-tipo').value;
+        var descricao = document.getElementById('op-manejo-descricao').value;
+        var lote = document.getElementById('op-manejo-lote').value;
+        
+        if (!descricao) {
+            window.app.showToast('Informe a descrição do manejo.', 'error');
+            return;
+        }
+        
+        var manejo = {
+            type: 'MANEJO',
+            tipoManejo: tipo,
+            descricao: descricao,
+            lote: lote || '--',
+            pastoOrigem: pastoNome,
+            date: new Date().toISOString(),
+            timestamp: new Date().toISOString()
+        };
+        
+        window.data.saveEvent(manejo);
+        window.app.showToast('✅ Manejo registrado para ' + pastoNome, 'success');
+        document.getElementById('op-manejo-descricao').value = '';
+        document.getElementById('op-manejo-lote').value = '';
+        this.renderList();
+    },
+
+    salvarInsumoRapido: function (pastoNome) {
+        var produto = document.getElementById('op-insumo-produto').value;
+        var qtd = parseFloat(document.getElementById('op-insumo-qtd').value) || 0;
+        var obs = document.getElementById('op-insumo-obs').value;
+        
+        if (!produto || qtd <= 0) {
+            window.app.showToast('Selecione produto e informe quantidade.', 'error');
+            return;
+        }
+        
+        // Baixar do estoque
+        if (window.estoque && window.estoque.baixarEstoque) {
+            window.estoque.baixarEstoque(produto, qtd);
+        }
+        
+        var insumo = {
+            type: 'ESTOQUE_SAIDA',
+            produto: produto,
+            quantidade: qtd,
+            pastoDestino: pastoNome,
+            obs: obs,
+            date: new Date().toISOString(),
+            timestamp: new Date().toISOString()
+        };
+        
+        window.data.saveEvent(insumo);
+        window.app.showToast('✅ ' + qtd + ' un de ' + produto + ' registrado em ' + pastoNome, 'success');
+        document.getElementById('op-insumo-qtd').value = '';
+        document.getElementById('op-insumo-obs').value = '';
+        this.renderList();
+    },
+
+    salvarTrocaPastorRapido: function (pastoNome) {
+        var destino = document.getElementById('op-pasto-destino').value;
+        
+        if (!destino) {
+            window.app.showToast('Selecione o pasto destino.', 'error');
+            return;
+        }
+        
+        var troca = {
+            type: 'TROCA_PASTO',
+            pastoOrigem: pastoNome,
+            pastoDestino: destino,
+            date: new Date().toISOString(),
+            timestamp: new Date().toISOString()
+        };
+        
+        window.data.saveEvent(troca);
+        window.app.showToast('✅ Troca de pasto registrada: ' + pastoNome + ' → ' + destino, 'success');
+        document.getElementById('op-pasto-destino').value = '';
+        this.renderList();
+    },
+
+    salvarObraRapida: function (pastoNome) {
+        var tipo = document.getElementById('op-obra-tipo').value;
+        var descricao = document.getElementById('op-obra-descricao').value;
+        var prioridade = document.getElementById('op-obra-prioridade').value;
+        
+        if (!descricao) {
+            window.app.showToast('Descreva a tarefa.', 'error');
+            return;
+        }
+        
+        var obra = {
+            type: 'OBRA_REGISTRO',
+            tipoObra: tipo,
+            descricao: descricao,
+            local: pastoNome,
+            prioridade: prioridade,
+            status: 'ativa',
+            date: new Date().toISOString(),
+            timestamp: new Date().toISOString()
+        };
+        
+        window.data.saveEvent(obra);
+        window.app.showToast('✅ Obra leve registrada: ' + descricao, 'success');
+        document.getElementById('op-obra-descricao').value = '';
+        this.renderList();
+    },
+
+    updateManejoFields: function () {
+        var tipo = document.getElementById('op-manejo-tipo').value;
+        var loteLabel = document.getElementById('op-manejo-lote-label');
+        if (loteLabel) {
+            loteLabel.textContent = tipo === 'pesagem' ? 'Lote' : 'Lote (opcional)';
+        }
+    },
+
     renderList: function () {
         var container = document.getElementById('pastos-list');
         if (!container) return;
@@ -216,15 +424,7 @@ window.pastos = {
                 + lotesHtml
                 // Card simplificado para operacao do peao
                 + (window.app && window.app.getPerfil && window.app.getPerfil() === 'peao'
-                    ? '<div style="margin-top:10px;padding:10px;border:1px solid #D7DFD2;border-radius:12px;background:#F8FBF7;">'
-                    + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#3F5F42;margin-bottom:8px;">Operacao Rapida do Pasto</div>'
-                    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
-                    + '<button class="btn-sm" style="background:#2E7D32;color:#fff;" onclick="event.stopPropagation(); window.pastos.startOperacaoPasto(\'' + p.nome + '\',\'manejo\')">Manejo</button>'
-                    + '<button class="btn-sm" style="background:#1B5E20;color:#fff;" onclick="event.stopPropagation(); window.pastos.startOperacaoPasto(\'' + p.nome + '\',\'insumo\')">Usar Insumo</button>'
-                    + '<button class="btn-sm" style="background:#2563EB;color:#fff;" onclick="event.stopPropagation(); window.pastos.startOperacaoPasto(\'' + p.nome + '\',\'troca\')">Troca de Pasto</button>'
-                    + '<button class="btn-sm" style="background:#0F766E;color:#fff;" onclick="event.stopPropagation(); window.app.navigate(\'obras\')">Obra Rapida</button>'
-                    + '</div>'
-                    + '</div>'
+                    ? window.pastos.renderCard3em1(p.nome)
                     : '')
                 // Botões
                 + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;display:flex;gap:6px;flex-wrap:wrap;">'

@@ -2202,6 +2202,45 @@ body.perfil-peao .dono-only { display: none !important; }
     margin-top: 2px;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CARD 3-EM-1 — Operação Rápida do Pasto (Fase 5)
+   ═══════════════════════════════════════════════════════════════ */
+
+.tab-btn-op {
+    transition: all 0.2s ease !important;
+}
+
+.tab-btn-op:active {
+    transform: scale(0.96) !important;
+}
+
+#card-operacao-manejo,
+#card-operacao-insumo,
+#card-operacao-troca,
+#card-operacao-obra {
+    animation: slideInCard 0.3s ease;
+}
+
+@keyframes slideInCard {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#tab-content-3em1 select,
+#tab-content-3em1 input {
+    font-family: inherit;
+}
+
+#tab-content-3em1 label {
+    display: block;
+}
+
 /* ═══════ PRINT ═══════ */
 @media print {
     .bottom-nav, .top-header, .fab { display: none; }
