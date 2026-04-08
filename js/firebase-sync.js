@@ -11,6 +11,15 @@ window.firebaseSync = {
     _isRegisterMode: false,
     _appReady: false,
 
+    _normalizePerfil: function (perfil) {
+        if (!perfil) return 'admin';
+        var p = ('' + perfil).toLowerCase();
+        if (p === 'campo') return 'peao';
+        if (p === 'gerencia') return 'admin';
+        if (p === 'peao' || p === 'admin' || p === 'dono') return p;
+        return 'admin';
+    },
+
     // ══ INIT ══
     init: function () {
         var self = this;
@@ -391,7 +400,7 @@ window.firebaseSync = {
                 uid: this.user.uid,
                 email: this.user.email,
                 nome: this.user.displayName || this.user.email,
-                perfil: 'gerencia'
+                perfil: 'dono'
             }],
             criadoEm: firebase.firestore.FieldValue.serverTimestamp()
         }).then(function (docRef) {
@@ -442,7 +451,7 @@ window.firebaseSync = {
                         uid: self.user.uid,
                         email: self.user.email,
                         nome: self.user.displayName || self.user.email,
-                        perfil: 'campo'
+                        perfil: 'peao'
                     })
                 }).then(function () {
                     self.fazendaId = doc.id;
@@ -626,49 +635,50 @@ window.firebaseSync = {
 
     // ══ GET USER PROFILE FROM FIRESTORE ══
     getUserPerfil: function () {
-        if (!this.user || !this.db || !this.fazendaId) return 'gerencia';
+        if (!this.user || !this.db || !this.fazendaId) return 'admin';
 
         // Check membrosInfo for this user's profile
         var self = this;
         try {
             var cachedPerfil = localStorage.getItem('agromacro_user_perfil');
-            if (cachedPerfil) return cachedPerfil;
+            if (cachedPerfil) return this._normalizePerfil(cachedPerfil);
         } catch (e) { }
 
-        return 'gerencia'; // Default until async load
+        return 'admin'; // Default until async load
     },
 
     // ══ LOAD USER PROFILE ASYNC ══
     loadUserPerfil: function (callback) {
         if (!this.user || !this.db || !this.fazendaId) {
-            if (callback) callback('gerencia');
+            if (callback) callback('admin');
             return;
         }
 
         var self = this;
         this.db.collection('fazendas').doc(this.fazendaId).get().then(function (doc) {
-            if (!doc.exists) { if (callback) callback('gerencia'); return; }
+            if (!doc.exists) { if (callback) callback('admin'); return; }
 
             var data = doc.data();
-            var perfil = 'campo'; // Default for non-owners
+            var perfil = 'peao'; // Default for non-owners
 
-            // Owner is always gerencia
+            // Owner is always dono
             if (data.dono === self.user.uid) {
-                perfil = 'gerencia';
+                perfil = 'dono';
             } else if (data.membrosInfo) {
                 // Check membrosInfo
                 for (var i = 0; i < data.membrosInfo.length; i++) {
                     if (data.membrosInfo[i].uid === self.user.uid) {
-                        perfil = data.membrosInfo[i].perfil || 'campo';
+                        perfil = data.membrosInfo[i].perfil || 'peao';
                         break;
                     }
                 }
             }
 
+            perfil = self._normalizePerfil(perfil);
             try { localStorage.setItem('agromacro_user_perfil', perfil); } catch (e) { }
             if (callback) callback(perfil);
         }).catch(function () {
-            if (callback) callback('gerencia');
+            if (callback) callback('admin');
         });
     },
 

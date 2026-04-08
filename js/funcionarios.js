@@ -89,6 +89,15 @@ window.funcionarios = {
     render: function () {
         var container = document.getElementById('funcionarios-list');
         if (!container) return;
+        var isPeao = window.app && window.app.getPerfil && window.app.getPerfil() === 'peao';
+        var escapeHtml = function (value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
 
         var funcs = this.getAll();
         if (funcs.length === 0) {
@@ -97,20 +106,21 @@ window.funcionarios = {
         }
 
         var html = funcs.map(function (f) {
+            var nomeSafe = encodeURIComponent(f.nome || '');
             var initials = f.nome.split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2);
             var statusClass = f.ativo ? 'badge-green' : 'badge-red';
             var statusText = f.ativo ? 'Ativo' : 'Inativo';
             return '<div class="funcionario-card' + (f.ativo ? '' : ' inativo') + '">'
                 + '<div class="func-avatar">' + initials + '</div>'
                 + '<div class="func-info">'
-                + '  <strong>' + f.nome + '</strong>'
-                + (f.funcao ? '<span class="func-role">👷 ' + f.funcao + '</span>' : '')
-                + (f.telefone ? '<span class="func-phone">📱 ' + f.telefone + '</span>' : '')
-                + (f.diaria ? '<span class="func-pay">💰 R$ ' + f.diaria.toFixed(2) + '/dia</span>' : '')
+                + '  <strong>' + escapeHtml(f.nome) + '</strong>'
+                + (f.funcao ? '<span class="func-role">👷 ' + escapeHtml(f.funcao) + '</span>' : '')
+                + (f.telefone ? '<span class="func-phone">📱 ' + escapeHtml(f.telefone) + '</span>' : '')
+                + (!isPeao && f.diaria ? '<span class="func-pay">💰 R$ ' + f.diaria.toFixed(2) + '/dia</span>' : '')
                 + '</div>'
                 + '<div class="func-actions">'
                 + '  <span class="badge ' + statusClass + '">' + statusText + '</span>'
-                + (f.ativo ? '  <button class="btn-sm btn-danger" onclick="window.funcionarios.inativar(\'' + f.nome.replace(/'/g, "\\'") + '\')">Inativar</button>' : '')
+                + (!isPeao && f.ativo ? '  <button class="btn-sm btn-danger" data-nome="' + nomeSafe + '" onclick="window.funcionarios.inativar(decodeURIComponent(this.getAttribute(\'data-nome\')))" >Inativar</button>' : '')
                 + '</div>'
                 + '</div>';
         }).join('');
@@ -122,6 +132,7 @@ window.funcionarios = {
     renderWorkersForObra: function () {
         var container = document.getElementById('workers-list');
         if (!container) return;
+        var isPeao = window.app && window.app.getPerfil && window.app.getPerfil() === 'peao';
 
         var funcs = this.getAtivos();
         if (funcs.length === 0) {
@@ -136,7 +147,7 @@ window.funcionarios = {
                 + '<label class="worker-name"><input type="checkbox" value="' + f.nome + '" data-diaria="' + (f.diaria || 0) + '"> ' + f.nome
                 + (f.funcao ? ' <small style="color:var(--text-light)">(' + f.funcao + ')</small>' : '')
                 + '</label>'
-                + '<div class="worker-days"><input type="number" min="0" placeholder="0" class="worker-days-input" data-worker="' + f.nome + '"> <small>dias</small></div>'
+                + '<div class="worker-days"><input type="number" min="0" placeholder="0" class="worker-days-input" data-worker="' + f.nome + '"> <small>' + (isPeao ? 'turnos' : 'dias') + '</small></div>'
                 + '</div>';
         }).join('');
     }

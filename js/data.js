@@ -44,6 +44,7 @@ window.data = {
             }
             return 'ADMINISTRACAO';
         },
+        CONTA_RECEBER: 'GADO_CORTE',
         FUNCIONARIO_CADASTRO: 'ADMINISTRACAO',
         FUNCIONARIO_INATIVAR: 'ADMINISTRACAO',
         FUNCIONARIO: 'ADMINISTRACAO',
@@ -70,6 +71,23 @@ window.data = {
         this.load();
         this.migrate();
         console.log('Data v3: ' + this.events.length + ' eventos carregados.');
+    },
+
+    normalizeValueField: function (ev) {
+        if (!ev) return false;
+        if (ev.valor !== undefined && ev.value === undefined) {
+            ev.value = ev.valor;
+            return true;
+        }
+        if (ev.cost !== undefined && ev.value === undefined) {
+            ev.value = ev.cost;
+            return true;
+        }
+        if (ev.custo !== undefined && ev.value === undefined) {
+            ev.value = ev.custo;
+            return true;
+        }
+        return false;
     },
 
     generateId: function () {
@@ -112,18 +130,7 @@ window.data = {
                 ev.timestamp = ev.date ? new Date(ev.date).toISOString() : new Date().toISOString();
                 changed = true;
             }
-            if (ev.valor !== undefined && ev.value === undefined) {
-                ev.value = ev.valor;
-                changed = true;
-            }
-            if (ev.cost !== undefined && ev.value === undefined) {
-                ev.value = ev.cost;
-                changed = true;
-            }
-            if (ev.custo !== undefined && ev.value === undefined) {
-                ev.value = ev.custo;
-                changed = true;
-            }
+            if (self.normalizeValueField(ev)) changed = true;
             if (!ev.linkedEventIds) {
                 ev.linkedEventIds = [];
                 changed = true;
@@ -146,10 +153,7 @@ window.data = {
                     ev.status = 'pago';
                     changed = true;
                 }
-                if (ev.valor !== undefined && ev.value === undefined) {
-                    ev.value = ev.valor;
-                    changed = true;
-                }
+                if (self.normalizeValueField(ev)) changed = true;
             }
         });
         if (changed) this.save();
@@ -171,9 +175,7 @@ window.data = {
         if (!ev.date) ev.date = new Date().toISOString().split('T')[0];
         if (!ev.linkedEventIds) ev.linkedEventIds = [];
 
-        if (ev.valor !== undefined && ev.value === undefined) ev.value = ev.valor;
-        if (ev.cost !== undefined && ev.value === undefined) ev.value = ev.cost;
-        if (ev.custo !== undefined && ev.value === undefined) ev.value = ev.custo;
+        this.normalizeValueField(ev);
 
         if (!ev.centerCost && ev.type) {
             var resolver = this.CENTER_COSTS[ev.type];
@@ -225,7 +227,7 @@ window.data = {
 
     getFinanceiro: function (filters) {
         filters = filters || {};
-        var tiposFinanceiros = ['COMPRA', 'VENDA', 'ESTOQUE_ENTRADA', 'MANEJO', 'MANEJO_SANITARIO', 'CONTA_PAGAR', 'OBRA_REGISTRO', 'ESTORNO'];
+        var tiposFinanceiros = ['COMPRA', 'VENDA', 'ESTOQUE_ENTRADA', 'MANEJO', 'MANEJO_SANITARIO', 'CONTA_PAGAR', 'CONTA_RECEBER', 'OBRA_REGISTRO', 'ESTORNO'];
         return this.events.filter(function (ev) {
             if (ev.estornado) return false;
             if (tiposFinanceiros.indexOf(ev.type) < 0) return false;

@@ -2,6 +2,18 @@
 window.obras = {
     init: function () {
         console.log('Obras v3 Ready');
+        this.bindForm();
+    },
+
+    bindForm: function () {
+        var form = document.getElementById('form-obra');
+        if (form && !form.dataset.boundObras) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                window.obras.salvar();
+            });
+            form.dataset.boundObras = '1';
+        }
     },
 
     STATUS: {
@@ -105,16 +117,27 @@ window.obras = {
     },
 
     salvar: function () {
-        var nome = document.getElementById('obra-nome').value;
-        var categoria = document.getElementById('obra-cat').value;
-        var desc = document.getElementById('obra-desc').value;
-        var custoEstimado = parseFloat(document.getElementById('obra-custo-estimado').value) || 0;
-        var custoPago = parseFloat(document.getElementById('obra-custo-pago').value) || 0;
-        var statusObra = document.getElementById('obra-status').value;
-        var worker = document.getElementById('obra-worker').value;
-        var diaria = parseFloat(document.getElementById('obra-diaria').value) || 0;
-        var dias = parseInt(document.getElementById('obra-dias').value) || 0;
-        var data = document.getElementById('obra-data').value;
+        var nome = document.getElementById('obra-nome') ? document.getElementById('obra-nome').value : '';
+        var categoriaEl = document.getElementById('obra-cat');
+        var categoria = categoriaEl ? categoriaEl.value : 'outro';
+        var descEl = document.getElementById('obra-desc') || document.getElementById('obra-obs');
+        var desc = descEl ? descEl.value : '';
+        var custoEstimadoEl = document.getElementById('obra-custo-estimado') || document.getElementById('obra-empreiteiro-valor');
+        var custoEstimado = parseFloat(custoEstimadoEl ? custoEstimadoEl.value : '') || 0;
+        var custoPagoEl = document.getElementById('obra-custo-pago');
+        var custoPago = parseFloat(custoPagoEl ? custoPagoEl.value : '') || 0;
+        var statusEl = document.getElementById('obra-status');
+        var statusObra = statusEl ? statusEl.value : 'PLANEJADA';
+        var workerEl = document.getElementById('obra-worker');
+        var worker = workerEl ? workerEl.value : '';
+        var diariaEl = document.getElementById('obra-diaria');
+        var diaria = parseFloat(diariaEl ? diariaEl.value : '') || 0;
+        var diasEl = document.getElementById('obra-dias');
+        var dias = parseInt(diasEl ? diasEl.value : '', 10) || 0;
+        var dataEl = document.getElementById('obra-data') || document.getElementById('obra-inicio');
+        var data = dataEl ? dataEl.value : '';
+        var pastoEl = document.getElementById('obra-pasto');
+        var pasto = pastoEl ? pastoEl.value : '';
 
         if (!nome) {
             window.app.showToast('Preencha o nome da obra.', 'error');
@@ -125,6 +148,15 @@ window.obras = {
         if (worker && diaria > 0) {
             workers.push({ nome: worker, diaria: diaria, dias: dias || 1 });
         }
+        document.querySelectorAll('#workers-list input[type="checkbox"]:checked').forEach(function (checkbox) {
+            var nomeWorker = checkbox.value || '';
+            var diariaWorker = parseFloat(checkbox.getAttribute('data-diaria') || '0') || 0;
+            var diasInput = document.querySelector('.worker-days-input[data-worker="' + nomeWorker.replace(/"/g, '\\"') + '"]');
+            var diasWorker = parseInt(diasInput ? diasInput.value : '', 10) || 1;
+            if (nomeWorker && diariaWorker > 0) {
+                workers.push({ nome: nomeWorker, diaria: diariaWorker, dias: diasWorker });
+            }
+        });
 
         var custoMaoDeObra = 0;
         workers.forEach(function (w) { custoMaoDeObra += (w.diaria * w.dias); });
@@ -147,6 +179,7 @@ window.obras = {
             nome: nome,
             desc: desc,
             categoria: categoria,
+            pasto: pasto,
             custoEstimado: custoEstimado,
             custoPago: custoPago,
             custoRestante: Math.max(0, custoEstimado - custoPago),
@@ -211,7 +244,7 @@ window.obras = {
     },
 
     render: function () {
-        var container = document.getElementById('obras-content');
+        var container = document.getElementById('obras-history') || document.getElementById('obras-content');
         if (!container) return;
 
         var obras = this.getObras();
@@ -303,6 +336,10 @@ window.obras = {
 
         html += '<button class="fab" onclick="window.obras.abrirForm()">+</button>';
         container.innerHTML = html;
+    },
+
+    renderHistory: function () {
+        this.render();
     },
 
     fecharModal: function () {

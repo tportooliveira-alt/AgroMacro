@@ -6,90 +6,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroMacro Premium</title>
 
-    <!-- ══ Google Fonts Premium ══ -->
+    <!-- ══ Google Fonts — Inter (Campo Vivo Design System) ══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
         rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
 
-    <!-- ══ Tailwind CSS + Plugins ══ -->
+    <!-- ══ Tailwind CSS (utilitários) + Chart.js ══ -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
-    <!-- ══ Estilos Originais AgroMacro ══ -->
-    <link rel="stylesheet" href="styles.css?v=20260221a">
+    <!-- ══ AgroMacro — Campo Vivo v4 ══ -->
+    <link rel="stylesheet" href="styles.css?v=20260407">
     <link rel="manifest" href="manifest.json">
 
-    <!-- Leaflet.js — Mapa Interativo (grátis) -->
+    <!-- Leaflet.js — Mapa Interativo -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 
-    <!-- ══ Configuração Tema Stitch (Dark/Gold) ══ -->
+    <!-- ══ Tailwind config — Campo Vivo palette ══ -->
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Manrope', 'sans-serif'],
-                        tech: ['Space Grotesk', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#d5a944',
-                        secondary: '#b38a36',
+                        primary: '#00796B',
+                        accent:  '#D97706',
+                        /* dark-X → Campo Vivo (compat seções de gerência) */
                         dark: {
-                            900: '#0d0a07',
-                            800: '#1a1410',
-                            700: '#261f18',
-                            600: '#332920'
+                            900: '#F4F7F5',
+                            800: '#FFFFFF',
+                            700: '#EEF2EF',
+                            600: '#DDE6E0',
                         },
-                        accent: {
-                            green: '#13ec5b',
-                            red: '#ec1343'
-                        }
+                        /* slate-X → legível no fundo claro (compat text-slate-xxx) */
+                        slate: {
+                            100: '#0D1F17',
+                            200: '#1A3327',
+                            300: '#2D5244',
+                            400: '#4A6A58',
+                            500: '#89A897',
+                            600: '#89A897',
+                            700: '#A8C4B4',
+                        },
                     }
                 }
             }
         }
     </script>
     <style>
+        /* Flash-of-unstyled-content prevention — tokens iniciais */
         :root {
-            /* Forçando as variáveis originais a adotarem as cores do Stitch */
-            --bg-1: #0d0a07;
-            --bg-2: #1a1410;
-            --bg-3: #261f18;
-            --text-1: #f3f4f6;
-            --text-2: #9ca3af;
-            --primary: #d5a944;
-            --primary-dark: #b38a36;
-            --accent-green: #13ec5b;
-            --accent-red: #ec1343;
-            --border: #332920;
+            --bg-0: #F4F7F5;
+            --bg-1: #FFFFFF;
+            --bg-3: #EEF2EF;
+            --text-0: #0D1F17;
+            --text-1: #1A3327;
+            --text-2: #4A6A58;
+            --text-3: #89A897;
+            --primary: #00796B;
+            --primary-surface: rgba(0,121,107,0.09);
+            --border: rgba(13,31,23,0.13);
+            /* back-compat aliases */
+            --accent-green: #26A69A;
+            --accent-red:   #DC2626;
         }
-
-        /* Oculta os scrollbars para look nativo Mobile App */
-        ::-webkit-scrollbar {
-            width: 0px;
-            background: transparent;
+        html, body {
+            background-color: var(--bg-0);
+            color: var(--text-0);
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0; padding: 0;
         }
-
-        html,
-        body {
-            background-color: var(--bg-1);
-            color: var(--text-1);
-            font-family: 'Manrope', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Material Symbols Custom Fill */
         .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-            transition: all 0.2s ease;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            transition: font-variation-settings 0.2s ease;
         }
     </style>
 </head>
@@ -165,21 +164,15 @@
     </div>
 
     <!-- Header -->
-    <header
-        class="sticky top-0 z-50 flex items-center justify-between p-4 border-b bg-dark-900/80 backdrop-blur-md border-dark-600">
-        <div class="flex items-center gap-2">
-            <span class="text-2xl">🐂</span>
-            <h1 class="text-primary text-xl font-extrabold tracking-tight"
-                style="font-family: 'Space Grotesk', sans-serif;">AgroMacro</h1>
+    <header class="top-header">
+        <div class="brand">
+            <span class="brand-icon">🐄</span>
+            <span class="brand-name">AgroMacro</span>
         </div>
-        <div class="flex items-center gap-3">
-            <div class="text-right">
-                <p class="text-xs text-slate-400 font-medium" id="fazenda-nome-topbar">Fazenda Esperança</p>
-            </div>
-            <button
-                class="flex items-center justify-center p-2 rounded-full text-primary border border-primary/20 bg-dark-800"
-                onclick="window.app.navigate('config')">
-                <span class="material-symbols-outlined">settings</span>
+        <div class="header-actions">
+            <span style="font-size:11px;font-weight:700;color:var(--text-3);padding:0 6px;" id="fazenda-nome-topbar"></span>
+            <button id="topbar-config-btn" class="header-action-btn gerencia-only" onclick="window.app.navigate('config')" aria-label="Configurações">
+                <span class="material-symbols-outlined" style="font-size:20px">settings</span>
             </button>
         </div>
     </header>
@@ -195,43 +188,90 @@
                 <div class="greeting-sub" id="greeting-date"></div>
             </div>
 
-            <!-- HOME CAMPO REMOVIDO — Interface unificada -->
+            <!-- ══ HOME PEÃO — Ações rápidas de campo ══ -->
+            <div id="home-peao" class="peao-only" style="display:none">
+                <div class="hero-greeting" style="padding-bottom:0;">
+                    <div class="greeting-text" id="peao-greeting-text">Bom dia</div>
+                    <div class="greeting-sub" id="peao-greeting-date"></div>
+                </div>
+                
+                <!-- Cards de Ação Rápida — Foco em frequência -->
+                <div class="peao-home-grid" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:80px;">
+                    <button class="peao-action-card" onclick="window.app.navigate('pastos')" style="grid-column:1/3;">
+                        <div class="peao-action-icon">🌿</div>
+                        <div class="peao-action-title">Gerenciar Pastos</div>
+                        <div class="peao-action-sub">Manejo e rotação</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('manejo')">
+                        <div class="peao-action-icon">💉</div>
+                        <div class="peao-action-title">Manejo</div>
+                        <div class="peao-action-sub">Vacinas</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('estoque')">
+                        <div class="peao-action-icon">📦</div>
+                        <div class="peao-action-title">Insumos</div>
+                        <div class="peao-action-sub">Almoxarifado</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('lotes')">
+                        <div class="peao-action-icon">🐄</div>
+                        <div class="peao-action-title">Lotes</div>
+                        <div class="peao-action-sub">Ver animais</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('rastreabilidade')">
+                        <div class="peao-action-icon">🏷️</div>
+                        <div class="peao-action-title">Rastreia</div>
+                        <div class="peao-action-sub">Brincos</div>
+                    </button>
+                    <button class="peao-action-card"onclick="window.app.navigate('calendario')">
+                        <div class="peao-action-icon">📅</div>
+                        <div class="peao-action-title">Agenda</div>
+                        <div class="peao-action-sub">Do dia</div>
+                    </button>
+                </div>
 
-            <!-- ══ HOME GERÊNCIA (Produtor) — Layout completo ══ -->
-            <div id="home-gerencia" class="gerencia-only space-y-4 p-4">
+                <!-- Alertas Críticos para Peão -->
+                <div style="padding:16px;padding-top:0;margin-bottom:60px;">
+                    <div style="font-weight:700;font-size:13px;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Atenção</div>
+                    <div id="peao-alerts-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+            </div>
+
+            <!-- ══ HOME ADMIN (Gerente) — Layout completo ══ -->
+            <div id="home-admin" class="admin-only gerencia-only space-y-4 p-4">
 
                 <!-- Greeting Card -->
                 <div class="relative overflow-hidden rounded-xl p-5"
-                    style="background-color: rgba(19, 236, 91, 0.1); border: 1px solid rgba(19, 236, 91, 0.2);">
+                    style="background: var(--primary-surface); border: 1.5px solid var(--border-emphasis);">
                     <div class="relative z-10">
-                        <h2 class="text-xl font-bold" style="color: var(--accent-green);" id="greeting-text">Bom dia,
-                            Fazendeiro!</h2>
-                        <p class="text-sm mt-1" style="color: rgba(19, 236, 91, 0.7);" id="greeting-date">Segunda-feira,
-                            24 de Maio • Ensolarado</p>
+                        <h2 class="text-xl font-black" style="color: var(--primary);" id="admin-greeting-text">Bom dia, Produtor!</h2>
+                        <p class="text-sm mt-1" style="color: var(--text-2);" id="admin-greeting-date">Segunda-feira, 7 de Abril</p>
                     </div>
+                    <div class="absolute -right-4 -top-4 text-6xl opacity-10" aria-hidden="true">🐄</div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Map Card -->
-                    <div class="relative group aspect-[4/3] rounded-xl overflow-hidden border border-dark-600 bg-dark-800"
+                    <div class="relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer"
+                        style="background: var(--bg-3); border: 1.5px solid var(--border-default);"
                         onclick="window.app.navigate('mapa')">
                         <div class="absolute inset-0 bg-cover bg-center"
                             style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdkrgOxFiNw3s4XWw07TxuU3p0C3WmVNBDSwx_cqgwGCYvRbeusmzY4tUIiLE67r28Rt0yb94CvhBaHPmm_8pKmwVsActmo7qoz2pU8_6o8aPcc6az92Ry53b7SJEuLxAAWZX09jVpEoOKiztfULvqzMjhK0q2QrQO6CQ6AWDTXFTTm4sEuCmHsL--f1-EPJBu8S-t4WT7zXC77rNv_2xbcKzaJMMDA2sdzCmoQ_1sxcE6YISGKV1Oikrtsn928byVErCp6VrkFfA_')">
                         </div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 60%);"></div>
                         <div class="absolute bottom-3 left-3">
                             <p class="text-white font-bold text-sm">Mapa da Fazenda</p>
-                            <div class="flex items-center gap-1 text-[10px] text-white/70">
-                                <span class="material-symbols-outlined text-xs">near_me</span>
+                            <div class="flex items-center gap-1" style="font-size:10px;color:rgba(255,255,255,0.75);">
+                                <span class="material-symbols-outlined" style="font-size:12px;">near_me</span>
                                 <span>Ver Talhões</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Weather / Climate Card -->
-                    <div class="aspect-[4/3] rounded-xl border border-blue-500/30 p-3 flex flex-col justify-between"
-                        style="background-color: rgba(59, 130, 246, 0.1);" onclick="window.app.navigate('clima')">
-                        <div id="clima-widget" class="clima-widget w-full h-full text-white">Carregando clima...</div>
+                    <div class="aspect-[4/3] rounded-xl p-3 flex flex-col justify-between cursor-pointer"
+                        style="background: linear-gradient(135deg, rgba(29,78,216,0.10), rgba(0,121,107,0.08)); border: 1.5px solid rgba(29,78,216,0.18);"
+                        onclick="window.app.navigate('clima')">
+                        <div id="clima-widget" class="clima-widget w-full h-full">Carregando clima...</div>
                     </div>
                 </div>
 
@@ -245,7 +285,8 @@
                 </section>
 
                 <!-- Menina (Clara AI) Insight Card -->
-                <div class="border-2 border-primary/40 rounded-xl p-4 relative overflow-hidden mt-2 bg-dark-800">
+                <div class="border-2 rounded-xl p-4 relative overflow-hidden mt-2"
+                    style="background: var(--primary-surface); border-color: var(--border-emphasis);">
                     <div class="flex gap-4 relative z-10">
                         <div
                             class="w-14 h-14 rounded-full border-2 border-primary overflow-hidden shrink-0 bg-primary/10">
@@ -262,7 +303,7 @@
                             <div id="ia-insights-home" class="text-sm text-slate-200 leading-relaxed font-medium">"Olá.
                                 Sou a Dona Clara, sua gerente de IA. Estou monitorando seus lotes e pastos."</div>
                             <button onclick="app.navigate('ia-chefa')"
-                                class="mt-4 w-full bg-primary text-dark-900 font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                class="mt-4 w-full bg-primary text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined text-sm">forum</span>
                                 Falar com a Clara
                             </button>
@@ -272,39 +313,39 @@
                 </div>
 
                 <!-- ZootecIA Quick Access -->
-                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer border border-green-800/40"
-                    style="background:linear-gradient(135deg,rgba(21,128,61,0.15),rgba(22,163,74,0.08))"
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer"
+                    style="background: var(--green-surface); border: 1.5px solid rgba(22,163,74,0.22);"
                     onclick="window.nutricaoIA.abrirModal('exigencias')">
                     <div style="font-size:36px;line-height:1">🧬</div>
                     <div style="flex:1">
-                        <div style="font-weight:700;font-size:14px;color:#4ADE80">ZootecIA — Nutrição Bovina</div>
-                        <div style="font-size:11px;color:#86EFAC;margin-top:2px">Formular ração · NRC 2016 · CQBAL 3.0 · Custo/arroba</div>
+                        <div style="font-weight:800;font-size:14px;color:var(--green);">ZootecIA — Nutrição Bovina</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Formular ração · NRC 2016 · CQBAL 3.0 · Custo/arroba</div>
                     </div>
-                    <span style="color:#4ADE80;font-size:20px">›</span>
+                    <span style="color:var(--green);font-size:20px;font-weight:700;">›</span>
                 </div>
 
                 <!-- Índices Zootécnicos Quick Access -->
-                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer border border-blue-800/40"
-                    style="background:linear-gradient(135deg,rgba(29,78,216,0.15),rgba(37,99,235,0.08))"
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer"
+                    style="background: var(--blue-surface); border: 1.5px solid rgba(29,78,216,0.18);"
                     onclick="window.zooIndices.abrirModal('indices')">
                     <div style="font-size:36px;line-height:1">📈</div>
                     <div style="flex:1">
-                        <div style="font-weight:700;font-size:14px;color:#60A5FA">Índices Zootécnicos</div>
-                        <div style="font-size:11px;color:#93C5FD;margin-top:2px">Prenhez · Natalidade · Desmama · Custo/@</div>
+                        <div style="font-weight:800;font-size:14px;color:var(--blue)">Índices Zootécnicos</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Prenhez · Natalidade · Desmama · Custo/@</div>
                     </div>
-                    <span style="color:#60A5FA;font-size:20px">›</span>
+                    <span style="color:var(--blue);font-size:20px;font-weight:700;">›</span>
                 </div>
 
                 <!-- Formulador Pro Quick Access -->
-                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer border border-yellow-800/40"
-                    style="background:linear-gradient(135deg,rgba(124,58,237,0.18),rgba(79,70,229,0.08))"
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer"
+                    style="background: var(--purple-surface); border: 1.5px solid rgba(124,58,237,0.18);"
                     onclick="window.formulacaoRacao.abrirModal('otimizador')">
                     <div style="font-size:36px;line-height:1">🔬</div>
                     <div style="flex:1">
-                        <div style="font-weight:700;font-size:14px;color:#C4B5FD">Formulador de Rações Pro</div>
-                        <div style="font-size:11px;color:#A78BFA;margin-top:2px">Otimizador LP · Simplex · CQBAL 3.0 · BR-CORTE 2023 · Custo/@</div>
+                        <div style="font-weight:800;font-size:14px;color:var(--purple);">Formulador de Rações Pro</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Otimizador LP · Simplex · CQBAL 3.0 · BR-CORTE 2023 · Custo/@</div>
                     </div>
-                    <span style="color:#C4B5FD;font-size:20px">›</span>
+                    <span style="color:var(--purple);font-size:20px;font-weight:700;">›</span>
                 </div>
 
                 <!-- Cotação do Rebanho em Pé -->
@@ -321,6 +362,70 @@
 
             </div>
 
+            <!-- ══ HOME DONO — Gestão, controle e estratégia ══ -->
+            <div id="home-dono" class="dono-only" style="display:none;padding:16px;padding-bottom:100px;">
+                
+                <!-- Greeting Card -->
+                <div style="background:var(--primary-surface);border:1.5px solid var(--border-emphasis);border-radius:12px;padding:16px;margin-bottom:16px;">
+                    <div style="color:var(--primary);font-weight:700;font-size:16px;" id="dono-greeting-text">Bem-vindo, Proprietário</div>
+                    <div style="color:var(--text-2);font-size:12px;margin-top:4px;" id="dono-greeting-date">Visão Estratégica da Fazenda</div>
+                </div>
+
+                <!-- Gestão de Pessoas — Rapid Access -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;" onclick="window.app.navigate('funcionarios')">
+                        <div style="font-size:28px;margin-bottom:8px;">👥</div>
+                        <div style="font-weight:700;font-size:13px;">Membros</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Gerenciar equipe</div>
+                    </div>
+                    <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;" onclick="window.app.navigate('config')">
+                        <div style="font-size:28px;margin-bottom:8px;">⚙️</div>
+                        <div style="font-weight:700;font-size:13px;">Configurações</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Perfis e permissões</div>
+                    </div>
+                </div>
+
+                <!-- Indicadores Estratégicos -->
+                <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:12px;text-transform:uppercase;color:var(--text-2);letter-spacing:0.5px;">Desempenho</div>
+                    <div id="dono-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+
+                <!-- Financeiro — Visão Executiva -->
+                <div style="background:linear-gradient(135deg,rgba(220,38,38,0.08),rgba(217,119,6,0.08));border:1.5px solid rgba(220,38,38,0.15);border-radius:10px;padding:14px;margin-bottom:16px;cursor:pointer;" onclick="window.app.navigate('financeiro')">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="font-size:28px;">💰</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700;font-size:13px;">Finanças Consolidadas</div>
+                            <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Receitas, custos e rentabilidade</div>
+                        </div>
+                        <div style="font-size:20px;color:var(--text-2);font-weight:700;">›</div>
+                    </div>
+                </div>
+
+                <!-- Auditoria e Atividades -->
+                <div id="dono-audit-summary" style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:12px;text-transform:uppercase;color:var(--text-2);letter-spacing:0.5px;">Últimas Atividades</div>
+                    <div id="dono-recent-activities" style="display:flex;flex-direction:column;gap:8px;">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+
+                <!-- Acesso Rápido para Admin -->
+                <div style="background:var(--primary-surface);border:1.5px solid var(--border-emphasis);border-radius:10px;padding:14px;">
+                    <div style="font-weight:700;font-size:12px;color:var(--primary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Operações Completas</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;">
+                        <button onclick="window.app.navigate('lotes')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Rebanho</button>
+                        <button onclick="window.app.navigate('obras')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Operações</button>
+                        <button onclick="window.app.navigate('estoque')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Insumos</button>
+                        <button onclick="window.app.navigate('manejo')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Manejo</button>
+                    </div>
+                </div>
+
+            </div>
+
             <!-- Alerts Section (ambos perfis) -->
             <div class="alerts-section">
                 <div class="alerts-title">Alertas</div>
@@ -330,126 +435,27 @@
         </section>
 
         <!-- ===================== FINANCEIRO (Stitch Cash Flow) ===================== -->
-        <section id="view-financeiro"
-            class="view hidden gerencia-only overflow-y-auto pb-24 relative min-h-screen bg-dark-900">
-            <!-- Header Título -->
-            <div
-                class="flex items-center bg-dark-900 p-4 justify-between border-b border-primary/20 sticky top-0 z-20 backdrop-blur-md">
-                <button
-                    class="flex items-center justify-center p-2 rounded-full text-primary border border-primary/20 bg-dark-800"
-                    onclick="window.app.navigate('home')">
-                    <span class="material-symbols-outlined">arrow_back</span>
-                </button>
-                <h2 class="text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
-                    Fluxo de Caixa</h2>
-            </div>
-
-            <!-- Ações Rápidas (Compensar a remoção do HUB antigo) -->
-            <div class="grid grid-cols-4 gap-2 px-4 pt-4">
-                <button onclick="window.app.navigate('compra')"
-                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
-                    <span class="text-xl">🛒</span><span
-                        class="text-[9px] font-bold text-slate-300 uppercase">Compra</span>
-                </button>
-                <button onclick="window.app.navigate('venda')"
-                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
-                    <span class="text-xl">💰</span><span
-                        class="text-[9px] font-bold text-slate-300 uppercase">Venda</span>
-                </button>
-                <button onclick="window.app.navigate('contas')"
-                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
-                    <span class="text-xl">📋</span><span
-                        class="text-[9px] font-bold text-slate-300 uppercase">Contas</span>
-                </button>
-                <button onclick="window.app.navigate('balanco')"
-                    class="flex flex-col items-center gap-1 p-2 bg-dark-800 rounded-lg border border-dark-600">
-                    <span class="text-xl">📈</span><span
-                        class="text-[9px] font-bold text-slate-300 uppercase">DRE</span>
-                </button>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="flex gap-3 p-4 overflow-x-auto no-scrollbar">
-                <!-- Entradas -->
-                <div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-xl p-4 border border-emerald-500/20"
-                    style="background-color: rgba(16, 185, 129, 0.1);">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-emerald-500 text-sm">trending_up</span>
-                        <p class="text-emerald-500 text-xs font-bold uppercase tracking-wider">Entradas</p>
-                    </div>
-                    <p class="text-slate-100 text-xl font-extrabold leading-tight">R$ 45.200</p>
-                    <p class="text-emerald-500 text-xs font-medium">+12% este mês</p>
-                </div>
-                <!-- Saídas -->
-                <div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-xl p-4 border border-rose-500/20"
-                    style="background-color: rgba(244, 63, 94, 0.1);">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-rose-500 text-sm">trending_down</span>
-                        <p class="text-rose-500 text-xs font-bold uppercase tracking-wider">Saídas</p>
-                    </div>
-                    <p class="text-slate-100 text-xl font-extrabold leading-tight">R$ 12.850</p>
-                    <p class="text-rose-500 text-xs font-medium">-5% este mês</p>
-                </div>
-                <!-- Saldo -->
-                <div
-                    class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-xl p-4 border border-primary/20 bg-primary/10">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
-                        <p class="text-primary text-xs font-bold uppercase tracking-wider">Saldo</p>
-                    </div>
-                    <p class="text-slate-100 text-xl font-extrabold leading-tight">R$ 32.350</p>
-                    <p class="text-primary text-xs font-medium">+15% vs out.</p>
-                </div>
-            </div>
-            <!-- Filters -->
-            <div class="flex gap-3 px-4 py-2 overflow-x-auto no-scrollbar">
-                <button
-                    class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary/20 border border-primary/30 px-4">
-                    <span class="text-primary text-sm font-bold">Novembro 2026</span>
-                    <span class="material-symbols-outlined text-primary text-sm">expand_more</span>
-                </button>
-            </div>
-            <div class="mt-4">
-                <h3 class="text-slate-300 text-sm font-bold uppercase tracking-[0.1em] px-4 pb-3 opacity-60">Transações
-                    Recentes</h3>
-                <div class="flex flex-col gap-[1px]">
-                    <div class="flex border-b border-border-dark flex-col gap-3 bg-dark-900 px-4 py-3">
-                        <div class="flex justify-between items-start">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase">12 Nov 2026</span>
-                                <h4 class="text-slate-100 font-bold">Venda Lote Hereford #42</h4>
-                                <div class="flex gap-2 items-center">
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase text-emerald-500"
-                                        style="background-color: rgba(16, 185, 129, 0.1);">Venda de Gado</span>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-end gap-1">
-                                <span class="text-emerald-500 font-extrabold text-lg">+ R$ 18.400,00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <section id="view-financeiro" class="view hidden gerencia-only">
+            <!-- Conteúdo renderizado dinamicamente pelo financeiro.js -->
+            <div id="fluxo-content"></div>
         </section>
 
         <!-- ===================== CHAT IA CHEFA (Dona Clara 3D) ===================== -->
-        <section id="view-ia-chefa" class="view hidden font-tech flex flex-col h-[100dvh]">
-            <header class="sticky top-0 z-50 bg-dark-900/90 backdrop-blur-md border-b p-4"
-                style="border-color: rgba(19, 236, 91, 0.2);">
+        <section id="view-ia-chefa" class="view hidden flex flex-col h-[100dvh]">
+            <header class="sticky top-0 z-50 backdrop-blur-md border-b p-4"
+                style="background: var(--header-bg); border-color: var(--border-default);">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex-1 flex items-center gap-3">
                         <div class="relative">
-                            <div class="w-14 h-14 rounded-full border-2 overflow-hidden bg-center bg-no-repeat bg-cover filter drop-shadow-[0_0_8px_rgba(19,236,91,0.5)]"
-                                style='border-color: #13ec5b; background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqHoszHRJJ2hKYb-omy_hhBoRlXnM_jTy-VKWb0RhVUGnP9Bpm3PYJY3MWWUyiNgnGcZRK5awApx7l6sjc-udFb7CgE0rHckhVu0F9_6GngbYnXcqk9eauRUE5tNlsRfCQWhLNzqQRF-rgAWDueOzOi5J6ZDeSaZU-VQ7MztqLR2cj7j1PPhtaRZEW7lWDXn7tDBQCabba2L26q8JXhr44MKw1-C1NDfX-PRiiIaWtTSNH-ESDiNfFeXuCJ1V_03JkoLdh-MAcVM5i");'>
+                            <div class="w-14 h-14 rounded-full border-2 overflow-hidden bg-center bg-no-repeat bg-cover"
+                                style='border-color: var(--primary); background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqHoszHRJJ2hKYb-omy_hhBoRlXnM_jTy-VKWb0RhVUGnP9Bpm3PYJY3MWWUyiNgnGcZRK5awApx7l6sjc-udFb7CgE0rHckhVu0F9_6GngbYnXcqk9eauRUE5tNlsRfCQWhLNzqQRF-rgAWDueOzOi5J6ZDeSaZU-VQ7MztqLR2cj7j1PPhtaRZEW7lWDXn7tDBQCabba2L26q8JXhr44MKw1-C1NDfX-PRiiIaWtTSNH-ESDiNfFeXuCJ1V_03JkoLdh-MAcVM5i");'>
                             </div>
-                            <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-dark-900"
-                                style="background-color: #13ec5b;"></div>
+                            <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+                                style="background: var(--primary); border-color: var(--bg-1);"></div>
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold tracking-tight text-slate-100">Dona Clara 3D</h1>
-                            <span class="text-xs font-medium uppercase tracking-widest" style="color: #13ec5b;">Master
-                                AI • AgroMacro</span>
+                            <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-0);">Dona Clara</h1>
+                            <span class="text-xs font-bold uppercase tracking-widest" style="color: var(--primary);">IA Gestora • AgroMacro</span>
                         </div>
                     </div>
                 </div>
@@ -458,27 +464,28 @@
                 <!-- AI Message -->
                 <div class="flex flex-col gap-2 items-start max-w-[85%]">
                     <span class="text-[10px] font-bold uppercase tracking-tighter ml-4"
-                        style="color: rgba(19, 236, 91, 0.7);">Clara</span>
-                    <div class="bg-dark-800 border rounded-xl rounded-tl-none p-4 shadow-xl"
-                        style="border-color: rgba(19, 236, 91, 0.4);">
-                        <p class="text-sm leading-relaxed text-slate-200" id="ia-welcome-msg">
+                        style="color: var(--primary);">Clara</span>
+                    <div class="rounded-xl rounded-tl-none p-4 shadow-sm"
+                        style="background: var(--primary-surface); border: 1px solid var(--border-emphasis);">
+                        <p class="text-sm leading-relaxed" style="color: var(--text-1);" id="ia-welcome-msg">
                             Olá! Sou a Dona Clara 👩‍💼, a IA Gestora da Fazenda. Domino as áreas de Administração,
                             Agronomia, Zootecnia e Financeiro. Como posso ajudar com as análises do AgroMacro hoje?
                         </p>
                     </div>
                 </div>
             </div>
-            <div class="fixed bottom-[70px] left-0 right-0 p-4 bg-dark-900 border-t"
-                style="border-color: rgba(19, 236, 91, 0.2);">
-                <div class="flex items-center gap-3 bg-dark-800/80 border rounded-full px-4 py-2 focus-within:border-[#13ec5b] filter drop-shadow-[0_0_8px_rgba(19,236,91,0.5)] transition-all"
-                    style="border-color: rgba(19, 236, 91, 0.3);">
+            <div class="fixed bottom-[70px] left-0 right-0 p-4"
+                style="background: var(--nav-bg); border-top: 1.5px solid var(--border-default); backdrop-filter: blur(20px);">
+                <div class="flex items-center gap-3 rounded-full px-4 py-2 transition-all"
+                    style="background: var(--bg-3); border: 1.5px solid var(--border-default);">
                     <input id="chat-input"
-                        class="flex-1 bg-transparent border-none text-slate-100 focus:ring-0 text-sm py-2"
-                        style="outline:none;" placeholder="Pergunte à Clara..." type="text" />
+                        class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2"
+                        style="outline:none; color: var(--text-0); font-family: inherit;"
+                        placeholder="Pergunte à Clara..." type="text" />
                     <button id="chat-send"
-                        class="w-10 h-10 text-dark-900 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-                        style="background-color: #13ec5b;">
-                        <span class="material-symbols-outlined font-bold">send</span>
+                        class="w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                        style="background: var(--primary); color: white;">
+                        <span class="material-symbols-outlined" style="font-size:18px;">send</span>
                     </button>
                 </div>
             </div>
@@ -570,6 +577,11 @@
                     <select id="venda-lote">
                         <option value="">Selecionar Lote...</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label>Pasto de Origem</label>
+                    <input type="text" id="venda-pasto-info" placeholder="Selecione um lote" readonly>
+                    <input type="hidden" id="venda-pasto-hidden">
                 </div>
                 <div class="form-group">
                     <label>Quantidade de Animais</label>
@@ -1342,16 +1354,16 @@
                     <label>Tema</label>
                     <div id="theme-toggle"
                         style="display:flex;gap:4px;background:var(--bg-0);border-radius:var(--radius-sm);padding:3px;">
-                        <button type="button" class="theme-opt" data-theme="auto" onclick="window.app.setTheme('auto')"
+                        <button type="button" class="theme-opt" data-theme="branco" onclick="window.app.setTheme('branco')"
                             style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
-                            🌗 Auto
+                            🤍 Branco
                         </button>
-                        <button type="button" class="theme-opt" data-theme="light"
-                            onclick="window.app.setTheme('light')"
+                        <button type="button" class="theme-opt" data-theme="claro"
+                            onclick="window.app.setTheme('claro')"
                             style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
                             ☀️ Claro
                         </button>
-                        <button type="button" class="theme-opt" data-theme="dark" onclick="window.app.setTheme('dark')"
+                        <button type="button" class="theme-opt" data-theme="escuro" onclick="window.app.setTheme('escuro')"
                             style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
                             🌙 Escuro
                         </button>
@@ -1773,38 +1785,39 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar (Stitch Fixed Base) -->
-    <nav
-        class="fixed bottom-0 left-0 right-0 bg-dark-900 border-t border-dark-600 px-4 pb-6 pt-3 flex justify-between items-center z-50">
-        <a class="flex flex-col items-center justify-center gap-1 text-primary cursor-pointer w-1/5"
-            onclick="app.navigate('home')" id="nav-home">
-            <span class="material-symbols-outlined text-2xl" id="nav-icon-home">home</span>
-            <span class="text-[10px] font-bold uppercase">Painel</span>
-        </a>
-        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5"
-            onclick="app.navigate('obras')" id="nav-operacoes">
-            <span class="material-symbols-outlined text-2xl" id="nav-icon-obra">precision_manufacturing</span>
-            <span class="text-[10px] font-medium uppercase">Operações</span>
-        </a>
-        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5 relative -top-3"
-            onclick="app.navigate('ia-chefa')" id="nav-ia-chefa">
-            <div
-                class="w-14 h-14 rounded-full bg-dark-900 border border-primary/30 flex items-center justify-center -mb-2 shadow-[0_0_15px_rgba(213,169,68,0.2)]">
-                <span class="material-symbols-outlined text-primary text-3xl font-extrabold"
-                    id="nav-icon-ia-chefa">psychology</span>
+    <!-- Bottom Navigation Bar — Campo Vivo -->
+    <nav class="bottom-nav">
+        <button class="nav-item" onclick="app.navigate('home')" id="nav-home">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-home">home</span>
             </div>
-            <span class="text-[10px] font-medium uppercase text-primary mt-1">Clara</span>
-        </a>
-        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5 gerencia-only"
-            onclick="app.navigate('financeiro')" id="nav-financeiro">
-            <span class="material-symbols-outlined text-2xl" id="nav-icon-financeiro">account_balance_wallet</span>
-            <span class="text-[10px] font-medium uppercase">Financeiro</span>
-        </a>
-        <a class="flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer w-1/5"
-            onclick="app.navigate('lotes')" id="nav-rebanho">
-            <span class="material-symbols-outlined text-2xl" id="nav-icon-rebanho">pets</span>
-            <span class="text-[10px] font-medium uppercase">Rebanho</span>
-        </a>
+            <span>Painel</span>
+        </button>
+        <button class="nav-item" onclick="app.navigate('obras')" id="nav-operacoes">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-obra">precision_manufacturing</span>
+            </div>
+            <span>Operações</span>
+        </button>
+        <button class="nav-item" onclick="app.navigate('ia-chefa')" id="nav-ia-chefa"
+            style="position:relative; top:-8px;">
+            <div class="nav-icon" style="width:54px; height:54px; border-radius:18px; background:var(--primary); color:white; box-shadow: 0 4px 16px var(--primary-glow);">
+                <span class="material-symbols-outlined" id="nav-icon-ia-chefa" style="font-size:26px;">psychology</span>
+            </div>
+            <span id="nav-label-ia" style="color:var(--primary); font-weight:800;">Clara</span>
+        </button>
+        <button class="nav-item gerencia-only" onclick="app.navigate('financeiro')" id="nav-financeiro">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-financeiro">account_balance_wallet</span>
+            </div>
+            <span>Financeiro</span>
+        </button>
+        <button class="nav-item" onclick="app.navigate('lotes')" id="nav-rebanho">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-rebanho">pets</span>
+            </div>
+            <span id="nav-label-rebanho">Rebanho</span>
+        </button>
     </nav>
 
     <!-- Firebase SDKs -->

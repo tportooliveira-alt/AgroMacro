@@ -46,6 +46,34 @@ window.pastos = {
         this.renderList();
     },
 
+    startOperacaoPasto: function (pastoNome, acao) {
+        try {
+            localStorage.setItem('agromacro_operacao_pasto', pastoNome || '');
+            localStorage.setItem('agromacro_operacao_acao', acao || '');
+        } catch (e) { }
+
+        if (acao === 'troca') {
+            if (window.lotes && window.lotes.trocarPasto) {
+                window.lotes.trocarPasto(pastoNome);
+                return;
+            }
+            window.app.showToast('Abra o modulo de lotes para trocar pasto.', 'warning');
+            return;
+        }
+
+        window.app.navigate('manejo');
+        setTimeout(function () {
+            var pastoSel = document.getElementById('manejo-pasto');
+            if (pastoSel && pastoNome) pastoSel.value = pastoNome;
+
+            var tipoSel = document.getElementById('manejo-tipo');
+            if (tipoSel) {
+                tipoSel.value = acao === 'insumo' ? 'nutricao' : 'vacina';
+                if (window.manejo && window.manejo.onTipoChange) window.manejo.onTipoChange();
+            }
+        }, 120);
+    },
+
     renderList: function () {
         var container = document.getElementById('pastos-list');
         if (!container) return;
@@ -186,6 +214,18 @@ window.pastos = {
                 + descansoHtml
                 // Lotes
                 + lotesHtml
+                // Card simplificado para operacao do peao
+                + (window.app && window.app.getPerfil && window.app.getPerfil() === 'peao'
+                    ? '<div style="margin-top:10px;padding:10px;border:1px solid #D7DFD2;border-radius:12px;background:#F8FBF7;">'
+                    + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#3F5F42;margin-bottom:8px;">Operacao Rapida do Pasto</div>'
+                    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+                    + '<button class="btn-sm" style="background:#2E7D32;color:#fff;" onclick="event.stopPropagation(); window.pastos.startOperacaoPasto(\'' + p.nome + '\',\'manejo\')">Manejo</button>'
+                    + '<button class="btn-sm" style="background:#1B5E20;color:#fff;" onclick="event.stopPropagation(); window.pastos.startOperacaoPasto(\'' + p.nome + '\',\'insumo\')">Usar Insumo</button>'
+                    + '<button class="btn-sm" style="background:#2563EB;color:#fff;" onclick="event.stopPropagation(); window.pastos.startOperacaoPasto(\'' + p.nome + '\',\'troca\')">Troca de Pasto</button>'
+                    + '<button class="btn-sm" style="background:#0F766E;color:#fff;" onclick="event.stopPropagation(); window.app.navigate(\'obras\')">Obra Rapida</button>'
+                    + '</div>'
+                    + '</div>'
+                    : '')
                 // Botões
                 + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;display:flex;gap:6px;flex-wrap:wrap;">'
                 + '<button class="btn-sm" onclick="event.stopPropagation(); window.pastoMgmt.abrirAvaliacao(\'' + p.nome + '\')">🌿 Avaliar</button>'

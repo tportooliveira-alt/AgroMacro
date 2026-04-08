@@ -2,6 +2,49 @@
 window.app = {
     currentPage: 'home',
     PERFIL_KEY: 'agromacro_perfil',
+    PERFIS_VALIDOS: ['peao', 'admin', 'dono'],
+
+    normalizePerfil: function (perfil) {
+        if (!perfil) return 'admin';
+        var p = ('' + perfil).toLowerCase();
+        if (p === 'campo') return 'peao';
+        if (p === 'gerencia') return 'admin';
+        if (this.PERFIS_VALIDOS.indexOf(p) >= 0) return p;
+        return 'admin';
+    },
+
+    _configureBottomNavByPerfil: function (perfil) {
+        var navOperacoes = document.getElementById('nav-operacoes');
+        var navRebanho = document.getElementById('nav-rebanho');
+        var navIA = document.getElementById('nav-ia-chefa');
+        var iconOperacoes = document.getElementById('nav-icon-obra');
+        var iconRebanho = document.getElementById('nav-icon-rebanho');
+        var labelIA = document.getElementById('nav-label-ia');
+        var labelRebanho = document.getElementById('nav-label-rebanho');
+
+        if (!navOperacoes || !navRebanho) return;
+
+        if (perfil === 'peao') {
+            navOperacoes.setAttribute('onclick', "app.navigate('pastos')");
+            navRebanho.setAttribute('onclick', "app.navigate('manejo')");
+            if (iconOperacoes) iconOperacoes.textContent = 'grass';
+            if (iconRebanho) iconRebanho.textContent = 'vaccines';
+            var opLabel = navOperacoes.querySelector('span:last-child');
+            if (opLabel) opLabel.textContent = 'Pastos';
+            if (labelRebanho) labelRebanho.textContent = 'Manejo';
+            if (navIA) navIA.style.display = 'none';
+        } else {
+            navOperacoes.setAttribute('onclick', "app.navigate('obras')");
+            navRebanho.setAttribute('onclick', "app.navigate('lotes')");
+            if (iconOperacoes) iconOperacoes.textContent = 'precision_manufacturing';
+            if (iconRebanho) iconRebanho.textContent = 'pets';
+            var opLabel2 = navOperacoes.querySelector('span:last-child');
+            if (opLabel2) opLabel2.textContent = 'Operações';
+            if (labelRebanho) labelRebanho.textContent = 'Rebanho';
+            if (navIA) navIA.style.display = '';
+            if (labelIA) labelIA.textContent = 'Clara';
+        }
+    },
 
     // Toast notification system
     showToast: function (msg, type) {
@@ -54,34 +97,17 @@ window.app = {
 
     // Called by firebaseSync._showApp() after auth gate passes
     _initModules: function () {
-        // Feature modules
-        if (window.rebanho) window.rebanho.init();
-        if (window.pastos) window.pastos.init();
-        if (window.lotes) window.lotes.init();
-        if (window.financeiro) window.financeiro.init();
-        if (window.estoque) window.estoque.init();
-        if (window.manejo) window.manejo.init();
-        if (window.obras) window.obras.init();
-        if (window.funcionarios) window.funcionarios.init();
-        if (window.rebanhoOps) window.rebanhoOps.init();
-        if (window.pastoMgmt) window.pastoMgmt.init();
-        if (window.clima) window.clima.init();
-        if (window.nutricao) window.nutricao.init();
-        if (window.nutricaoIA) window.nutricaoIA.init();
-        if (window.zooIndices) window.zooIndices.init();
-        if (window.formulacaoRacao) window.formulacaoRacao.init();
-        if (window.balanca) window.balanca.init();
-        if (window.safebeef) window.safebeef.init();
-        if (window.calendario) window.calendario.init();
-        if (window.contas) window.contas.init();
-        if (window.rastreabilidade) window.rastreabilidade.init();
-        if (window.indicadores) window.indicadores.init();
-        if (window.graficos) window.graficos.init();
-        if (window.fotos) window.fotos.init();
-        if (window.mapa) window.mapa.init();
-        if (window.iaConsultor) window.iaConsultor.init();
-        if (window.uxHelpers) window.uxHelpers.init();
-        if (window.resultados) window.resultados.init();
+        [
+            'rebanho', 'pastos', 'lotes', 'financeiro', 'estoque', 'manejo', 'obras',
+            'funcionarios', 'rebanhoOps', 'pastoMgmt', 'clima', 'nutricao',
+            'nutricaoIA', 'zooIndices', 'formulacaoRacao', 'balanca', 'safebeef',
+            'calendario', 'contas', 'rastreabilidade', 'indicadores', 'graficos',
+            'fotos', 'mapa', 'iaConsultor', 'uxHelpers', 'resultados'
+        ].forEach(function (moduleName) {
+            if (window[moduleName] && typeof window[moduleName].init === 'function') {
+                window[moduleName].init();
+            }
+        });
 
         this.loadConfig();
         this.applyPerfil();
@@ -176,8 +202,9 @@ window.app = {
         window.scrollTo(0, 0);
 
         // Update bottom nav active state
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(function (btn) {
-            btn.classList.remove('active');
+        ['nav-home', 'nav-operacoes', 'nav-ia-chefa', 'nav-financeiro', 'nav-rebanho', 'nav-config'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('active');
         });
         var navMap = {
             'home': 'nav-home',
@@ -192,14 +219,24 @@ window.app = {
             // Config
             'config': 'nav-config'
         };
+
+        var perfilAtual = this.getPerfil();
+        if (perfilAtual === 'peao') {
+            navMap.pastos = 'nav-operacoes';
+            navMap.estoque = 'nav-operacoes';
+            navMap.obras = 'nav-operacoes';
+            navMap.manejo = 'nav-rebanho';
+        }
         var activeNav = navMap[pageId] || 'nav-home';
         var navEl = document.getElementById(activeNav);
         if (navEl) navEl.classList.add('active');
 
-        // Block financial views for campo profile
-        var blockedForCampo = ['compra', 'venda', 'fluxo', 'balanco', 'contas', 'financeiro'];
-        if (this.getPerfil() === 'campo' && blockedForCampo.indexOf(pageId) >= 0) {
-            this.showToast('Acesso restrito à Gerência', 'warning');
+        // Block views by access profile
+        var blockedForPeao = ['financeiro', 'compra', 'venda', 'fluxo', 'balanco', 'contas', 'config'];
+        var blockedForAdmin = [];
+        if ((perfilAtual === 'peao' && blockedForPeao.indexOf(pageId) >= 0) ||
+            (perfilAtual === 'admin' && blockedForAdmin.indexOf(pageId) >= 0)) {
+            this.showToast('Acesso restrito ao seu perfil', 'warning');
             return;
         }
 
@@ -211,6 +248,7 @@ window.app = {
 
         switch (pageId) {
             case 'home':
+                this._renderHomeForPerfil();
                 this.renderKPIs();
                 this.renderAlerts();
                 this.renderAtividadeRecente();
@@ -261,6 +299,7 @@ window.app = {
                 break;
             case 'venda':
                 if (window.lotes) window.lotes.populateSelect('venda-lote');
+                if (window.financeiro && window.financeiro.syncVendaContext) window.financeiro.syncVendaContext();
                 break;
             case 'obras':
                 if (window.obras) window.obras.renderHistory();
@@ -664,36 +703,43 @@ window.app = {
         }
     },
 
-    // ══ PERFIL DE ACESSO (Gerência / Campo) ══
+    // ══ PERFIL DE ACESSO (Peão / Admin / Dono) ══
     getPerfil: function () {
         try {
-            return localStorage.getItem(this.PERFIL_KEY) || 'gerencia';
-        } catch (e) { return 'gerencia'; }
+            return this.normalizePerfil(localStorage.getItem(this.PERFIL_KEY) || 'admin');
+        } catch (e) { return 'admin'; }
     },
 
     setPerfil: function (perfil) {
+        var perfilNormalizado = this.normalizePerfil(perfil);
         try {
-            localStorage.setItem(this.PERFIL_KEY, perfil);
+            localStorage.setItem(this.PERFIL_KEY, perfilNormalizado);
         } catch (e) { /* ignore */ }
         this.applyPerfil();
         this.navigate('home');
-        this.showToast(perfil === 'campo' ? '🤠 Modo Campo ativado' : '👔 Modo Gerência ativado');
+        var msg = perfilNormalizado === 'peao'
+            ? 'Modo Peao ativado'
+            : perfilNormalizado === 'dono'
+                ? 'Modo Dono ativado'
+                : 'Modo Admin ativado';
+        this.showToast(msg, 'success');
     },
 
     applyPerfil: function () {
         var body = document.body;
-        body.classList.remove('perfil-gerencia', 'perfil-campo');
+        body.classList.remove('perfil-gerencia', 'perfil-campo', 'perfil-peao', 'perfil-admin', 'perfil-dono');
 
         // Check Firebase profile first
-        var perfil = 'gerencia';
+        var perfil = 'admin';
         if (window.firebaseSync && window.firebaseSync.user) {
-            perfil = window.firebaseSync.getUserPerfil();
+            perfil = this.normalizePerfil(window.firebaseSync.getUserPerfil());
 
             // Load async to update if needed
             var self = this;
             window.firebaseSync.loadUserPerfil(function (asyncPerfil) {
-                if (asyncPerfil !== perfil) {
-                    self._enforceProfile(asyncPerfil);
+                var perfilAsync = self.normalizePerfil(asyncPerfil);
+                if (perfilAsync !== perfil) {
+                    self._enforceProfile(perfilAsync);
                 }
             });
         }
@@ -702,24 +748,81 @@ window.app = {
     },
 
     _enforceProfile: function (perfil) {
+        perfil = this.normalizePerfil(perfil);
         var body = document.body;
-        body.classList.remove('perfil-gerencia', 'perfil-campo');
+        body.classList.remove('perfil-gerencia', 'perfil-campo', 'perfil-peao', 'perfil-admin', 'perfil-dono');
         body.classList.add('perfil-' + perfil);
 
-        if (perfil === 'campo') {
-            // Hide financial elements
+        // Backward-compat CSS classes
+        if (perfil === 'peao') {
+            body.classList.add('perfil-campo');
+        } else if (perfil === 'admin') {
+            body.classList.add('perfil-gerencia');
+        }
+
+        this._configureBottomNavByPerfil(perfil);
+
+        // ░░ Manage home visibility for 3 perfis ░░
+        var homePeao = document.getElementById('home-peao');
+        var homeAdmin = document.getElementById('home-admin');
+        var homeDono = document.getElementById('home-dono');
+
+        // Hide all homes first
+        if (homePeao) homePeao.style.display = 'none';
+        if (homeAdmin) homeAdmin.style.display = 'none';
+        if (homeDono) homeDono.style.display = 'none';
+
+        // Show the correct home based on perfil
+        if (perfil === 'peao') {
+            if (homePeao) homePeao.style.display = 'block';
+            // Hide financial elements for peão
             document.querySelectorAll('.gerencia-only').forEach(function (el) {
                 el.style.display = 'none';
             });
-            var homeGerencia = document.getElementById('home-gerencia');
-            if (homeGerencia) homeGerencia.style.display = 'none';
-        } else {
-            // Show all
+        } else if (perfil === 'admin') {
+            if (homeAdmin) homeAdmin.style.display = 'block';
+            // Show all elements for admin
             document.querySelectorAll('.gerencia-only').forEach(function (el) {
                 el.style.display = '';
             });
-            var homeGerencia = document.getElementById('home-gerencia');
-            if (homeGerencia) homeGerencia.style.display = 'block';
+        } else if (perfil === 'dono') {
+            if (homeDono) homeDono.style.display = 'block';
+            // Show all elements for dono (total control)
+            document.querySelectorAll('.gerencia-only').forEach(function (el) {
+                el.style.display = '';
+            });
+        }
+
+        // Update greeting for specific homes
+        this._updateGreetingsForPerfil(perfil);
+    },
+
+    _updateGreetingsForPerfil: function (perfil) {
+        var now = new Date();
+        var hour = now.getHours();
+        var greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+        var weekDays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        var dayName = weekDays[now.getDay()];
+        var date = now.getDate();
+        var months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        var month = months[now.getMonth()];
+        var dateStr = dayName + ', ' + date + ' de ' + month;
+
+        if (perfil === 'peao') {
+            var peaoGreet = document.getElementById('peao-greeting-text');
+            var peaoDate = document.getElementById('peao-greeting-date');
+            if (peaoGreet) peaoGreet.textContent = greeting;
+            if (peaoDate) peaoDate.textContent = dateStr;
+        } else if (perfil === 'admin') {
+            var adminGreet = document.getElementById('admin-greeting-text');
+            var adminDate = document.getElementById('admin-greeting-date');
+            if (adminGreet) adminGreet.textContent = greeting + ', Gerente!';
+            if (adminDate) adminDate.textContent = dateStr;
+        } else if (perfil === 'dono') {
+            var donoGreet = document.getElementById('dono-greeting-text');
+            var donoDate = document.getElementById('dono-greeting-date');
+            if (donoGreet) donoGreet.textContent = greeting + ', Proprietário';
+            if (donoDate) donoDate.textContent = dateStr;
         }
     },
 
@@ -764,19 +867,97 @@ window.app = {
         this.showToast('✅ Preço da @ atualizado: R$ ' + preco.toFixed(2));
     },
 
+    _renderHomeForPerfil: function () {
+        var perfil = this.getPerfil();
+        
+        // Render peão-specific home alerts
+        if (perfil === 'peao') {
+            var alertsList = document.getElementById('peao-alerts-list');
+            if (alertsList && window.data && window.data.alerts) {
+                var criticalAlerts = window.data.alerts.filter(function (a) {
+                    return a.type === 'warning' || a.type === 'error';
+                }).slice(0, 4);
+                
+                alertsList.innerHTML = criticalAlerts.length > 0
+                    ? criticalAlerts.map(function (a) {
+                        var icon = a.type === 'error' ? '❌' : '⚠️';
+                        return '<div style="background:rgba(245,158,11,0.1);border-left:3px solid #f59e0b;border-radius:6px;padding:8px 10px;font-size:12px;">' +
+                            '<span style="font-weight:700;">' + icon + ' ' + (a.msg || 'Alerta') + '</span>' +
+                            '</div>';
+                    }).join('')
+                    : '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:10px;">✓ Nenhum alerta crítico</div>';
+            }
+        }
+        
+        // Render dono-specific dashboard
+        if (perfil === 'dono') {
+            // KPIs for dono
+            var donoKpis = document.getElementById('dono-kpis');
+            if (donoKpis && window.data) {
+                var kpiData = {
+                    'Membros': (window.data.membros || []).length,
+                    'Fazendas': 1,
+                    'Rentabilidade': '----',
+                    'Status': '✓ OK'
+                };
+                donoKpis.innerHTML = Object.keys(kpiData).map(function (key) {
+                    return '<div class="dono-kpi-card">' +
+                        '<span class="dono-kpi-value">' + kpiData[key] + '</span>' +
+                        '<span class="dono-kpi-label">' + key + '</span>' +
+                        '</div>';
+                }).join('');
+            }
+            
+            // Recent activities for dono
+            var donoActivities = document.getElementById('dono-recent-activities');
+            if (donoActivities && window.data) {
+                var recentEvents = window.data.events.slice().reverse().slice(0, 6);
+                donoActivities.innerHTML = recentEvents.length > 0
+                    ? recentEvents.map(function (ev) {
+                        var fmt = function (d) { 
+                            if (!d) return '--'; 
+                            var parts = d.split('T')[0].split('-');
+                            return parts.length === 3 ? parts[2] + '/' + parts[1] : d;
+                        };
+                        return '<div class="dono-activity-item">' +
+                            '<div style="font-weight:600;">' + (ev.nome || ev.desc || 'Atividade') + '</div>' +
+                            '<span class="dono-activity-time">' + fmt(ev.date) + '</span>' +
+                            '</div>';
+                    }).join('')
+                    : '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:10px;">Sem atividades</div>';
+            }
+        }
+    },
+
     // ══ Theme System ══
     THEME_KEY: 'agromacro_theme',
 
+    normalizeTheme: function (mode) {
+        var value = (mode || '').toLowerCase();
+        if (value === 'dark') return 'escuro';
+        if (value === 'light') return 'claro';
+        if (value === 'auto') return 'claro';
+        if (value === 'branco' || value === 'claro' || value === 'escuro') return value;
+        return 'claro';
+    },
+
     setTheme: function (mode) {
-        // mode: 'auto', 'light', 'dark'
-        localStorage.setItem(this.THEME_KEY, mode);
-        this._applyTheme(mode);
-        this._updateThemeToggleUI(mode);
-        this.showToast(mode === 'dark' ? '🌙 Modo escuro ativado' : mode === 'light' ? '☀️ Modo claro ativado' : '🌗 Tema automático');
+        // mode: 'branco', 'claro', 'escuro'
+        var normalized = this.normalizeTheme(mode);
+        localStorage.setItem(this.THEME_KEY, normalized);
+        this._applyTheme(normalized);
+        this._updateThemeToggleUI(normalized);
+        this.showToast(
+            normalized === 'escuro'
+                ? '🌙 Tema escuro ativado'
+                : normalized === 'branco'
+                    ? '🤍 Tema branco ativado'
+                    : '☀️ Tema claro ativado'
+        );
     },
 
     loadTheme: function () {
-        var mode = localStorage.getItem(this.THEME_KEY) || 'auto';
+        var mode = this.normalizeTheme(localStorage.getItem(this.THEME_KEY) || 'claro');
         this._applyTheme(mode);
         // Update toggle UI after DOM is ready
         var self = this;
@@ -784,20 +965,16 @@ window.app = {
     },
 
     _applyTheme: function (mode) {
+        var normalized = this.normalizeTheme(mode);
         var html = document.documentElement;
-        if (mode === 'dark') {
-            html.setAttribute('data-theme', 'dark');
-        } else if (mode === 'light') {
-            html.setAttribute('data-theme', 'light');
-        } else {
-            // Auto: remove attribute, let CSS media query handle it
-            html.removeAttribute('data-theme');
-        }
+        html.setAttribute('data-theme', normalized);
+
         // Update theme-color meta for mobile browser chrome
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) {
-            var isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            meta.content = isDark ? '#000000' : '#0F1318';
+            if (normalized === 'escuro') meta.content = '#000000';
+            else if (normalized === 'branco') meta.content = '#FFFFFF';
+            else meta.content = '#F2F2F7';
         }
     },
 
