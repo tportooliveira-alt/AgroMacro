@@ -133,14 +133,18 @@ with sync_playwright() as p:
     button_texts = {}
     for btn in all_buttons:
         try:
-            txt = btn.inner_text().strip()
-            if txt:
-                view = btn.evaluate('el => el.closest("[id]")?.id || "unknown"')
-                key = f"{view}::{txt}"
-                if key in button_texts:
-                    button_texts[key] += 1
-                else:
-                    button_texts[key] = 1
+            raw_text = btn.inner_text().strip()
+            view = btn.evaluate('el => el.closest("[id]")?.id || "unknown"')
+            context_label = btn.evaluate('el => el.closest(".form-group")?.querySelector("label")?.innerText?.trim() || ""')
+            aria_label = btn.get_attribute('aria-label') or btn.get_attribute('title') or ''
+            display_text = aria_label or context_label or raw_text
+            if not display_text:
+                continue
+            key = f"{view}::{context_label}::{display_text}"
+            if key in button_texts:
+                button_texts[key] += 1
+            else:
+                button_texts[key] = 1
         except:
             pass
 
