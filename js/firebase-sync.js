@@ -243,14 +243,15 @@ window.firebaseSync = {
     // ══ RENDER FAZENDA SELECTION UI ══
     _renderFazendaSelectUI: function (fazendas) {
         var self = this;
+        var _esc = window.data.escapeHtml;
 
         // User bar
         var userBar = document.getElementById('fazenda-user-bar');
         if (userBar && this.user) {
             userBar.innerHTML = ''
-                + (this.user.photoURL ? '<img src="' + this.user.photoURL + '" onerror="this.style.display=\'none\'">' : '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">👤</div>')
-                + '<div><div class="user-name">' + (this.user.displayName || 'Usuário') + '</div>'
-                + '<div class="user-email">' + (this.user.email || '') + '</div></div>';
+                + (this.user.photoURL ? '<img src="' + _esc(this.user.photoURL) + '" onerror="this.style.display=\'none\'">' : '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">👤</div>')
+                + '<div><div class="user-name">' + _esc(this.user.displayName || 'Usuário') + '</div>'
+                + '<div class="user-email">' + _esc(this.user.email || '') + '</div></div>';
         }
 
         // Content
@@ -263,9 +264,12 @@ window.firebaseSync = {
             // ── Has farms: show list ──
             html += '<div class="fazenda-option-card"><h3>🏠 Suas Fazendas</h3>';
             fazendas.forEach(function (f) {
-                html += '<button class="fazenda-list-item" data-id="' + f.id + '" data-nome="' + (f.nome || '') + '">'
-                    + (f.nome || 'Sem nome')
-                    + '<div class="fazenda-meta">' + (f.membros ? f.membros.length : 0) + ' membro(s) • Código: ' + (f.codigo || '--') + '</div>'
+                var nomeEsc = _esc(f.nome || 'Sem nome');
+                var idEsc = _esc(f.id || '');
+                var codigoEsc = _esc(f.codigo || '--');
+                html += '<button class="fazenda-list-item" data-id="' + idEsc + '" data-nome="' + nomeEsc + '">'
+                    + nomeEsc
+                    + '<div class="fazenda-meta">' + (f.membros ? f.membros.length : 0) + ' membro(s) • Código: ' + codigoEsc + '</div>'
                     + '</button>';
             });
             html += '</div>';
@@ -532,8 +536,6 @@ window.firebaseSync = {
                 var localEv = mergedMap[ev.id];
                 if (!localEv || (ev.timestamp && localEv.timestamp && ev.timestamp > localEv.timestamp)) {
                     mergedMap[ev.id] = ev;
-                } else if (!localEv) {
-                    mergedMap[ev.id] = ev;
                 }
             });
 
@@ -709,8 +711,10 @@ window.firebaseSync = {
     _gerarCodigo: function () {
         var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         var code = '';
+        var arr = new Uint8Array(6);
+        crypto.getRandomValues(arr);
         for (var i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
+            code += chars.charAt(arr[i] % chars.length);
         }
         return code;
     },
@@ -743,11 +747,12 @@ window.firebaseSync = {
     },
 
     _updateLoginUI: function (loggedIn) {
+        var _esc = window.data.escapeHtml;
         // Update farm indicator on home
         var indicator = document.getElementById('farm-indicator');
         if (indicator) {
             if (loggedIn && this.fazendaNome) {
-                indicator.innerHTML = '<span style="font-size:11px;color:#059669;font-weight:600;">🌐 ' + this.fazendaNome + ' • Sincronizado</span>';
+                indicator.innerHTML = '<span style="font-size:11px;color:#059669;font-weight:600;">🌐 ' + _esc(this.fazendaNome) + ' • Sincronizado</span>';
                 indicator.style.display = 'block';
             } else if (loggedIn) {
                 indicator.innerHTML = '<span style="font-size:11px;color:#D97706;font-weight:600;">⚠️ Selecione uma fazenda</span>';
@@ -764,15 +769,15 @@ window.firebaseSync = {
             if (loggedIn && this.user) {
                 var html = '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;">';
                 if (this.user.photoURL) {
-                    html += '<img src="' + this.user.photoURL + '" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);" onerror="this.style.display=\'none\'">';
+                    html += '<img src="' + _esc(this.user.photoURL) + '" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);" onerror="this.style.display=\'none\'">';
                 } else {
                     html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;">👤</div>';
                 }
                 html += '<div>';
-                html += '<div style="font-size:14px;font-weight:700;color:var(--text-0);">' + (this.user.displayName || 'Usuário') + '</div>';
-                html += '<div style="font-size:11px;color:var(--text-2);">' + (this.user.email || '') + '</div>';
+                html += '<div style="font-size:14px;font-weight:700;color:var(--text-0);">' + _esc(this.user.displayName || 'Usuário') + '</div>';
+                html += '<div style="font-size:11px;color:var(--text-2);">' + _esc(this.user.email || '') + '</div>';
                 if (this.fazendaNome) {
-                    html += '<div style="font-size:11px;color:#059669;font-weight:600;margin-top:2px;">🌐 ' + this.fazendaNome + '</div>';
+                    html += '<div style="font-size:11px;color:#059669;font-weight:600;margin-top:2px;">🌐 ' + _esc(this.fazendaNome) + '</div>';
                 }
                 html += '</div></div>';
                 userInfo.innerHTML = html;
@@ -791,6 +796,8 @@ window.firebaseSync = {
         if (!container) return;
 
         var self = this;
+        var _esc = window.data.escapeHtml;
+        var _escCid = _esc(containerId);
         var html = '';
 
         if (!this.user) {
@@ -813,10 +820,10 @@ window.firebaseSync = {
             // ── LOGGED IN, NO FARM SELECTED ──
             html += '<div style="padding:16px;">'
                 + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
-                + '<img src="' + (this.user.photoURL || '') + '" style="width:40px;height:40px;border-radius:50%;border:2px solid #059669;" onerror="this.style.display=\'none\'">'
+                + '<img src="' + _esc(this.user.photoURL || '') + '" style="width:40px;height:40px;border-radius:50%;border:2px solid #059669;" onerror="this.style.display=\'none\'">'
                 + '<div>'
-                + '<div style="font-size:14px;font-weight:700;color:#1E293B;">' + (this.user.displayName || 'Usuário') + '</div>'
-                + '<div style="font-size:11px;color:#64748B;">' + this.user.email + '</div>'
+                + '<div style="font-size:14px;font-weight:700;color:#1E293B;">' + _esc(this.user.displayName || 'Usuário') + '</div>'
+                + '<div style="font-size:11px;color:#64748B;">' + _esc(this.user.email || '') + '</div>'
                 + '</div>'
                 + '</div>';
 
@@ -825,7 +832,7 @@ window.firebaseSync = {
                 + '<div style="font-size:14px;font-weight:700;color:#059669;margin-bottom:8px;">🏠 Criar Nova Fazenda</div>'
                 + '<input type="text" id="sync-nome-fazenda" placeholder="Nome da fazenda..." '
                 + 'style="width:100%;padding:10px 14px;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;margin-bottom:8px;box-sizing:border-box;">'
-                + '<button onclick="var n=document.getElementById(\'sync-nome-fazenda\').value;if(n)window.firebaseSync.criarFazenda(n).then(function(){window.firebaseSync.renderSyncUI(\'' + containerId + '\');})" '
+                + '<button onclick="var n=document.getElementById(\'sync-nome-fazenda\').value;if(n)window.firebaseSync.criarFazenda(n).then(function(){window.firebaseSync.renderSyncUI(\'' + _escCid + '\');})" '
                 + 'style="width:100%;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">Criar Fazenda</button>'
                 + '</div>';
 
@@ -834,11 +841,11 @@ window.firebaseSync = {
                 + '<div style="font-size:14px;font-weight:700;color:#2563EB;margin-bottom:8px;">🔗 Entrar em Fazenda (código)</div>'
                 + '<input type="text" id="sync-codigo" placeholder="Código (ex: ABC123)" '
                 + 'style="width:100%;padding:10px 14px;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;margin-bottom:8px;text-transform:uppercase;box-sizing:border-box;">'
-                + '<button onclick="var c=document.getElementById(\'sync-codigo\').value;if(c)window.firebaseSync.entrarFazenda(c).then(function(){window.firebaseSync.renderSyncUI(\'' + containerId + '\');})" '
+                + '<button onclick="var c=document.getElementById(\'sync-codigo\').value;if(c)window.firebaseSync.entrarFazenda(c).then(function(){window.firebaseSync.renderSyncUI(\'' + _escCid + '\');})" '
                 + 'style="width:100%;padding:10px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">Entrar</button>'
                 + '</div>';
 
-            html += '<button onclick="window.firebaseSync.logout();window.firebaseSync.renderSyncUI(\'' + containerId + '\')" '
+            html += '<button onclick="window.firebaseSync.logout();window.firebaseSync.renderSyncUI(\'' + _escCid + '\')" '
                 + 'style="width:100%;padding:8px;background:none;border:1px solid #E2E8F0;color:#64748B;border-radius:8px;font-size:12px;cursor:pointer;">Sair da conta</button>'
                 + '</div>';
         } else {
@@ -846,8 +853,8 @@ window.firebaseSync = {
             html += '<div style="padding:16px;">'
                 + '<div style="background:linear-gradient(135deg,#059669,#10B981);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px;">'
                 + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;">🌐 Fazenda Ativa</div>'
-                + '<div style="font-size:22px;font-weight:800;margin-top:4px;">' + (this.fazendaNome || 'Sem nome') + '</div>'
-                + '<div style="font-size:11px;margin-top:4px;opacity:0.8;">' + (this.user.email || '') + '</div>'
+                + '<div style="font-size:22px;font-weight:800;margin-top:4px;">' + _esc(this.fazendaNome || 'Sem nome') + '</div>'
+                + '<div style="font-size:11px;margin-top:4px;opacity:0.8;">' + _esc(this.user.email || '') + '</div>'
                 + '</div>';
 
             // Sync status
@@ -872,10 +879,10 @@ window.firebaseSync = {
                 + 'style="width:100%;padding:10px;background:#D97706;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">📋 Código de Convite</button>';
 
             // Switch farm
-            html += '<button onclick="window.firebaseSync._mostrarTrocarFazenda(\'' + containerId + '\')" '
+            html += '<button onclick="window.firebaseSync._mostrarTrocarFazenda(\'' + _escCid + '\')" '
                 + 'style="width:100%;padding:10px;background:none;border:1px solid #E2E8F0;color:#64748B;border-radius:10px;font-size:12px;cursor:pointer;margin-bottom:8px;">🔄 Trocar de Fazenda</button>';
 
-            html += '<button onclick="window.firebaseSync.logout();window.firebaseSync.renderSyncUI(\'' + containerId + '\')" '
+            html += '<button onclick="window.firebaseSync.logout();window.firebaseSync.renderSyncUI(\'' + _escCid + '\')" '
                 + 'style="width:100%;padding:8px;background:none;border:1px solid #FCA5A5;color:#DC2626;border-radius:8px;font-size:12px;cursor:pointer;">Sair da conta</button>'
                 + '</div>';
         }
@@ -896,27 +903,56 @@ window.firebaseSync = {
 
     _mostrarTrocarFazenda: function (containerId) {
         var self = this;
+        var _esc = window.data.escapeHtml;
         this.getMinhasFazendas().then(function (fazendas) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+
+            var cidEsc = _esc(containerId);
             var html = '<div style="padding:16px;">'
                 + '<div style="font-size:16px;font-weight:700;margin-bottom:12px;">🏠 Suas Fazendas</div>';
 
             fazendas.forEach(function (f) {
                 var isActive = f.id === self.fazendaId;
-                html += '<button onclick="window.firebaseSync.trocarFazenda(\'' + f.id + '\',\'' + f.nome + '\');window.firebaseSync.renderSyncUI(\'' + containerId + '\')" '
-                    + 'style="width:100%;padding:12px;background:' + (isActive ? 'rgba(5,150,105,0.1)' : '#fff') + ';'
+                var fidEsc = _esc(f.id || '');
+                var fnomeEsc = _esc(f.nome || '');
+                var fcodigoEsc = _esc(f.codigo || '--');
+                html += '<button class="troca-fazenda-btn"'
+                    + ' data-fid="' + fidEsc + '"'
+                    + ' data-fname="' + fnomeEsc + '"'
+                    + ' data-cid="' + cidEsc + '"'
+                    + ' style="width:100%;padding:12px;background:' + (isActive ? 'rgba(5,150,105,0.1)' : '#fff') + ';'
                     + 'border:2px solid ' + (isActive ? '#059669' : '#E2E8F0') + ';border-radius:10px;margin-bottom:8px;'
                     + 'text-align:left;cursor:pointer;font-size:14px;font-weight:600;color:#1E293B;">'
-                    + (isActive ? '✅ ' : '') + f.nome
+                    + (isActive ? '✅ ' : '') + fnomeEsc
                     + '<span style="display:block;font-size:11px;color:#64748B;font-weight:400;margin-top:2px;">'
-                    + (f.membros ? f.membros.length : 0) + ' membro(s) • Código: ' + (f.codigo || '--')
+                    + (f.membros ? f.membros.length : 0) + ' membro(s) • Código: ' + fcodigoEsc
                     + '</span></button>';
             });
 
-            html += '<button onclick="window.firebaseSync.renderSyncUI(\'' + containerId + '\')" '
-                + 'style="width:100%;padding:8px;margin-top:4px;background:none;border:1px solid #E2E8F0;color:#64748B;border-radius:8px;font-size:12px;cursor:pointer;">← Voltar</button>'
+            html += '<button class="troca-fazenda-voltar"'
+                + ' data-cid="' + cidEsc + '"'
+                + ' style="width:100%;padding:8px;margin-top:4px;background:none;border:1px solid #E2E8F0;color:#64748B;border-radius:8px;font-size:12px;cursor:pointer;">← Voltar</button>'
                 + '</div>';
 
-            document.getElementById(containerId).innerHTML = html;
+            container.innerHTML = html;
+
+            container.querySelectorAll('.troca-fazenda-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var fid = this.getAttribute('data-fid');
+                    var fname = this.getAttribute('data-fname');
+                    var cid = this.getAttribute('data-cid');
+                    self.trocarFazenda(fid, fname);
+                    self.renderSyncUI(cid);
+                });
+            });
+
+            var voltarBtn = container.querySelector('.troca-fazenda-voltar');
+            if (voltarBtn) {
+                voltarBtn.addEventListener('click', function () {
+                    self.renderSyncUI(this.getAttribute('data-cid'));
+                });
+            }
         });
     }
 };

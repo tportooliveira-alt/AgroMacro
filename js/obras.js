@@ -42,6 +42,7 @@ window.obras = {
 
         var funcOptions = '<option value="">Nenhum</option>';
         if (window.data) {
+            var _esc = window.data.escapeHtml;
             var funcs = window.data.events.filter(function (ev) {
                 return (ev.type === 'FUNCIONARIO_CADASTRO' || ev.type === 'FUNCIONARIO') && !ev.estornado && ev.status !== 'INATIVO';
             });
@@ -49,7 +50,7 @@ window.obras = {
             funcs.forEach(function (f) {
                 var nome = f.nome || f.name || '';
                 if (nome && !seen[nome]) {
-                    funcOptions += '<option value="' + nome + '">' + nome + '</option>';
+                    funcOptions += '<option value="' + _esc(nome) + '">' + _esc(nome) + '</option>';
                     seen[nome] = true;
                 }
             });
@@ -101,7 +102,7 @@ window.obras = {
         if (window.estoque) {
             window.estoque.getStockItems().forEach(function (item) {
                 if (item.categoria === 'obras' || item.categoria === 'outros') {
-                    suggestions += '<option value="' + item.nome + '">';
+                    suggestions += '<option value="' + window.data.escapeHtml(item.nome || '') + '">';
                 }
             });
         }
@@ -226,13 +227,13 @@ window.obras = {
 
         var obrasMap = {};
         obrasEvents.forEach(function (ev) {
-            obrasMap[ev.nome] = ev;
+            obrasMap[ev.id] = ev;
         });
 
         var result = [];
-        for (var nome in obrasMap) {
-            if (obrasMap.hasOwnProperty(nome)) {
-                result.push(obrasMap[nome]);
+        for (var id in obrasMap) {
+            if (obrasMap.hasOwnProperty(id)) {
+                result.push(obrasMap[id]);
             }
         }
 
@@ -270,6 +271,7 @@ window.obras = {
         html += '</div>';
 
         var self = this;
+        var _esc = window.data.escapeHtml;
 
         if (obras.length === 0) {
             html += '<div class="empty-state"><span class="empty-state-icon">🔨</span>'
@@ -292,12 +294,12 @@ window.obras = {
                 html += '<div style="background:' + st.bg + ';border-left:4px solid ' + st.color + ';border-radius:10px;padding:12px;margin-bottom:8px;">'
                     + '<div style="display:flex;justify-content:space-between;align-items:center;">'
                     + '<div><span style="font-size:18px;">' + catIcon + '</span> '
-                    + '<span style="font-size:14px;font-weight:700;color:#1E293B;">' + obra.nome + '</span></div>'
+                    + '<span style="font-size:14px;font-weight:700;color:#1E293B;">' + _esc(obra.nome || '') + '</span></div>'
                     + '<span style="font-size:9px;font-weight:800;background:' + st.color + ';color:#fff;padding:2px 6px;border-radius:4px;">' + st.label + '</span>'
                     + '</div>';
 
                 if (obra.desc) {
-                    html += '<div style="font-size:12px;color:#64748B;margin-top:4px;">' + obra.desc + '</div>';
+                    html += '<div style="font-size:12px;color:#64748B;margin-top:4px;">' + _esc(obra.desc) + '</div>';
                 }
 
                 html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;">'
@@ -312,7 +314,7 @@ window.obras = {
                 if (obra.workers && obra.workers.length > 0) {
                     html += '<div style="margin-top:6px;padding:4px 8px;background:rgba(0,0,0,0.04);border-radius:6px;">';
                     obra.workers.forEach(function (w) {
-                        html += '<span style="font-size:11px;color:#64748B;">👷 ' + w.nome + ' - ' + w.dias + ' dia(s) x ' + fmt(w.diaria) + '</span>';
+                        html += '<span style="font-size:11px;color:#64748B;">👷 ' + _esc(w.nome || '') + ' - ' + w.dias + ' dia(s) x ' + fmt(w.diaria) + '</span>';
                     });
                     html += '</div>';
                 }
@@ -320,14 +322,14 @@ window.obras = {
                 if (obra.materiaisUsados && obra.materiaisUsados.length > 0) {
                     html += '<div style="margin-top:4px;padding:4px 8px;background:rgba(0,0,0,0.04);border-radius:6px;">';
                     obra.materiaisUsados.forEach(function (m) {
-                        html += '<span style="font-size:11px;color:#64748B;">📦 ' + m.name + ': ' + m.qty + ' | </span>';
+                        html += '<span style="font-size:11px;color:#64748B;">📦 ' + _esc(m.name || '') + ': ' + m.qty + ' | </span>';
                     });
                     html += '</div>';
                 }
 
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">'
                     + '<span style="font-size:10px;color:#94A3B8;">' + dateStr + '</span>'
-                    + '<button class="btn-sm" style="background:#64748B;" onclick="window.financeiro.estornar(\'' + obra.id + '\')">Estornar</button>'
+                    + '<button class="btn-sm" style="background:#64748B;" onclick="window.financeiro.estornar(\'' + _esc(obra.id || '') + '\')">Estornar</button>'
                     + '</div>';
 
                 html += '</div>';

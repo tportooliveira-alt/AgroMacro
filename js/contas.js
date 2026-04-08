@@ -134,16 +134,17 @@ window.contas = {
             + '<div class="kpi-card"><div class="kpi-label">Qtd Pendente</div>'
             + '<div class="kpi-value">' + pendentes.length + '</div></div></div>';
 
+        var _esc = window.data.escapeHtml;
         var vencidas30d = 0;
         var proximas30d = 0;
-        var hoje = new Date();
-        var em30dias = new Date();
-        em30dias.setDate(em30dias.getDate() + 30);
+        var now = new Date();
+        var hojeStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        var em30diasDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 30);
+        var em30diasStr = em30diasDate.getFullYear() + '-' + String(em30diasDate.getMonth() + 1).padStart(2, '0') + '-' + String(em30diasDate.getDate()).padStart(2, '0');
         pendentes.forEach(function (c) {
             if (!c.vencimento) return;
-            var venc = new Date(c.vencimento);
-            if (venc < hoje) vencidas30d += (c.value || 0);
-            else if (venc <= em30dias) proximas30d += (c.value || 0);
+            if (c.vencimento < hojeStr) vencidas30d += (c.value || 0);
+            else if (c.vencimento <= em30diasStr) proximas30d += (c.value || 0);
         });
 
         if (vencidas30d > 0 || proximas30d > 0) {
@@ -166,26 +167,26 @@ window.contas = {
         if (pendentes.length > 0) {
             html += '<div class="section-title">Contas Pendentes</div>';
             pendentes.forEach(function (c) {
-                var venc = c.vencimento ? new Date(c.vencimento) : null;
-                var vencida = venc && venc < hoje;
+                var vencida = c.vencimento && c.vencimento < hojeStr;
                 var catIcons = { nutricao: '🧂', sanidade: '💊', mao_obra: '👷', infraestrutura: '🔨', impostos: '🏛️', combustivel: '⛽', gado: '🐄', outro: '📌', estoque: '📦' };
                 var vencStr = c.vencimento || 'Sem data';
                 if (c.vencimento) {
                     var dp = c.vencimento.split('-');
                     if (dp.length === 3) vencStr = dp[2] + '/' + dp[1] + '/' + dp[0];
                 }
+                var cid = _esc(c.id || '');
 
                 html += '<div class="history-card" style="' + (vencida ? 'border-left:3px solid #ef4444;' : '') + '">'
                     + '<div class="history-card-header">'
                     + '<span class="badge ' + (vencida ? 'badge-red' : 'badge-yellow') + '">'
-                    + (catIcons[c.categoria] || '📌') + ' ' + (c.desc || c.nome || '--') + '</span>'
+                    + (catIcons[c.categoria] || '📌') + ' ' + _esc(c.desc || c.nome || '--') + '</span>'
                     + '<span class="date">' + vencStr + '</span></div>'
                     + '<div class="history-card-body">'
                     + '<strong class="text-red">' + fmt(c.value) + '</strong>'
-                    + (c.formaPagamento ? '<span style="font-size:10px;color:#64748B;margin-left:8px;">' + c.formaPagamento + '</span>' : '')
+                    + (c.formaPagamento ? '<span style="font-size:10px;color:#64748B;margin-left:8px;">' + _esc(c.formaPagamento) + '</span>' : '')
                     + '<div style="display:flex;gap:6px;margin-top:4px;">'
-                    + '<button class="btn-sm" onclick="window.contas.pagarConta(\'' + c.id + '\')">Pagar</button>'
-                    + '<button class="btn-sm" style="background:#64748B;" onclick="window.contas.estornarConta(\'' + c.id + '\')">Estornar</button>'
+                    + '<button class="btn-sm" onclick="window.contas.pagarConta(\'' + cid + '\')">Pagar</button>'
+                    + '<button class="btn-sm" style="background:#64748B;" onclick="window.contas.estornarConta(\'' + cid + '\')">Estornar</button>'
                     + '</div>'
                     + '</div></div>';
             });
@@ -201,10 +202,10 @@ window.contas = {
                 }
                 html += '<div class="history-card" style="opacity:0.6;">'
                     + '<div class="history-card-header">'
-                    + '<span class="badge badge-green">' + (c.desc || c.nome || '--') + '</span>'
+                    + '<span class="badge badge-green">' + _esc(c.desc || c.nome || '--') + '</span>'
                     + '<span class="date">' + dateStr + '</span></div>'
                     + '<div class="history-card-body"><strong>' + fmt(c.value) + '</strong>'
-                    + (c.formaPagamento ? '<span style="font-size:10px;color:#64748B;margin-left:8px;">' + c.formaPagamento + '</span>' : '')
+                    + (c.formaPagamento ? '<span style="font-size:10px;color:#64748B;margin-left:8px;">' + _esc(c.formaPagamento) + '</span>' : '')
                     + '</div></div>';
             });
         }

@@ -6,6 +6,15 @@ window.data = {
     VERSION: 3,
     _saveCount: 0,
 
+    escapeHtml: function (str) {
+        return ('' + (str == null ? '' : str))
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    },
+
     CENTER_COSTS: {
         COMPRA: 'GADO_CORTE',
         VENDA: 'GADO_CORTE',
@@ -100,6 +109,7 @@ window.data = {
         try {
             var raw = localStorage.getItem(this.STORAGE_KEY);
             this.events = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(this.events)) this.events = [];
             var seen = {};
             var before = this.events.length;
             this.events = this.events.filter(function (ev) {
@@ -301,7 +311,7 @@ window.data = {
                 version: this.VERSION,
                 date: new Date().toISOString(),
                 count: this.events.length,
-                data: JSON.stringify(this.events)
+                data: this.events
             };
             localStorage.setItem(this.BACKUP_KEY, JSON.stringify(backup));
             console.log('Backup automatico: ' + this.events.length + ' eventos');
@@ -315,7 +325,8 @@ window.data = {
             var raw = localStorage.getItem(this.BACKUP_KEY);
             if (!raw) return false;
             var backup = JSON.parse(raw);
-            this.events = JSON.parse(backup.data);
+            this.events = typeof backup.data === 'string' ? JSON.parse(backup.data) : backup.data;
+            if (!Array.isArray(this.events)) this.events = [];
             this.save();
             console.log('Backup restaurado: ' + this.events.length + ' eventos de ' + backup.date);
             return true;

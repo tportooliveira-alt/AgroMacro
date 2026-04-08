@@ -156,6 +156,8 @@ window.rebanho = {
             + '<div class="kpi-card"><div class="kpi-label">Raças</div><div class="kpi-value">' + this.countRacas(individuais.concat(lotes)) + '</div></div>'
             + '</div>';
 
+        var _esc = window.data.escapeHtml;
+
         // Lot batches first
         if (lotes.length > 0) {
             html += '<div class="section-title" style="margin-top:8px;">Lotes Cadastrados</div>';
@@ -163,15 +165,15 @@ window.rebanho = {
                 var sexoLabel = l.sexo === 'macho' ? '♂ Machos' : l.sexo === 'femea' ? '♀ Fêmeas' : '⚤ Misto';
                 return '<div class="history-card">'
                     + '<div class="history-card-header">'
-                    + '  <span class="badge badge-green">📋 ' + (l.nome || '--') + '</span>'
-                    + '  <span class="date">' + (l.raca || '') + '</span>'
+                    + '  <span class="badge badge-green">📋 ' + _esc(l.nome || '--') + '</span>'
+                    + '  <span class="date">' + _esc(l.raca || '') + '</span>'
                     + '</div>'
                     + '<div class="history-card-body">'
                     + '  <strong>' + l.qtdAnimais + ' cabeças</strong>'
                     + '  <span class="detail">' + sexoLabel + '</span>'
                     + '  <span class="detail">' + (l.pesoMedio ? l.pesoMedio + ' kg médio' : '') + '</span>'
                     + '  <span class="detail">' + (l.idadeMedia ? '~' + l.idadeMedia + ' meses' : '') + '</span>'
-                    + '  <span class="detail">' + (l.loteDestino ? 'Lote: ' + l.loteDestino : '') + '</span>'
+                    + '  <span class="detail">' + (l.loteDestino ? 'Lote: ' + _esc(l.loteDestino) : '') + '</span>'
                     + '</div>'
                     + '</div>';
             }).join('');
@@ -183,13 +185,13 @@ window.rebanho = {
             html += individuais.slice().reverse().map(function (a) {
                 return '<div class="history-card">'
                     + '<div class="history-card-header">'
-                    + '  <span class="badge badge-green">🐄 ' + (a.brinco || '--') + '</span>'
-                    + '  <span class="date">' + (a.raca || '') + '</span>'
+                    + '  <span class="badge badge-green">🐄 ' + _esc(a.brinco || '--') + '</span>'
+                    + '  <span class="date">' + _esc(a.raca || '') + '</span>'
                     + '</div>'
                     + '<div class="history-card-body">'
                     + '  <strong>' + (a.sexo === 'macho' ? '♂ Macho' : '♀ Fêmea') + '</strong>'
                     + '  <span class="detail">' + (a.peso ? a.peso + ' kg' : '') + '</span>'
-                    + '  <span class="detail">' + (a.lote ? 'Lote: ' + a.lote : 'Sem lote') + '</span>'
+                    + '  <span class="detail">' + (a.lote ? 'Lote: ' + _esc(a.lote) : 'Sem lote') + '</span>'
                     + '</div>'
                     + '</div>';
             }).join('');

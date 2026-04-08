@@ -76,14 +76,16 @@ window.pastos = {
 
     // ═══ NOVO: Card 3-em-1 Inline — Operação Rápida do Pasto ═══
     renderCard3em1: function (pastoNome) {
+        var _esc = window.data.escapeHtml;
+        var nomeAttr = _esc(pastoNome);
         var tabAtiva = localStorage.getItem('card3em1_tab') || 'manejo';
-        var html = '<div id="card-operacao-' + pastoNome + '" style="margin-top:10px;padding:12px;border:2px solid #2E7D32;border-radius:12px;background:linear-gradient(135deg,#F8FBF7,#FFFFFF);box-shadow:0 4px 12px rgba(46,125,50,0.15);">'
+        var html = '<div id="card-operacao-' + nomeAttr + '" style="margin-top:10px;padding:12px;border:2px solid #2E7D32;border-radius:12px;background:linear-gradient(135deg,#F8FBF7,#FFFFFF);box-shadow:0 4px 12px rgba(46,125,50,0.15);">'
             + '<div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#1B5E20;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span>⚡</span> OPERAÇÃO RÁPIDA — SEM SAIR DAQUI</div>'
             + '<div style="display:flex;gap:6px;margin-bottom:10px;border-bottom:2px solid #E8F5E9;padding-bottom:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;">'
-            + '<button class="tab-btn-op" data-tab="manejo" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'manejo' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'manejo' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'manejo\')">💉 Manejo</button>'
-            + '<button class="tab-btn-op" data-tab="insumo" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'insumo' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'insumo' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'insumo\')">📦 Insumo</button>'
-            + '<button class="tab-btn-op" data-tab="troca" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'troca' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'troca' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'troca\')">🔄 Troca</button>'
-            + '<button class="tab-btn-op" data-tab="obra" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'obra' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'obra' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="window.pastos.switchTab3em1(\'' + pastoNome + '\',\'obra\')">🔨 Obra</button>'
+            + '<button class="tab-btn-op" data-tab="manejo" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'manejo' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'manejo' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" data-pasto="' + nomeAttr + '" onclick="window.pastos.switchTab3em1(this.dataset.pasto,this.dataset.tab)">💉 Manejo</button>'
+            + '<button class="tab-btn-op" data-tab="insumo" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'insumo' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'insumo' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" data-pasto="' + nomeAttr + '" onclick="window.pastos.switchTab3em1(this.dataset.pasto,this.dataset.tab)">📦 Insumo</button>'
+            + '<button class="tab-btn-op" data-tab="troca" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'troca' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'troca' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" data-pasto="' + nomeAttr + '" onclick="window.pastos.switchTab3em1(this.dataset.pasto,this.dataset.tab)">🔄 Troca</button>'
+            + '<button class="tab-btn-op" data-tab="obra" style="padding:6px 14px;border:none;border-radius:8px;background:' + (tabAtiva === 'obra' ? '#2E7D32' : '#E8F5E9') + ';color:' + (tabAtiva === 'obra' ? '#fff' : '#1B5E20') + ';font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;" data-pasto="' + nomeAttr + '" onclick="window.pastos.switchTab3em1(this.dataset.pasto,this.dataset.tab)">🔨 Obra</button>'
             + '</div>'
             + '<div id="tab-content-3em1">'
             + this.renderTabContent3em1(pastoNome, tabAtiva)
@@ -94,15 +96,17 @@ window.pastos = {
 
     switchTab3em1: function (pastoNome, tab) {
         try { localStorage.setItem('card3em1_tab', tab); } catch (e) { }
-        var container = document.getElementById('card-operacao-' + pastoNome);
+        var container = document.getElementById('card-operacao-' + window.data.escapeHtml(pastoNome));
         if (container) {
             container.querySelector('#tab-content-3em1').innerHTML = this.renderTabContent3em1(pastoNome, tab);
         }
     },
 
     renderTabContent3em1: function (pastoNome, tab) {
+        var _esc = window.data.escapeHtml;
+        var nomeAttr = _esc(pastoNome);
         var html = '';
-        
+
         if (tab === 'manejo') {
             html += '<div style="padding:10px 0;">'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Tipo de Manejo</label>'
@@ -115,32 +119,32 @@ window.pastos = {
                 + '<input id="op-manejo-descricao" type="text" placeholder="Ex: Vacina da febre" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;" id="op-manejo-lote-label">Lote</label>'
                 + '<input id="op-manejo-lote" type="text" placeholder="Opcional" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
-                + '<button style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarManejoRapido(\'' + pastoNome + '\')">✅ Registrar Manejo</button>'
+                + '<button style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" data-pasto="' + nomeAttr + '" onclick="window.pastos.salvarManejoRapido(this.dataset.pasto)">✅ Registrar Manejo</button>'
                 + '</div>';
         } else if (tab === 'insumo') {
             html += '<div style="padding:10px 0;">'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Insumo do Estoque</label>'
                 + '<select id="op-insumo-produto" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;">'
                 + '<option value="">-- Selecione um insumo --</option>'
-                + (window.estoque ? window.estoque.getStockItems().map(function(i) { return '<option value="' + (i.nome || i.descricao || '') + '">' + (i.nome || i.descricao || '') + ' (' + (i.saldo || 0) + ' ' + (i.unidade || 'un') + ')</option>'; }).join('') : '')
+                + (window.estoque ? window.estoque.getStockItems().map(function(i) { var n = _esc(i.nome || ''); return '<option value="' + n + '">' + n + ' (' + (i.qtdTotal || 0) + ' ' + (i.unit || 'un') + ')</option>'; }).join('') : '')
                 + '</select>'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Quantidade</label>'
                 + '<input id="op-insumo-qtd" type="number" placeholder="0" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Obs / Aplicação</label>'
                 + '<input id="op-insumo-obs" type="text" placeholder="Ex: Aplicado ao amanhecer" style="width:100%;padding:8px;border:1px solid #2E7D32;border-radius:6px;font-size:12px;margin-bottom:8px;" />'
-                + '<button style="width:100%;padding:10px;background:#1B5E20;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarInsumoRapido(\'' + pastoNome + '\')">✅ Usar Insumo</button>'
+                + '<button style="width:100%;padding:10px;background:#1B5E20;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" data-pasto="' + nomeAttr + '" onclick="window.pastos.salvarInsumoRapido(this.dataset.pasto)">✅ Usar Insumo</button>'
                 + '</div>';
         } else if (tab === 'troca') {
             html += '<div style="padding:10px 0;">'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Pasto Destino</label>'
                 + '<select id="op-pasto-destino" style="width:100%;padding:8px 8px;border:1px solid #2E7D32;border-radius:6px;font-size:13px;margin-bottom:8px;">'
                 + '<option value="">-- Selecione destino --</option>'
-                + (window.pastos ? window.pastos.getPastos().filter(function(p) { return p.nome !== pastoNome; }).map(function(p) { return '<option value="' + p.nome + '">' + p.nome + '</option>'; }).join('') : '')
+                + (window.pastos ? window.pastos.getPastos().filter(function(p) { return p.nome !== pastoNome; }).map(function(p) { var n = _esc(p.nome || ''); return '<option value="' + n + '">' + n + '</option>'; }).join('') : '')
                 + '</select>'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#1B5E20;margin-bottom:4px;">Lotes a Mover</label>'
                 + '<div id="op-lotes-movimentacao" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:120px;overflow-y:auto;">'
                 + '</div>'
-                + '<button style="width:100%;padding:10px;background:#0F766E;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarTrocaPastorRapido(\'' + pastoNome + '\')">✅ Trocar de Pasto</button>'
+                + '<button style="width:100%;padding:10px;background:#0F766E;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" data-pasto="' + nomeAttr + '" onclick="window.pastos.salvarTrocaPastorRapido(this.dataset.pasto)">✅ Trocar de Pasto</button>'
                 + '</div>';
         } else if (tab === 'obra') {
             html += '<div style="padding:10px 0;">'
@@ -159,10 +163,10 @@ window.pastos = {
                 + '<option value="alta">🔴 Alta</option>'
                 + '<option value="baixa">Baixa</option>'
                 + '</select>'
-                + '<button style="width:100%;padding:10px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" onclick="window.pastos.salvarObraRapida(\'' + pastoNome + '\')">✅ Registrar Obra</button>'
+                + '<button style="width:100%;padding:10px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;" data-pasto="' + nomeAttr + '" onclick="window.pastos.salvarObraRapida(this.dataset.pasto)">✅ Registrar Obra</button>'
                 + '</div>';
         }
-        
+
         return html;
     },
 
@@ -204,8 +208,8 @@ window.pastos = {
         }
         
         // Baixar do estoque
-        if (window.estoque && window.estoque.baixarEstoque) {
-            window.estoque.baixarEstoque(produto, qtd);
+        if (window.estoque && window.estoque.registrarSaida) {
+            window.estoque.registrarSaida(produto, qtd);
         }
         
         var insumo = {
@@ -333,6 +337,8 @@ window.pastos = {
         };
 
         html += pastos.slice().reverse().map(function (p) {
+            var _esc = window.data.escapeHtml;
+            var nomeEsc = _esc(p.nome);
             // Calcular lotação
             var lotacao = window.pastoMgmt ? window.pastoMgmt.calcLotacao(p) : { uaha: 0, animais: 0, status: 'vazio', lotesNoPasto: [] };
             var lotacaoBadge = window.pastoMgmt ? window.pastoMgmt.getLotacaoBadge(lotacao.status, lotacao.uaha) : '';
@@ -358,7 +364,7 @@ window.pastos = {
                     + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94A3B8;margin-bottom:6px;">LOTES NESTE PASTO</div>';
                 lotacao.lotesNoPasto.forEach(function (l) {
                     lotesHtml += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 8px;background:#F8FAFC;border-radius:8px;margin-bottom:4px;">'
-                        + '<span style="font-weight:600;color:#1E293B;">🐄 ' + (l.nome || 'Sem nome') + '</span>'
+                        + '<span style="font-weight:600;color:#1E293B;">🐄 ' + _esc(l.nome || 'Sem nome') + '</span>'
                         + '<span style="color:#64748B;">' + (l.qtdAnimais || 0) + ' cab · ' + (l.pesoMedio || 0) + 'kg</span>'
                         + '</div>';
                 });
@@ -383,7 +389,7 @@ window.pastos = {
             return '<div style="overflow:hidden;border-radius:16px;margin-bottom:14px;border:1px solid #E2E8F0;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
                 // Header com gradiente por status
                 + '<div style="' + headerStyle + '">'
-                + '<div style="font-size:15px;font-weight:800;color:#fff;">🌾 ' + p.nome + '</div>'
+                + '<div style="font-size:15px;font-weight:800;color:#fff;">🌾 ' + nomeEsc + '</div>'
                 + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,0.25);color:#fff;">' + st.label + '</span>'
                 + '</div>'
                 // Body
@@ -415,7 +421,7 @@ window.pastos = {
                 + '</div>'
                 // Tipo capim + Avaliação
                 + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">'
-                + (p.tipoPasto || p.tipoCapim ? '<span style="font-size:11px;padding:3px 8px;background:#ECFDF5;color:#059669;border-radius:8px;font-weight:600;">🌿 ' + (p.tipoPasto || p.tipoCapim) + '</span>' : '')
+                + (p.tipoPasto || p.tipoCapim ? '<span style="font-size:11px;padding:3px 8px;background:#ECFDF5;color:#059669;border-radius:8px;font-weight:600;">🌿 ' + _esc(p.tipoPasto || p.tipoCapim) + '</span>' : '')
                 + (avalBadge ? '<span style="font-size:11px;">' + avalBadge + '</span>' : '')
                 + '</div>'
                 // Descanso
@@ -428,10 +434,10 @@ window.pastos = {
                     : '')
                 // Botões
                 + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;display:flex;gap:6px;flex-wrap:wrap;">'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.pastoMgmt.abrirAvaliacao(\'' + p.nome + '\')">🌿 Avaliar</button>'
-                + '<button class="btn-sm" onclick="event.stopPropagation(); window.lotes.trocarPasto && window.lotes.trocarPasto(\'' + (p.nome) + '\')">🔄 Rotacionar</button>'
-                + '<button class="btn-sm" style="background:#2563EB;" onclick="event.stopPropagation(); window.pastos.editPasto(\'' + p.nome + '\')">✏️ Editar</button>'
-                + '<button class="btn-sm" style="background:#DC2626;" onclick="event.stopPropagation(); window.pastos.excluirPasto(\'' + p.nome + '\')">🗑️ Excluir</button>'
+                + '<button class="btn-sm" data-pasto="' + nomeEsc + '" onclick="event.stopPropagation(); window.pastoMgmt.abrirAvaliacao(this.dataset.pasto)">🌿 Avaliar</button>'
+                + '<button class="btn-sm" data-pasto="' + nomeEsc + '" onclick="event.stopPropagation(); window.lotes.trocarPasto && window.lotes.trocarPasto(this.dataset.pasto)">🔄 Rotacionar</button>'
+                + '<button class="btn-sm" style="background:#2563EB;" data-pasto="' + nomeEsc + '" onclick="event.stopPropagation(); window.pastos.editPasto(this.dataset.pasto)">✏️ Editar</button>'
+                + '<button class="btn-sm" style="background:#DC2626;" data-pasto="' + nomeEsc + '" onclick="event.stopPropagation(); window.pastos.excluirPasto(this.dataset.pasto)">🗑️ Excluir</button>'
                 + '</div>'
                 + '</div>'
                 + '</div>';

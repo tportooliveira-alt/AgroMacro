@@ -4,6 +4,10 @@ Testa: navegação, botões, console errors, links, funcionalidade
 """
 from playwright.sync_api import sync_playwright
 import json, time, re
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')
+BASE_URL = "http://127.0.0.1:8080/projetos/nexus-hub/agromacro/AgroMacro"
 
 RESULTS = {
     'console_errors': [],
@@ -58,7 +62,7 @@ with sync_playwright() as p:
 
     # 1. Load app
     print("\n📱 1. CARREGANDO APP...")
-    page.goto('http://localhost:8080', wait_until='domcontentloaded', timeout=60000)
+    page.goto(BASE_URL, wait_until='domcontentloaded', timeout=60000)
     page.wait_for_timeout(2000)
     page.evaluate('''() => {
         if (window.firebaseSync && typeof window.firebaseSync.skipLogin === 'function') {
@@ -83,6 +87,7 @@ with sync_playwright() as p:
         });
     }''')
     page.wait_for_timeout(2000)
+    page.wait_for_function("window.data && typeof window.data.saveEvent === 'function'", timeout=20000)
     page.screenshot(path='/tmp/01_home.png', full_page=True)
     log_ok("App carregou com sucesso")
 
@@ -348,10 +353,18 @@ with sync_playwright() as p:
     print(f"  Page errors: {len(RESULTS['page_errors'])}")
     print(f"  Issues encontrados: {len(RESULTS['issues'])}")
 
+    known_404_msg = "A bad HTTP response code (404) was received when fetching the script"
+    console_errors_to_print = [err for err in RESULTS['console_errors'] if known_404_msg not in err['text']]
+    ignored_console_errors = len(RESULTS['console_errors']) - len(console_errors_to_print)
     if RESULTS['console_errors']:
-        print("\n  🔴 CONSOLE ERRORS:")
-        for err in RESULTS['console_errors'][:20]:
-            print(f"    [{err['type']}] {err['text'][:120]}")
+        if ignored_console_errors:
+            print(f"\n  ⚠️ Ignorando {ignored_console_errors} erros 404 de CDN conhecidos")
+        if console_errors_to_print:
+            print("\n  🔴 CONSOLE ERRORS:")
+            for err in console_errors_to_print[:20]:
+                print(f"    [{err['type']}] {err['text'][:120]}")
+        else:
+            print("\n  🔴 CONSOLE ERRORS: apenas os 404s conhecidos foram disparados")
 
     if RESULTS['page_errors']:
         print("\n  🔴 PAGE ERRORS:")

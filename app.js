@@ -4,6 +4,15 @@ window.app = {
     PERFIL_KEY: 'agromacro_perfil',
     PERFIS_VALIDOS: ['peao', 'admin', 'dono'],
 
+    _escapeHtml: function (str) {
+        return ('' + (str == null ? '' : str))
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    },
+
     normalizePerfil: function (perfil) {
         if (!perfil) return 'admin';
         var p = ('' + perfil).toLowerCase();
@@ -60,8 +69,8 @@ window.app = {
         toast.textContent = msg;
         toast.style.opacity = '1';
         toast.style.animation = 'toast-in 0.3s var(--ease-out) forwards';
-        clearTimeout(window._toastTimer);
-        window._toastTimer = setTimeout(function () {
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(function () {
             toast.style.animation = 'toast-out 0.3s var(--ease-out) forwards';
         }, 3000);
     },
@@ -97,6 +106,8 @@ window.app = {
 
     // Called by firebaseSync._showApp() after auth gate passes
     _initModules: function () {
+        if (this._modulesInitialized) return;
+        this._modulesInitialized = true;
         [
             'rebanho', 'pastos', 'lotes', 'financeiro', 'estoque', 'manejo', 'obras',
             'funcionarios', 'rebanhoOps', 'pastoMgmt', 'clima', 'nutricao',
@@ -393,9 +404,11 @@ window.app = {
         // Ordenar por nome
         pastos.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
 
+        var _esc = this._escapeHtml;
         var html = '<option value="">Selecionar Pasto...</option>';
         pastos.forEach(function (p) {
-            html += '<option value="' + p.nome + '">' + p.nome + (p.area > 0 ? ' (' + p.area + ' ha)' : '') + '</option>';
+            var n = _esc(p.nome);
+            html += '<option value="' + n + '">' + n + (p.area > 0 ? ' (' + p.area + ' ha)' : '') + '</option>';
         });
         html += '<option value="__novo__">➕ Novo pasto...</option>';
         select.innerHTML = html;
@@ -775,10 +788,7 @@ window.app = {
         // Show the correct home based on perfil
         if (perfil === 'peao') {
             if (homePeao) homePeao.style.display = 'block';
-            // Hide financial elements for peão
-            document.querySelectorAll('.gerencia-only').forEach(function (el) {
-                el.style.display = 'none';
-            });
+            // Para peões mantemos os cards visíveis, o restante segue o layout do home peão.
         } else if (perfil === 'admin') {
             if (homeAdmin) homeAdmin.style.display = 'block';
             // Show all elements for admin

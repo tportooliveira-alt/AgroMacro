@@ -328,7 +328,10 @@ window.estoque = {
                 return item.categoria === window.estoque.currentFilter;
             });
         }
+        if (!Array.isArray(items)) items = [];
+
         var fmt = function (v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); };
+        var _esc = window.data.escapeHtml;
 
         var valorTotal = 0;
         var itensAlerta = 0;
@@ -364,8 +367,8 @@ window.estoque = {
                     + '<div style="display:flex;align-items:center;gap:8px;">'
                     + '<span style="font-size:20px;">' + icon + '</span>'
                     + '<div>'
-                    + '<div style="font-size:14px;font-weight:700;color:#1E293B;">' + item.nome + '</div>'
-                    + '<div style="font-size:10px;color:#64748B;">' + (item.categoria || 'outros') + '</div>'
+                    + '<div style="font-size:14px;font-weight:700;color:#1E293B;">' + _esc(item.nome) + '</div>'
+                    + '<div style="font-size:10px;color:#64748B;">' + _esc(item.categoria || 'outros') + '</div>'
                     + '</div></div>'
                     + '<span style="font-size:9px;font-weight:800;background:' + statusColor + ';color:#fff;padding:2px 6px;border-radius:4px;">' + statusLabel + '</span>'
                     + '</div>';
@@ -465,9 +468,10 @@ window.estoque = {
 
     getProductSuggestions: function () {
         var items = this.getStockItems();
+        var _esc = window.data.escapeHtml;
         var html = '';
         items.forEach(function (item) {
-            html += '<option value="' + item.nome + '">';
+            html += '<option value="' + _esc(item.nome) + '">';
         });
         return html;
     },
@@ -521,9 +525,11 @@ window.estoque = {
         if (!select) return;
 
         var items = this.getStockItems();
+        var _esc = window.data.escapeHtml;
         var html = '<option value="">Selecionar do Estoque...</option>';
         items.forEach(function (item) {
-            html += '<option value="' + item.nome + '">' + item.nome + ' (' + item.qtdTotal.toFixed(1) + ' kg)</option>';
+            var n = _esc(item.nome || '');
+            html += '<option value="' + n + '">' + n + ' (' + item.qtdTotal.toFixed(1) + ' kg)</option>';
         });
         html += '<option value="__outro__">📝 Outro (digitar)</option>';
         select.innerHTML = html;
@@ -545,10 +551,12 @@ window.estoque = {
 
         var html = items.map(function (item, index) {
             var inputId = containerId + '-item-' + index;
+            var nomeEsc = window.data.escapeHtml(item.nome || '');
+            var catEsc = window.data.escapeHtml(item.categoria || '');
             return '<label for="' + inputId + '" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(148,163,184,0.25);border-radius:8px;margin-bottom:6px;">'
-                + '<input type="checkbox" id="' + inputId + '" data-material-name="' + item.nome + '" data-material-category="' + item.categoria + '">'
-                + '<span style="flex:1;">' + item.nome + ' <small style="color:#64748B;">(' + item.qtdTotal.toFixed(1) + ' kg)</small></span>'
-                + '<input type="number" step="0.1" min="0" placeholder="Qtd" class="material-qty-input" data-material-name="' + item.nome + '" style="width:84px;">'
+                + '<input type="checkbox" id="' + inputId + '" data-material-name="' + nomeEsc + '" data-material-category="' + catEsc + '">'
+                + '<span style="flex:1;">' + nomeEsc + ' <small style="color:#64748B;">(' + item.qtdTotal.toFixed(1) + ' kg)</small></span>'
+                + '<input type="number" step="0.1" min="0" placeholder="Qtd" class="material-qty-input" data-material-name="' + nomeEsc + '" style="width:84px;">'
                 + '</label>';
         }).join('');
 

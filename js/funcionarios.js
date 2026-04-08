@@ -21,7 +21,9 @@ window.funcionarios = {
         var funcs = {};
         window.data.events.forEach(function (ev) {
             if (ev.type === 'FUNCIONARIO_CADASTRO') {
-                funcs[ev.nome.toLowerCase().trim()] = {
+                var key = (ev.nome || '').toLowerCase().trim();
+                if (!key) return;
+                funcs[key] = {
                     nome: ev.nome,
                     funcao: ev.funcao || '',
                     telefone: ev.telefone || '',
@@ -107,7 +109,7 @@ window.funcionarios = {
 
         var html = funcs.map(function (f) {
             var nomeSafe = encodeURIComponent(f.nome || '');
-            var initials = f.nome.split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2);
+            var initials = (f.nome || '').split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2);
             var statusClass = f.ativo ? 'badge-green' : 'badge-red';
             var statusText = f.ativo ? 'Ativo' : 'Inativo';
             return '<div class="funcionario-card' + (f.ativo ? '' : ' inativo') + '">'
@@ -141,13 +143,14 @@ window.funcionarios = {
         }
 
         container.innerHTML = funcs.map(function (f) {
-            var initials = f.nome.split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2);
+            var _esc = window.data.escapeHtml;
+            var initials = (f.nome || '').split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2);
             return '<div class="worker-card">'
                 + '<div class="worker-avatar">' + initials + '</div>'
-                + '<label class="worker-name"><input type="checkbox" value="' + f.nome + '" data-diaria="' + (f.diaria || 0) + '"> ' + f.nome
-                + (f.funcao ? ' <small style="color:var(--text-light)">(' + f.funcao + ')</small>' : '')
+                + '<label class="worker-name"><input type="checkbox" value="' + _esc(f.nome || '') + '" data-diaria="' + (f.diaria || 0) + '"> ' + _esc(f.nome || '')
+                + (f.funcao ? ' <small style="color:var(--text-light)">(' + _esc(f.funcao) + ')</small>' : '')
                 + '</label>'
-                + '<div class="worker-days"><input type="number" min="0" placeholder="0" class="worker-days-input" data-worker="' + f.nome + '"> <small>' + (isPeao ? 'turnos' : 'dias') + '</small></div>'
+                + '<div class="worker-days"><input type="number" min="0" placeholder="0" class="worker-days-input" data-worker="' + _esc(f.nome || '') + '"> <small>' + (isPeao ? 'turnos' : 'dias') + '</small></div>'
                 + '</div>';
         }).join('');
     }

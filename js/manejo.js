@@ -54,7 +54,8 @@ window.manejo = {
         }
         var html = '<option value="">Selecionar Sal/Ração...</option>';
         items.forEach(function (item) {
-            html += '<option value="' + item.name + '">🧂 ' + item.name + ' (' + Math.round(item.qty) + ' ' + item.unit + ' restante)</option>';
+            var n = window.data.escapeHtml(item.name || '');
+            html += '<option value="' + n + '">🧂 ' + n + ' (' + Math.round(item.qty) + ' ' + item.unit + ' restante)</option>';
         });
         html += '<option value="__outro__">📝 Outro (digitar)</option>';
         select.innerHTML = html;
@@ -168,14 +169,14 @@ window.manejo = {
 
         // Vacinação: descontar materiais do estoque
         if (materials.length > 0) {
-            var saida = {
+            var saidaVacinacao = {
                 type: 'SAIDA_ESTOQUE',
                 desc: 'Manejo: ' + desc,
                 items: materials,
                 motivo: 'Manejo: ' + desc,
                 date: data || new Date().toISOString().split('T')[0]
             };
-            window.data.saveEvent(saida);
+            window.data.saveEvent(saidaVacinacao);
         }
 
         // Toast informativo
@@ -239,6 +240,7 @@ window.manejo = {
             return;
         }
 
+        var _esc = window.data.escapeHtml;
         var html = filterHtml + manejos.slice().reverse().map(function (ev) {
             var cfg = tipoConfig[ev.tipoManejo] || tipoConfig['outro'];
             var dateStr = (ev.date || '').split('T')[0];
@@ -261,12 +263,12 @@ window.manejo = {
                 + '<span style="' + labelStyle + '">' + cfg.label + '</span>'
                 + '<span style="' + dateStyle + '">📅 ' + dateFormatted + '</span>'
                 + '</div>'
-                + '<div style="' + descStyle + '">' + (ev.desc || '--') + '</div>'
+                + '<div style="' + descStyle + '">' + _esc(ev.desc || '--') + '</div>'
                 + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'
                 + (ev.qtdAnimais ? '<span style="' + detailStyle + '">🐄 ' + ev.qtdAnimais + ' cab</span>' : '')
                 + (ev.qtyProduto ? '<span style="' + detailStyle + '">📦 ' + ev.qtyProduto + ' kg usados</span>' : '')
-                + (ev.pasto ? '<span style="' + detailStyle + '">🌿 ' + ev.pasto + '</span>' : '')
-                + (ev.lote ? '<span style="' + detailStyle + '">📋 ' + ev.lote + '</span>' : '')
+                + (ev.pasto ? '<span style="' + detailStyle + '">🌿 ' + _esc(ev.pasto) + '</span>' : '')
+                + (ev.lote ? '<span style="' + detailStyle + '">📋 ' + _esc(ev.lote) + '</span>' : '')
                 + '</div>'
                 + (ev.cost ? '<div style="' + costStyle + '">💰 R$ ' + ev.cost.toFixed(2) + '</div>' : '')
                 + '</div>'
