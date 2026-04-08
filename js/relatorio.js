@@ -115,7 +115,7 @@ window.relatorio = {
                 else if (cat === 'remedios' || name.indexOf('vacina') >= 0) custoSanidade += (ev.value || 0);
                 else if (cat === 'obras') custoInfra += (ev.value || 0);
             }
-            else if ((ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && ev.cost) custoSanidade += ev.cost;
+            else if ((ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO') && (ev.value || ev.cost)) custoSanidade += (ev.value || ev.cost);
             else if (ev.type === 'OBRA' && ev.workers) ev.workers.forEach(function (w) { custoMaoDeObra += ((w.diaria || 0) * (w.dias || 1)); });
         });
         var custoTotal = custoReposicao + custoNutricao + custoSanidade + custoInfra + custoMaoDeObra;
@@ -247,7 +247,7 @@ window.relatorio = {
         var html = self._header('Relatório de Estoque');
 
         if (!window.estoque) { html += '<p>Módulo de estoque não disponível.</p>' + self._footer(); self._abrir(html, modo); return; }
-        var items = window.estoque.getItems();
+        var items = (window.estoque.getStockItems || window.estoque.getItems).call(window.estoque);
         var valorTotal = 0;
         items.forEach(function (item) { valorTotal += (item.valorTotal || (item.qty || 0) * (item.valor || 0)); });
 
@@ -349,7 +349,7 @@ window.relatorio = {
         var self = this;
         var html = self._header('Fluxo de Caixa');
 
-        var events = window.data ? window.data.events : [];
+        var events = window.data ? window.data.events.filter(function (ev) { return !ev.estornado; }) : [];
         var entradas = 0, saidas = 0;
         var rows = [];
 
@@ -388,11 +388,11 @@ window.relatorio = {
         var self = this;
         var html = self._header('Contas a Pagar');
 
-        var contas = JSON.parse(localStorage.getItem('agromacro_contas') || '[]');
+        var contas = window.data ? window.data.events.filter(function (e) { return e.type === 'CONTA_PAGAR' && !e.estornado; }) : [];
         var totalPendente = 0, totalPago = 0;
         contas.forEach(function (c) {
-            if (c.pago) totalPago += (c.valor || 0);
-            else totalPendente += (c.valor || 0);
+            if (c.pago || c.status === 'pago') totalPago += (c.value || c.valor || 0);
+            else totalPendente += (c.value || c.valor || 0);
         });
 
         html += '<div class="kpi-row">';
@@ -403,13 +403,13 @@ window.relatorio = {
 
         html += '<h2>📋 Lista de Contas</h2>';
         html += '<table><thead><tr><th>Vencimento</th><th>Descrição</th><th>Valor</th><th>Status</th></tr></thead><tbody>';
-        contas.sort(function (a, b) { return new Date(a.vencimento) - new Date(b.vencimento); });
+        contas.sort(function (a, b) { return new Date(a.vencimento || a.date) - new Date(b.vencimento || b.date); });
         contas.forEach(function (c) {
-            var d = c.vencimento ? new Date(c.vencimento).toLocaleDateString('pt-BR') : '--';
+            var d = (c.vencimento || c.date) ? new Date(c.vencimento || c.date).toLocaleDateString('pt-BR') : '--';
             html += '<tr><td>' + d + '</td>';
-            html += '<td>' + (c.descricao || c.desc || '--') + '</td>';
-            html += '<td>' + self._fmt(c.valor || 0) + '</td>';
-            html += '<td><span class="badge ' + (c.pago ? 'badge-green' : 'badge-red') + '">' + (c.pago ? 'Pago' : 'Pendente') + '</span></td></tr>';
+            html += '<td>' + (c.nome || c.desc || c.descricao || '--') + '</td>';
+            html += '<td>' + self._fmt(c.value || c.valor || 0) + '</td>';
+            html += '<td><span class="badge ' + ((c.pago || c.status === 'pago') ? 'badge-green' : 'badge-red') + '">' + ((c.pago || c.status === 'pago') ? 'Pago' : 'Pendente') + '</span></td></tr>';
         });
         html += '</tbody></table>';
         html += self._footer();
@@ -424,7 +424,9 @@ window.relatorio = {
         var self = this;
         var html = self._header('Relatório de Funcionários');
 
-        var funcionarios = JSON.parse(localStorage.getItem('agromacro_funcionarios') || '[]');
+        var funcionarios = window.data ? window.data.events.filter(function (e) {
+            return (e.type === 'FUNCIONARIO_CADASTRO' || e.type === 'FUNCIONARIO') && !e.estornado && e.status !== 'INATIVO';
+        }) : [];
 
         html += '<div class="kpi-row">';
         html += '<div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value">' + funcionarios.length + '</div></div>';
@@ -439,6 +441,146 @@ window.relatorio = {
             html += '<td>' + (f.telefone || '--') + '</td></tr>';
         });
         html += '</tbody></table>';
+        html += self._footer();
+        self._abrir(html, modo);
+    },
+
+    relatorioLivroCaixa: function (modo) {
+        modo = modo || 'print';
+        var self = this;
+        var html = self._header('Livro Caixa Digital');
+
+        var events = window.data ? window.data.events.filter(function (ev) { return !ev.estornado; }) : [];
+        var movs = [];
+        var saldoAcumulado = 0;
+
+        events.forEach(function (ev) {
+            var valor = ev.value || ev.cost || ev.custo || 0;
+            if (valor <= 0 && ev.type !== 'ESTORNO') return;
+            var isEntrada = ev.type === 'VENDA';
+            var isEstorno = ev.type === 'ESTORNO';
+            if (isEstorno) {
+                isEntrada = ev.tipoOriginal !== 'VENDA';
+            }
+            var isSaida = !isEntrada && (ev.type === 'COMPRA' || ev.type === 'ESTOQUE_ENTRADA'
+                || ev.type === 'OBRA_REGISTRO' || (ev.type === 'CONTA_PAGAR' && (ev.pago || ev.status === 'pago'))
+                || ev.type === 'MANEJO' || ev.type === 'MANEJO_SANITARIO');
+
+            if (!isEntrada && !isSaida) return;
+
+            var centerLabel = ev.centerCost || 'OUTROS';
+            var desc = ev.nome || ev.desc || ev.type;
+
+            movs.push({
+                date: ev.date || '',
+                tipo: isEntrada ? 'ENTRADA' : 'SAIDA',
+                desc: desc,
+                centerCost: centerLabel,
+                valor: valor,
+                categoria: ev.type
+            });
+        });
+
+        movs.sort(function (a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+        html += '<h2>Movimentacoes por Data</h2>';
+        html += '<table><thead><tr><th>Data</th><th>E/S</th><th>Descricao</th><th>Centro Custo</th><th>Valor</th><th>Saldo</th></tr></thead><tbody>';
+        movs.forEach(function (m) {
+            if (m.tipo === 'ENTRADA') saldoAcumulado += m.valor;
+            else saldoAcumulado -= m.valor;
+            var d = m.date ? new Date(m.date).toLocaleDateString('pt-BR') : '--';
+            html += '<tr><td>' + d + '</td>';
+            html += '<td><span class="badge ' + (m.tipo === 'ENTRADA' ? 'badge-green' : 'badge-red') + '">' + (m.tipo === 'ENTRADA' ? 'E' : 'S') + '</span></td>';
+            html += '<td>' + m.desc + '</td>';
+            html += '<td>' + m.centerCost + '</td>';
+            html += '<td class="' + (m.tipo === 'ENTRADA' ? 'positive' : 'negative') + '">' + self._fmt(m.valor) + '</td>';
+            html += '<td class="' + (saldoAcumulado >= 0 ? 'positive' : 'negative') + '">' + self._fmt(saldoAcumulado) + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        html += '<div class="dre-total"><span>SALDO FINAL</span><span class="' + (saldoAcumulado >= 0 ? 'positive' : 'negative') + '">' + self._fmt(saldoAcumulado) + '</span></div>';
+        html += self._footer();
+        self._abrir(html, modo);
+    },
+
+    relatorioProjecaoFluxo: function (modo) {
+        modo = modo || 'print';
+        var self = this;
+        var html = self._header('Projecao de Fluxo de Caixa');
+
+        var pendentes = window.data ? window.data.getContasPendentes() : [];
+        var total30 = 0, total60 = 0, total90 = 0, totalAlem = 0;
+        var hoje = new Date();
+        var d30 = new Date(); d30.setDate(d30.getDate() + 30);
+        var d60 = new Date(); d60.setDate(d60.getDate() + 60);
+        var d90 = new Date(); d90.setDate(d90.getDate() + 90);
+
+        pendentes.forEach(function (c) {
+            var v = c.value || 0;
+            var venc = c.vencimento ? new Date(c.vencimento) : hoje;
+            if (venc <= d30) total30 += v;
+            else if (venc <= d60) total60 += v;
+            else if (venc <= d90) total90 += v;
+            else totalAlem += v;
+        });
+
+        html += '<div class="kpi-row">';
+        html += '<div class="kpi"><div class="kpi-label">Proximo 30d</div><div class="kpi-value negative">' + self._fmt(total30) + '</div></div>';
+        html += '<div class="kpi"><div class="kpi-label">30-60d</div><div class="kpi-value negative">' + self._fmt(total60) + '</div></div>';
+        html += '<div class="kpi"><div class="kpi-label">60-90d</div><div class="kpi-value negative">' + self._fmt(total90) + '</div></div>';
+        html += '<div class="kpi"><div class="kpi-label">Alem 90d</div><div class="kpi-value negative">' + self._fmt(totalAlem) + '</div></div>';
+        html += '</div>';
+
+        html += '<h2>Contas Pendentes por Vencimento</h2>';
+        html += '<table><thead><tr><th>Vencimento</th><th>Descricao</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>';
+        pendentes.sort(function (a, b) { return new Date(a.vencimento || '2099-01-01') - new Date(b.vencimento || '2099-01-01'); });
+        pendentes.forEach(function (c) {
+            var d = c.vencimento ? new Date(c.vencimento).toLocaleDateString('pt-BR') : 'Sem data';
+            var venc = c.vencimento ? new Date(c.vencimento) : null;
+            var vencida = venc && venc < hoje;
+            html += '<tr style="' + (vencida ? 'background:#fee2e2;' : '') + '">';
+            html += '<td>' + d + (vencida ? ' ⚠️' : '') + '</td>';
+            html += '<td>' + (c.nome || c.desc || '--') + '</td>';
+            html += '<td>' + (c.categoria || '--') + '</td>';
+            html += '<td class="negative">' + self._fmt(c.value || 0) + '</td></tr>';
+        });
+        html += '</tbody></table>';
+
+        if (window.lotes) {
+            var lotes = window.lotes.getLotes();
+            var projecoes = [];
+            lotes.forEach(function (l) {
+                if (window.lotes.projecaoAbate) {
+                    var proj = window.lotes.projecaoAbate(l, 550);
+                    if (proj) {
+                        var arrobas = (l.qtdAnimais || 0) * 550 / 30;
+                        var precoArr = parseFloat(localStorage.getItem('agromacro_preco_arroba') || '0');
+                        projecoes.push({
+                            lote: l.nome,
+                            cabecas: l.qtdAnimais,
+                            dias: proj.dias,
+                            data: proj.dataEstimada,
+                            arrobas: arrobas,
+                            valorEstimado: arrobas * precoArr
+                        });
+                    }
+                }
+            });
+
+            if (projecoes.length > 0) {
+                html += '<h2>Projecao de Receitas (Vendas Futuras)</h2>';
+                html += '<table><thead><tr><th>Lote</th><th>Cabecas</th><th>Dias p/ Abate</th><th>Data Est.</th><th>Arrobas</th><th>Valor Est.</th></tr></thead><tbody>';
+                projecoes.forEach(function (p) {
+                    html += '<tr><td>' + p.lote + '</td>';
+                    html += '<td>' + p.cabecas + '</td>';
+                    html += '<td>' + (p.dias || '--') + '</td>';
+                    html += '<td>' + (p.data ? new Date(p.data).toLocaleDateString('pt-BR') : '--') + '</td>';
+                    html += '<td>' + p.arrobas.toFixed(0) + '</td>';
+                    html += '<td class="positive">' + self._fmt(p.valorEstimado) + '</td></tr>';
+                });
+                html += '</tbody></table>';
+            }
+        }
+
         html += self._footer();
         self._abrir(html, modo);
     }

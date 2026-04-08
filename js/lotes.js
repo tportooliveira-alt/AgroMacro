@@ -50,6 +50,8 @@ window.lotes = {
             racaoConsumo: racaoConsumo,
             obs: obs,
             status: 'ATIVO',
+            centerCost: 'GADO_CORTE',
+            pesoHistorico: [{ date: dataEntrada || new Date().toISOString().split('T')[0], pesoMedio: pesoMedio, qtdAnimais: qtdAnimais }],
             date: new Date().toISOString(),
             timestamp: new Date().toISOString()
         };
@@ -487,7 +489,51 @@ window.lotes = {
         select.innerHTML = html;
     },
 
-    // ====== GMD — Ganho Médio Diário ======
+    registrarPesagem: function (loteNome, pesoMedio, qtdAnimais, data) {
+        var lote = this.getLoteByNome(loteNome);
+        if (!lote) return;
+
+        data = data || new Date().toISOString().split('T')[0];
+        qtdAnimais = qtdAnimais || lote.qtdAnimais || 0;
+
+        if (!lote.pesoHistorico) lote.pesoHistorico = [];
+        lote.pesoHistorico.push({ date: data, pesoMedio: pesoMedio, qtdAnimais: qtdAnimais });
+        lote.pesoMedio = pesoMedio;
+        window.data.save();
+
+        window.data.saveEvent({
+            type: 'MANEJO',
+            tipoManejo: 'pesagem',
+            lote: loteNome,
+            pesoMedio: pesoMedio,
+            qtdAnimais: qtdAnimais,
+            centerCost: 'GADO_CORTE',
+            date: data
+        });
+    },
+
+    projecaoAbate: function (lote, pesoAlvo) {
+        pesoAlvo = pesoAlvo || 550;
+        var gmdData = this.calcGMD(lote);
+        if (!gmdData || gmdData.gmd <= 0) return null;
+
+        var pesoAtual = gmdData.pesoAtual || lote.pesoMedio || 0;
+        if (pesoAtual >= pesoAlvo) return { dias: 0, dataEstimada: new Date().toISOString().split('T')[0], pronto: true };
+
+        var diasParaAbate = Math.ceil((pesoAlvo - pesoAtual) / gmdData.gmd);
+        var dataAbate = new Date();
+        dataAbate.setDate(dataAbate.getDate() + diasParaAbate);
+
+        return {
+            dias: diasParaAbate,
+            dataEstimada: dataAbate.toISOString().split('T')[0],
+            pesoAtual: pesoAtual,
+            pesoAlvo: pesoAlvo,
+            gmd: gmdData.gmd,
+            pronto: false
+        };
+    },
+
     calcGMD: function (lote) {
         if (!window.data) return null;
 

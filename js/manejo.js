@@ -117,7 +117,10 @@ window.manejo = {
             materials = window.estoque.getSelectedMaterials('manejo-materials-list');
         }
 
-        // Save manejo event
+        var centerCost = 'OPERACIONAL';
+        if (tipo === 'nutricao') centerCost = 'NUTRICAO';
+        else if (tipo === 'vacinacao' || tipo === 'vermifugacao') centerCost = 'SANIDADE';
+
         var ev = {
             type: 'MANEJO',
             tipoManejo: tipo,
@@ -127,10 +130,28 @@ window.manejo = {
             qtdAnimais: qtd,
             qtyProduto: qtyProduto,
             cost: custo,
+            value: custo,
             materiaisUsados: materials,
+            centerCost: centerCost,
             date: data || new Date().toISOString().split('T')[0]
         };
-        window.data.saveEvent(ev);
+        var manejoEvent = window.data.saveEvent(ev);
+
+        if (custo > 0) {
+            var contaEvent = window.data.saveEvent({
+                type: 'CONTA_PAGAR',
+                nome: 'Manejo: ' + desc,
+                desc: tipo + ' - ' + desc + (lote ? ' (' + lote + ')' : ''),
+                value: custo,
+                categoria: 'sanidade',
+                centerCost: centerCost,
+                status: 'pago',
+                pago: true,
+                linkedEventIds: [manejoEvent.id],
+                date: data || new Date().toISOString().split('T')[0]
+            });
+            window.data.linkEvents(manejoEvent.id, contaEvent.id);
+        }
 
         // ══ BAIXA NO ESTOQUE ══
         // Nutrição: descontar a quantidade de sal/ração usada
