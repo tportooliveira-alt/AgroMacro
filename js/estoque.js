@@ -1,7 +1,102 @@
 // ====== MODULO: ESTOQUE / ALMOXARIFADO v3 (Linked Events, Alertas, Rastreabilidade) ======
 window.estoque = {
+    currentFilter: 'todos',
+
     init: function () {
         console.log('Estoque v3 Ready');
+        this.bindForm();
+        this.onCategoryChange();
+        this.calcTotal();
+    },
+
+    bindForm: function () {
+        var form = document.getElementById('form-estoque');
+        if (form && !form.dataset.boundEstoque) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                window.estoque.saveEntrada();
+            });
+            form.dataset.boundEstoque = '1';
+        }
+    },
+
+    getElement: function (id) {
+        return document.getElementById(id);
+    },
+
+    getValue: function (ids) {
+        for (var index = 0; index < ids.length; index++) {
+            var element = this.getElement(ids[index]);
+            if (element && element.value !== undefined && element.value !== '') {
+                return element.value;
+            }
+        }
+        return '';
+    },
+
+    getNumberValue: function (ids) {
+        var raw = this.getValue(ids);
+        return parseFloat(raw) || 0;
+    },
+
+    getCategorySuggestions: function (categoria) {
+        var catalog = {
+            racao_sal: ['Sal Mineral', 'Proteinado', 'Racao Engorda', 'Racao Confinamento', 'Nucleo Mineral'],
+            remedios: ['Vermifugo', 'Vacina Aftosa', 'Ivermectina', 'Antibiotico', 'Carrapaticida'],
+            obras: ['Arame', 'Cimento', 'Estaca', 'Prego', 'Telha', 'Madeira'],
+            outros: ['Lubrificante', 'Combustivel', 'Ferramenta']
+        };
+        return catalog[categoria] || catalog.outros;
+    },
+
+    updateSuggestionOptions: function (categoria) {
+        var select = this.getElement('est-produto-sugestao');
+        if (!select) return;
+
+        var suggestions = this.getCategorySuggestions(categoria);
+        var html = '<option value="">— Selecionar ou digitar abaixo —</option>';
+        suggestions.forEach(function (item) {
+            html += '<option value="' + item + '">' + item + '</option>';
+        });
+        select.innerHTML = html;
+    },
+
+    onCategoryChange: function () {
+        var categoria = this.getValue(['est-categoria']) || 'racao_sal';
+        this.updateSuggestionOptions(categoria);
+        this.calcTotal();
+    },
+
+    onSuggestionSelect: function () {
+        var suggestion = this.getValue(['est-produto-sugestao']);
+        var productInput = this.getElement('est-produto');
+        if (productInput && suggestion) productInput.value = suggestion;
+    },
+
+    calcTotal: function () {
+        var preview = this.getElement('est-total-preview');
+        if (!preview) return;
+
+        var qty = this.getNumberValue(['est-qty-sacos', 'est-qty']);
+        var pesoSaco = this.getNumberValue(['est-peso-saco']) || 1;
+        var valorUnitario = this.getNumberValue(['est-valor']);
+        var custoTotal = this.getNumberValue(['est-custo']);
+        var totalKg = qty * pesoSaco;
+
+        if (!custoTotal && valorUnitario > 0 && qty > 0) {
+            custoTotal = valorUnitario * qty;
+        }
+
+        if (!qty && !valorUnitario && !custoTotal) {
+            preview.style.display = 'none';
+            preview.innerHTML = '';
+            return;
+        }
+
+        preview.style.display = '';
+        preview.innerHTML = '<strong>Total:</strong> ' + qty.toFixed(1) + ' saco(s) | '
+            + totalKg.toFixed(1) + ' kg | '
+            + 'R$ ' + custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
 
     getCategories: function () {
@@ -22,26 +117,32 @@ window.estoque = {
     },
 
     saveEntrada: function () {
-        var produto = document.getElementById('est-produto').value;
-        var qtdSacos = parseFloat(document.getElementById('est-qty-sacos').value) || 0;
-        var pesoSaco = parseFloat(document.getElementById('est-peso-saco').value) || 0;
-        var custoTotal = parseFloat(document.getElementById('est-custo').value) || 0;
-        var catSelect = document.getElementById('est-categoria');
+        this.bindForm();
+
+        var produto = this.getValue(['est-produto']).trim();
+        var qtdSacos = this.getNumberValue(['est-qty-sacos', 'est-qty']);
+        var pesoSaco = this.getNumberValue(['est-peso-saco']) || 1;
+        var custoTotal = this.getNumberValue(['est-custo']);
+        var valorUnitario = this.getNumberValue(['est-valor']);
+        if (!custoTotal && valorUnitario > 0 && qtdSacos > 0) {
+            custoTotal = valorUnitario * qtdSacos;
+        }
+        var catSelect = this.getElement('est-categoria');
         var categoria = catSelect ? catSelect.value : 'outros';
-        var data = document.getElementById('est-data').value || new Date().toISOString().split('T')[0];
+        var data = this.getValue(['est-data']) || new Date().toISOString().split('T')[0];
 
         var statusPgto = 'pago';
-        var statusEl = document.getElementById('est-pago');
+        var statusEl = this.getElement('est-pago');
         if (statusEl) {
             statusPgto = statusEl.checked ? 'pago' : 'pendente';
         }
 
         var qtdMinima = 0;
-        var qtdMinimaEl = document.getElementById('est-qty-minima');
+        var qtdMinimaEl = this.getElement('est-qty-minima');
         if (qtdMinimaEl) qtdMinima = parseFloat(qtdMinimaEl.value) || 0;
 
         var fornecedor = '';
-        var fornEl = document.getElementById('est-fornecedor');
+        var fornEl = this.getElement('est-fornecedor');
         if (fornEl) fornecedor = fornEl.value;
 
         if (!produto || !qtdSacos) {
@@ -92,8 +193,11 @@ window.estoque = {
 
         window.app.showToast('Entrada registrada: ' + produto + ' (' + totalKg + 'kg) ' + (statusPgto === 'pago' ? '- PAGO' : '- PENDENTE'));
 
-        var form = document.getElementById('form-estoque');
+        var form = this.getElement('form-estoque');
         if (form) form.reset();
+
+        this.onCategoryChange();
+        this.calcTotal();
 
         this.render();
     },
@@ -170,6 +274,9 @@ window.estoque = {
                 p.qtdTotal = Math.max(0, p.qtdTotal);
                 p.custoMedioPonderado = p.qtdTotal > 0 ? p.custoTotal / p.qtdTotal : 0;
                 p.alertaBaixo = p.qtdTotal < p.qtdMinima;
+                p.name = p.nome;
+                p.qty = p.qtdTotal;
+                p.unit = 'kg';
 
                 var consumoDiario = 0;
                 var consumosRecentes = p.movimentacoes.filter(function (m) {
@@ -212,10 +319,15 @@ window.estoque = {
     },
 
     render: function () {
-        var container = document.getElementById('estoque-content');
+        var container = document.getElementById('estoque-content') || document.getElementById('estoque-list');
         if (!container) return;
 
         var items = this.getStockItems();
+        if (this.currentFilter && this.currentFilter !== 'todos') {
+            items = items.filter(function (item) {
+                return item.categoria === window.estoque.currentFilter;
+            });
+        }
         var fmt = function (v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); };
 
         var valorTotal = 0;
@@ -287,6 +399,29 @@ window.estoque = {
 
         html += '<button class="fab" onclick="window.estoque.abrirFormEntrada()">+</button>';
         container.innerHTML = html;
+        this.updateFilterButtons();
+    },
+
+    updateFilterButtons: function () {
+        document.querySelectorAll('#view-estoque .filter-btn').forEach(function (button) {
+            button.classList.remove('active');
+        });
+
+        var map = {
+            todos: 0,
+            racao_sal: 1,
+            remedios: 2,
+            obras: 3
+        };
+
+        var buttons = document.querySelectorAll('#view-estoque .filter-btn');
+        var index = map[this.currentFilter || 'todos'];
+        if (buttons[index]) buttons[index].classList.add('active');
+    },
+
+    filterBy: function (categoria) {
+        this.currentFilter = categoria || 'todos';
+        this.render();
     },
 
     abrirFormEntrada: function () {
@@ -373,5 +508,73 @@ window.estoque = {
             if (items[i].nome.toLowerCase().trim() === key) return items[i];
         }
         return null;
+    },
+
+    getStockByCategory: function (categoria) {
+        return this.getStockItems().filter(function (item) {
+            return item.categoria === categoria;
+        });
+    },
+
+    populateManejoProducts: function () {
+        var select = document.getElementById('manejo-produto');
+        if (!select) return;
+
+        var items = this.getStockItems();
+        var html = '<option value="">Selecionar do Estoque...</option>';
+        items.forEach(function (item) {
+            html += '<option value="' + item.nome + '">' + item.nome + ' (' + item.qtdTotal.toFixed(1) + ' kg)</option>';
+        });
+        html += '<option value="__outro__">📝 Outro (digitar)</option>';
+        select.innerHTML = html;
+    },
+
+    renderMaterialCheckboxes: function (containerId, categoria) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+
+        var items = this.getStockItems().filter(function (item) {
+            if (!categoria) return true;
+            return item.categoria === categoria;
+        });
+
+        if (!items.length) {
+            container.innerHTML = '<div class="empty-state">Nenhum material disponivel no estoque.</div>';
+            return;
+        }
+
+        var html = items.map(function (item, index) {
+            var inputId = containerId + '-item-' + index;
+            return '<label for="' + inputId + '" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(148,163,184,0.25);border-radius:8px;margin-bottom:6px;">'
+                + '<input type="checkbox" id="' + inputId + '" data-material-name="' + item.nome + '" data-material-category="' + item.categoria + '">'
+                + '<span style="flex:1;">' + item.nome + ' <small style="color:#64748B;">(' + item.qtdTotal.toFixed(1) + ' kg)</small></span>'
+                + '<input type="number" step="0.1" min="0" placeholder="Qtd" class="material-qty-input" data-material-name="' + item.nome + '" style="width:84px;">'
+                + '</label>';
+        }).join('');
+
+        container.innerHTML = html;
+    },
+
+    getSelectedMaterials: function (containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return [];
+
+        var selected = [];
+        container.querySelectorAll('input[type="checkbox"][data-material-name]:checked').forEach(function (checkbox) {
+            var name = checkbox.getAttribute('data-material-name') || '';
+            var qtyInput = container.querySelector('.material-qty-input[data-material-name="' + name.replace(/"/g, '\\"') + '"]');
+            var qty = parseFloat(qtyInput ? qtyInput.value : '') || 0;
+            if (name && qty > 0) {
+                selected.push({ name: name, qty: qty });
+            }
+        });
+
+        return selected;
+    },
+
+    populateLoteNutrition: function () {
+        var select = document.getElementById('manejo-produto');
+        if (!select) return;
+        this.populateManejoProducts();
     }
 };

@@ -39,6 +39,19 @@ with sync_playwright() as p:
     # 1. Load app
     print("\n📱 1. CARREGANDO APP...")
     page.goto('http://localhost:8080', wait_until='networkidle', timeout=15000)
+    page.evaluate('''() => {
+        if (window.firebaseSync && typeof window.firebaseSync.skipLogin === 'function') {
+            window.firebaseSync.skipLogin();
+        } else {
+            var login = document.getElementById('login-screen');
+            if (login) login.classList.add('hidden');
+            if (window.app && typeof window.app._initModules === 'function') {
+                window.app._initModules();
+            }
+        }
+        var onboarding = document.getElementById('ux-onboarding');
+        if (onboarding) onboarding.style.display = 'none';
+    }''')
     page.wait_for_timeout(2000)
     page.screenshot(path='/tmp/01_home.png', full_page=True)
     log_ok("App carregou com sucesso")

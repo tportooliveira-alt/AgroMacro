@@ -446,35 +446,39 @@ window.lotes = {
         var pastos = [];
         var seen = {};
 
+        var addPasto = function (nome) {
+            if (!nome) return;
+            var key = nome.toLowerCase();
+            if (seen[key]) return;
+            pastos.push(nome);
+            seen[key] = true;
+        };
+
         // 1. Pastos do mapa (FAZENDA_PASTOS do KML)
         if (window.FAZENDA_PASTOS && Array.isArray(window.FAZENDA_PASTOS)) {
             window.FAZENDA_PASTOS.forEach(function (p) {
-                var nome = p.nome || '';
-                if (nome && !seen[nome.toLowerCase()]) {
-                    pastos.push(nome);
-                    seen[nome.toLowerCase()] = true;
-                }
+                addPasto(p.nome || '');
             });
         }
 
-        // 2. Pastos de lotes existentes (caso tenha algum não mapeado)
+        // 2. Pastos cadastrados pelo modulo de pastos
+        if (window.pastos && window.pastos.getPastos) {
+            window.pastos.getPastos().forEach(function (p) {
+                addPasto(p.nome || '');
+            });
+        }
+
+        // 3. Pastos de lotes existentes (caso tenha algum não mapeado)
         var lotes = this.getLotes();
         lotes.forEach(function (l) {
-            var pasto = l.pasto || '';
-            if (pasto && !seen[pasto.toLowerCase()]) {
-                pastos.push(pasto);
-                seen[pasto.toLowerCase()] = true;
-            }
+            addPasto(l.pasto || '');
         });
 
-        // 3. Pastos manuais (localStorage)
+        // 4. Pastos manuais (localStorage)
         try {
             var manuais = JSON.parse(localStorage.getItem('agromacro_pastos_manuais') || '[]');
             manuais.forEach(function (p) {
-                if (p && !seen[p.toLowerCase()]) {
-                    pastos.push(p);
-                    seen[p.toLowerCase()] = true;
-                }
+                addPasto(p);
             });
         } catch (e) { }
 

@@ -29,6 +29,19 @@ def test_all_views():
         print("=== Opening AgroMacro ===")
         page.goto('http://localhost:8080')
         page.wait_for_load_state('networkidle')
+        page.evaluate('''() => {
+            if (window.firebaseSync && typeof window.firebaseSync.skipLogin === 'function') {
+                window.firebaseSync.skipLogin();
+            } else {
+                var login = document.getElementById('login-screen');
+                if (login) login.classList.add('hidden');
+                if (window.app && typeof window.app._initModules === 'function') {
+                    window.app._initModules();
+                }
+            }
+            var onboarding = document.getElementById('ux-onboarding');
+            if (onboarding) onboarding.style.display = 'none';
+        }''')
         page.wait_for_timeout(2000)
         
         # Get all view IDs
