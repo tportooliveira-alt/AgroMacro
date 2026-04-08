@@ -3,7 +3,7 @@ AgroMacro — Teste Completo Automatizado
 Testa: navegação, botões, console errors, links, funcionalidade
 """
 from playwright.sync_api import sync_playwright
-import json, time
+import json, time, re
 
 RESULTS = {
     'console_errors': [],
@@ -13,6 +13,12 @@ RESULTS = {
     'issues': [],
     'screenshots': []
 }
+
+
+def sanitize_filename(value):
+    safe = re.sub(r'[^A-Za-z0-9]+', '_', (value or '').strip())
+    safe = safe.strip('_')
+    return safe[:30] or 'tab'
 
 def log_issue(area, desc):
     RESULTS['issues'].append({'area': area, 'issue': desc})
@@ -112,7 +118,8 @@ with sync_playwright() as p:
             tab.click()
             page.wait_for_timeout(800)
             RESULTS['tabs_tested'] += 1
-            page.screenshot(path=f'/tmp/02_tab_{i}_{label[:10].replace(" ", "_")}.png', full_page=True)
+            screenshot_name = sanitize_filename(label)
+            page.screenshot(path=f'/tmp/02_tab_{i}_{screenshot_name}.png', full_page=True)
             log_ok(f'Tab {i}: "{label}" - clicou OK')
         except Exception as e:
             log_issue('Navegação', f'Tab {i} falhou: {str(e)[:80]}')

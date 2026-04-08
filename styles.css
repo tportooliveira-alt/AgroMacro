@@ -81,6 +81,12 @@
     --shadow-gold: 0 4px 14px var(--primary-glow);
 }
 
+#ux-onboarding,
+.ux-onboarding {
+    display: none !important;
+    pointer-events: none !important;
+}
+
 /* ═══════ TEMA: BRANCO (sol escaldante — máximo contraste) ═══════ */
 :root[data-theme="branco"] {
     --bg-0: #FFFFFF;
