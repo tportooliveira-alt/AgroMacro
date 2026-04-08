@@ -394,7 +394,7 @@
                 </div>
 
                 <!-- Financeiro — Visão Executiva -->
-                <div style="background:linear-gradient(135deg,rgba(220,38,38,0.08),rgba(217,119,6,0.08));border:1.5px solid rgba(220,38,38,0.15);border-radius:10px;padding:14px;margin-bottom:16px;cursor:pointer;" onclick="window.app.navigate('financeiro')">
+                <div class="gerencia-only" style="background:linear-gradient(135deg,rgba(220,38,38,0.08),rgba(217,119,6,0.08));border:1.5px solid rgba(220,38,38,0.15);border-radius:10px;padding:14px;margin-bottom:16px;cursor:pointer;" onclick="window.app.navigate('financeiro')">
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div style="font-size:28px;">💰</div>
                         <div style="flex:1;">
@@ -492,7 +492,7 @@
         </section>
 
         <!-- ===================== COMPRA DE GADO ===================== -->
-        <section id="view-compra" class="view hidden">
+        <section id="view-compra" class="view hidden gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Compra de Gado</h2>
@@ -566,7 +566,7 @@
         </section>
 
         <!-- ===================== VENDA DE GADO ===================== -->
-        <section id="view-venda" class="view hidden">
+        <section id="view-venda" class="view hidden gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Venda de Gado</h2>
@@ -1020,7 +1020,7 @@
         </section>
 
         <!-- ===================== FLUXO DE CAIXA ===================== -->
-        <section id="view-fluxo" class="view hidden">
+        <section id="view-fluxo" class="view hidden gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Fluxo de Caixa</h2>
@@ -1246,7 +1246,7 @@
         </section>
 
         <!-- ===================== BALANÇO / DRE ===================== -->
-        <section id="view-balanco" class="view hidden">
+        <section id="view-balanco" class="view hidden gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Balanço & DRE</h2>
@@ -1571,7 +1571,7 @@
         </section>
 
         <!-- ===================== CONTAS A PAGAR ===================== -->
-        <section id="view-contas" class="view hidden">
+        <section id="view-contas" class="view hidden gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Contas a Pagar</h2>
