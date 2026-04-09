@@ -1836,9 +1836,12 @@
                 <button onclick="window.iaAuditoria.exportarRelatorio('print')" style="background:#7C3AED22;color:#7C3AED;border:1px solid #7C3AED44;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">🖨 Relatorio</button>
                 <button onclick="window.iaAuditoria._exportarJSON()" style="background:#05966922;color:#059669;border:1px solid #05966944;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">📥 JSON</button>
                 <button onclick="window.iaAuditoria.syncAuditLogToFirestore()" style="background:#3B82F622;color:#3B82F6;border:1px solid #3B82F644;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">☁ Sync</button>
+                <button onclick="window.iaAuditoria.executarAuditoriaAlgoritmica()" style="background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B44;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">🔬 Bias Check</button>
                 <button onclick="window.iaAuditoria.limparAnomalias()" style="background:#EF444422;color:#EF4444;border:1px solid #EF444444;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;">🗑 Limpar</button>
             </div>
             <div id="auditoria-dashboard"></div>
+            <div id="auditoria-checklist"></div>
+            <div id="auditoria-algo-report"></div>
             <div id="auditoria-lista" style="padding:0 16px 24px;">
                 <div style="text-align:center;padding:48px 16px;color:var(--text-2);">
                     <div style="font-size:48px;margin-bottom:12px;">🛡</div>
