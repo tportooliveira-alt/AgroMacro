@@ -338,6 +338,29 @@ window.iaConsultor = {
                 });
             }
 
+            if (window.iaAuditoria) {
+                try {
+                    var anomalias = (window.data && window.data.events || []).filter(function (e) {
+                        return e.type === 'ANOMALIA' && e.status === 'PENDENTE';
+                    });
+                    if (anomalias.length > 0) {
+                        ctx.push('\n🛡 AUDITORIA — ' + anomalias.length + ' ANOMALIA(S) PENDENTE(S):');
+                        anomalias.slice(0, 5).forEach(function (a, i) {
+                            ctx.push('  ' + (i + 1) + '. [' + (a.severidade || '?') + '] ' + (a.indicador || '') + ': ' + (a.descricao || ''));
+                        });
+                        if (anomalias.length > 5) {
+                            ctx.push('  ... e mais ' + (anomalias.length - 5) + ' anomalia(s)');
+                        }
+                        ctx.push('\n📋 PASSOS DE RACIOCÍNIO (Chain-of-Thought):');
+                        ctx.push('  1. Verificar totais por centro de custo');
+                        ctx.push('  2. Comparar com medias historicas (ultimos 90 dias)');
+                        ctx.push('  3. Isolar eventos fora de 2 desvios-padrao');
+                        ctx.push('  4. Classificar por gravidade: ALTA / MEDIA / BAIXA');
+                        ctx.push('  5. Apresentar recomendacao pratica ao gestor');
+                    }
+                } catch (e) { }
+            }
+
         } catch (err) {
             ctx.push('(Erro ao coletar dados: ' + err.message + ')');
         }

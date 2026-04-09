@@ -198,7 +198,34 @@ window.data = {
 
         this.events.push(ev);
         this.save();
+
+        if (ev.type !== 'ANOMALIA' && ev.type !== 'AUDIT_LOG') {
+            this._registrarAuditLog(ev);
+        }
+
         return ev;
+    },
+
+    _registrarAuditLog: function (ev) {
+        try {
+            var logKey = 'agromacro_audit_log';
+            var logs = JSON.parse(localStorage.getItem(logKey) || '[]');
+            logs.push({
+                eventoId: ev.id,
+                tipo: ev.type,
+                timestamp: ev.timestamp,
+                usuario: (window.firebaseSync && window.firebaseSync.user) ? window.firebaseSync.user.email : 'offline',
+                fazendaId: (window.firebaseSync && window.firebaseSync.fazendaId) ? window.firebaseSync.fazendaId : 'local'
+            });
+            if (logs.length > 5000) logs = logs.slice(-5000);
+            localStorage.setItem(logKey, JSON.stringify(logs));
+        } catch (e) { }
+    },
+
+    getAuditLog: function () {
+        try {
+            return JSON.parse(localStorage.getItem('agromacro_audit_log') || '[]');
+        } catch (e) { return []; }
     },
 
     linkEvents: function (eventId1, eventId2) {

@@ -659,6 +659,7 @@ window.financeiro = {
                     + 'style="' + (active ? 'background:#0F766E;color:#fff;border-color:#0F766E;' : '') + '" '
                     + 'onclick="window.financeiro.setArea(\'' + item.id + '\')">' + item.label + '</button>';
             }).join('')
+            + '<button type="button" class="filter-btn" style="background:#7C3AED22;color:#7C3AED;border-color:#7C3AED;margin-left:auto;" onclick="window.app.navigate(\'auditoria\')">🛡 Auditoria</button>'
             + '</div>';
     },
 

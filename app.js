@@ -121,7 +121,7 @@ window.app = {
             'funcionarios', 'rebanhoOps', 'pastoMgmt', 'clima', 'nutricao',
             'nutricaoIA', 'zooIndices', 'formulacaoRacao', 'balanca', 'safebeef',
             'calendario', 'contas', 'rastreabilidade', 'indicadores', 'graficos',
-            'fotos', 'mapa', 'iaConsultor', 'uxHelpers', 'resultados'
+            'fotos', 'mapa', 'iaConsultor', 'uxHelpers', 'resultados', 'iaAuditoria'
         ].forEach(function (moduleName) {
             if (window[moduleName] && typeof window[moduleName].init === 'function') {
                 window[moduleName].init();
@@ -131,6 +131,14 @@ window.app = {
         this.loadConfig();
         this.applyPerfil();
         this.navigate('home');
+
+        setTimeout(function () {
+            if (window.iaAuditoria && window.iaAuditoria.executarAuditoria) {
+                try {
+                    window.iaAuditoria.executarAuditoria();
+                } catch (e) { console.warn('[Auto-Auditoria] Erro:', e); }
+            }
+        }, 3000);
     },
 
     // ══ PWA — Service Worker Registration ══
@@ -232,7 +240,7 @@ window.app = {
             'manejo': 'nav-rebanho', 'calendario': 'nav-rebanho', 'rebanho': 'nav-rebanho', 'cabecas': 'nav-rebanho', 'mapa': 'nav-rebanho',
             // Financeiro sub-views → nav-financeiro
             'financeiro': 'nav-financeiro', 'compra': 'nav-financeiro',
-            'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro',
+            'venda': 'nav-financeiro', 'fluxo': 'nav-financeiro', 'balanco': 'nav-financeiro', 'contas': 'nav-financeiro', 'auditoria': 'nav-financeiro',
             // Operações sub-views → nav-operacoes
             'operacoes': 'nav-operacoes', 'estoque': 'nav-operacoes', 'obras': 'nav-operacoes', 'funcionarios': 'nav-operacoes', 'rastreabilidade': 'nav-operacoes', 'balanca': 'nav-operacoes',
             // Config
@@ -354,6 +362,9 @@ window.app = {
                 this.loadConfig();
                 this.loadArrobaPrice();
                 if (window.firebaseSync) window.firebaseSync.renderSyncUI('sync-container');
+                break;
+            case 'auditoria':
+                if (window.iaAuditoria) window.iaAuditoria.renderView();
                 break;
         }
     },
@@ -638,6 +649,30 @@ window.app = {
             } catch (e) { /* ignore */ }
         }
 
+        // ══ 10. Anomalias de auditoria pendentes ══
+        if (window.iaAuditoria) {
+            try {
+                var anomalias = events.filter(function (ev) {
+                    return ev.type === 'ANOMALIA' && ev.status === 'PENDENTE';
+                });
+                if (anomalias.length > 0) {
+                    var altas = anomalias.filter(function (a) { return a.severidade === 'ALTA'; }).length;
+                    var medias = anomalias.filter(function (a) { return a.severidade === 'MEDIA'; }).length;
+                    var baixas = anomalias.filter(function (a) { return a.severidade !== 'ALTA' && a.severidade !== 'MEDIA'; }).length;
+                    var partes = [];
+                    if (altas > 0) partes.push(altas + ' alta(s)');
+                    if (medias > 0) partes.push(medias + ' media(s)');
+                    if (baixas > 0) partes.push(baixas + ' baixa(s)');
+                    alerts.push({
+                        icon: '🛡',
+                        msg: anomalias.length + ' anomalia(s) pendente(s) na auditoria: ' + partes.join(', '),
+                        type: altas > 0 ? 'danger' : 'warning',
+                        onclick: "window.app.navigate('auditoria')"
+                    });
+                }
+            } catch (e) { }
+        }
+
         // ══ Sem alertas ══
         if (alerts.length === 0) {
             alerts.push({ icon: '✅', msg: 'Tudo em dia! Nenhum alerta no momento.', type: 'ok' });
@@ -653,7 +688,8 @@ window.app = {
 
         container.innerHTML = alerts.map(function (a) {
             var borderColor = typeColors[a.type] || typeColors.info;
-            return '<div class="alert-item" style="border-left:3px solid ' + borderColor + ';">' +
+            var clickAttr = a.onclick ? ' onclick="' + a.onclick + '" style="border-left:3px solid ' + borderColor + ';cursor:pointer;"' : ' style="border-left:3px solid ' + borderColor + ';"';
+            return '<div class="alert-item"' + clickAttr + '>' +
                 '<span class="alert-icon">' + a.icon + '</span>' +
                 '<span>' + a.msg + '</span>' +
                 '</div>';
