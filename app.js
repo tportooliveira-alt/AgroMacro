@@ -138,6 +138,11 @@ window.app = {
                     window.iaAuditoria.executarAuditoria();
                 } catch (e) { console.warn('[Auto-Auditoria] Erro:', e); }
             }
+            if (window.iaAuditoria && window.iaAuditoria.syncAuditLogToFirestore) {
+                try {
+                    window.iaAuditoria.syncAuditLogToFirestore();
+                } catch (e) { }
+            }
         }, 3000);
     },
 

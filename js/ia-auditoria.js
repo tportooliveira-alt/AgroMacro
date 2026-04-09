@@ -470,6 +470,7 @@ window.iaAuditoria = (function () {
         }
 
         listaEl.innerHTML = anomalias.map(_renderCard).join('');
+        renderDashboardHistorico();
     }
 
     function _atualizarStatus(id, novoStatus) {
@@ -529,6 +530,294 @@ window.iaAuditoria = (function () {
         }
     }
 
+    function exportarRelatorio(modo) {
+        modo = modo || 'print';
+        var anomalias = _carregarAnomalias();
+        var events = (window.data && window.data.events) || [];
+        var kpis = _calcularIndicadores(events);
+
+        var config = JSON.parse(localStorage.getItem('agromacro_config') || '{}');
+        var nomeFazenda = config.nomeFazenda || 'Fazenda';
+        var proprietario = config.proprietario || '';
+        var cidade = config.cidade || '';
+        var estado = config.estado || '';
+        var hoje = new Date();
+        var dataRelatorio = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        var pendentes = anomalias.filter(function (a) { return a.status === 'PENDENTE'; });
+        var aprovados = anomalias.filter(function (a) { return a.status === 'APROVADO'; });
+        var rejeitados = anomalias.filter(function (a) { return a.status === 'REJEITADO'; });
+
+        var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+            '<title>Relatorio de Auditoria - ' + nomeFazenda + '</title>' +
+            '<style>' +
+            'body{font-family:"Inter","Segoe UI",sans-serif;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px;font-size:13px;}' +
+            'h1{color:#7C3AED;border-bottom:3px solid #7C3AED;padding-bottom:8px;font-size:22px;}' +
+            'h2{color:#1E3A5F;margin-top:24px;font-size:16px;border-bottom:1px solid #ddd;padding-bottom:4px;}' +
+            '.header-info{display:flex;justify-content:space-between;margin:8px 0 20px;font-size:12px;color:#666;}' +
+            '.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;}' +
+            '.kpi{background:#f1f5f9;border-radius:8px;padding:10px;text-align:center;}' +
+            '.kpi-label{font-size:10px;color:#666;text-transform:uppercase;}' +
+            '.kpi-value{font-size:18px;font-weight:700;margin-top:4px;}' +
+            'table{width:100%;border-collapse:collapse;margin:10px 0;}' +
+            'th{background:#7C3AED;color:white;padding:8px 10px;text-align:left;font-size:12px;}' +
+            'td{padding:6px 10px;border-bottom:1px solid #eee;font-size:12px;}' +
+            'tr:nth-child(even){background:#f8f9fa;}' +
+            '.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}' +
+            '.badge-alta{background:#fee2e2;color:#991b1b;}' +
+            '.badge-media{background:#fef9c3;color:#854d0e;}' +
+            '.badge-baixa{background:#dbeafe;color:#1e40af;}' +
+            '.positive{color:#16a34a;}.negative{color:#dc2626;}' +
+            '.summary-box{background:#f8f7ff;border:1px solid #e9e5f5;border-radius:8px;padding:12px;margin:10px 0;}' +
+            '.cot-section{background:#f9fafb;border-left:3px solid #7C3AED;padding:8px 12px;margin:6px 0;font-size:11px;}' +
+            '.footer{margin-top:30px;text-align:center;font-size:10px;color:#999;border-top:1px solid #ddd;padding-top:10px;}' +
+            '.no-print{margin:15px 0;}' +
+            '.btn-print{background:#7C3AED;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;margin-right:8px;}' +
+            '.btn-print:hover{background:#6D28D9;}' +
+            '@media print{.no-print{display:none !important;}body{padding:0;}}' +
+            '</style></head><body>';
+
+        html += '<h1>🛡 ' + nomeFazenda + ' — Relatorio de Auditoria</h1>';
+        html += '<div class="header-info">';
+        html += '<span>' + (proprietario ? proprietario + ' | ' : '') + (cidade ? cidade + '/' + estado : '') + '</span>';
+        html += '<span>Emitido em: ' + dataRelatorio + '</span>';
+        html += '</div>';
+
+        html += '<div class="no-print">';
+        html += '<button class="btn-print" onclick="window.print()">🖨 Imprimir</button>';
+        html += '<button class="btn-print" style="background:#059669;" onclick="window.iaAuditoria._exportarJSON()">📥 Exportar JSON</button>';
+        html += '</div>';
+
+        html += '<h2>Indicadores do Mes</h2>';
+        html += '<div class="kpi-row">';
+        html += '<div class="kpi"><div class="kpi-label">Receita</div><div class="kpi-value positive">' + _formatarMoeda(kpis.receitaMes) + '</div></div>';
+        html += '<div class="kpi"><div class="kpi-label">Despesa</div><div class="kpi-value negative">' + _formatarMoeda(kpis.despesaMes) + '</div></div>';
+        html += '<div class="kpi"><div class="kpi-label">Saldo</div><div class="kpi-value ' + (kpis.saldo >= 0 ? 'positive' : 'negative') + '">' + _formatarMoeda(kpis.saldo) + '</div></div>';
+        html += '<div class="kpi"><div class="kpi-label">Margem</div><div class="kpi-value">' + kpis.margem.toFixed(1) + '%</div></div>';
+        html += '</div>';
+
+        html += '<div class="summary-box">';
+        html += '<strong>Resumo da Auditoria:</strong> ' + anomalias.length + ' anomalia(s) detectada(s) — ';
+        html += pendentes.length + ' pendente(s), ' + aprovados.length + ' aprovada(s), ' + rejeitados.length + ' rejeitada(s)';
+        html += '</div>';
+
+        if (anomalias.length > 0) {
+            html += '<h2>Anomalias Detectadas</h2>';
+            html += '<table><thead><tr>';
+            html += '<th>Sev.</th><th>Indicador</th><th>Descricao</th><th>Valor</th><th>Data</th><th>Status</th><th>Revisor</th>';
+            html += '</tr></thead><tbody>';
+
+            anomalias.forEach(function (a) {
+                var badgeClass = a.severidade === 'ALTA' ? 'badge-alta' : a.severidade === 'MEDIA' ? 'badge-media' : 'badge-baixa';
+                html += '<tr>';
+                html += '<td><span class="badge ' + badgeClass + '">' + a.severidade + '</span></td>';
+                html += '<td>' + a.indicador.replace(/_/g, ' ') + '</td>';
+                html += '<td>' + a.descricao + '</td>';
+                html += '<td>' + _formatarMoeda(a.valor) + '</td>';
+                html += '<td>' + _formatarData(a.data) + '</td>';
+                html += '<td>' + a.status + '</td>';
+                html += '<td>' + (a.revisadoPor || '-') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+
+            html += '<h2>Raciocinio por Anomalia (Chain-of-Thought)</h2>';
+            anomalias.forEach(function (a, idx) {
+                var cot = _gerarCoT(a);
+                html += '<div class="cot-section">';
+                html += '<strong>' + (idx + 1) + '. ' + a.indicador.replace(/_/g, ' ') + '</strong><br>';
+                cot.passos.forEach(function (p) { html += p + '<br>'; });
+                html += '<em>Recomendacao: ' + cot.recomendacao + '</em>';
+                html += '</div>';
+            });
+        }
+
+        var auditLog = (window.data && window.data.getAuditLog) ? window.data.getAuditLog() : [];
+        if (auditLog.length > 0) {
+            html += '<h2>Trilha de Auditoria (ultimos 50 eventos)</h2>';
+            html += '<table><thead><tr><th>Data/Hora</th><th>Tipo</th><th>Evento ID</th><th>Usuario</th></tr></thead><tbody>';
+            auditLog.slice(-50).reverse().forEach(function (log) {
+                html += '<tr>';
+                html += '<td>' + _formatarData(log.timestamp) + '</td>';
+                html += '<td>' + (log.tipo || '-') + '</td>';
+                html += '<td style="font-family:monospace;font-size:10px;">' + (log.eventoId || '-') + '</td>';
+                html += '<td>' + (log.usuario || 'offline') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+        }
+
+        html += '<div class="footer">AgroMacro — Auditoria Automatizada com IA | Gerado em ' + dataRelatorio + '</div>';
+        html += '</body></html>';
+
+        var win = window.open('', '_blank');
+        if (win) {
+            win.document.write(html);
+            win.document.close();
+            win.iaAuditoria = { _exportarJSON: _exportarJSON };
+            if (modo === 'print') {
+                setTimeout(function () { win.print(); }, 500);
+            }
+        } else if (window.app) {
+            window.app.showToast('Pop-up bloqueado. Libere pop-ups para gerar o relatorio.', 'error');
+        }
+    }
+
+    function _exportarJSON() {
+        var anomalias = _carregarAnomalias();
+        var auditLog = (window.data && window.data.getAuditLog) ? window.data.getAuditLog() : [];
+        var events = (window.data && window.data.events) || [];
+        var kpis = _calcularIndicadores(events);
+
+        var payload = {
+            versao: SCHEMA_VERSION,
+            geradoEm: new Date().toISOString(),
+            fazenda: JSON.parse(localStorage.getItem('agromacro_config') || '{}').nomeFazenda || 'Fazenda',
+            indicadores: kpis,
+            anomalias: anomalias,
+            auditLog: auditLog.slice(-200)
+        };
+
+        var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'auditoria_' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function renderDashboardHistorico() {
+        var listaEl = document.getElementById('auditoria-lista');
+        if (!listaEl) return;
+
+        var anomalias = _carregarAnomalias();
+        if (anomalias.length === 0) return;
+
+        var porMes = {};
+        anomalias.forEach(function (a) {
+            var d = new Date(a.timestamp || a.data);
+            var chave = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (!porMes[chave]) porMes[chave] = { total: 0, alta: 0, media: 0, baixa: 0, aprovados: 0, rejeitados: 0, pendentes: 0 };
+            porMes[chave].total++;
+            if (a.severidade === 'ALTA') porMes[chave].alta++;
+            else if (a.severidade === 'MEDIA') porMes[chave].media++;
+            else porMes[chave].baixa++;
+            if (a.status === 'APROVADO') porMes[chave].aprovados++;
+            else if (a.status === 'REJEITADO') porMes[chave].rejeitados++;
+            else porMes[chave].pendentes++;
+        });
+
+        var meses = Object.keys(porMes).sort();
+        var maxTotal = Math.max.apply(null, meses.map(function (m) { return porMes[m].total; }));
+
+        var porIndicador = {};
+        anomalias.forEach(function (a) {
+            var ind = a.indicador || 'OUTRO';
+            porIndicador[ind] = (porIndicador[ind] || 0) + 1;
+        });
+
+        var indicadores = Object.keys(porIndicador).sort(function (a, b) { return porIndicador[b] - porIndicador[a]; });
+        var coresIndicador = {
+            VALOR_ATIPICO: '#EF4444', GMD_ANOMALO: '#F59E0B', CONTA_VENCIDA: '#8B5CF6',
+            ESTORNO_ALTO: '#EC4899', MARGEM_NEGATIVA: '#DC2626', FORNECEDOR_CONCENTRADO: '#F97316',
+            ESTOQUE_EXCESSIVO: '#6366F1'
+        };
+
+        var html = '<div style="margin-top:16px;margin-bottom:16px;">';
+        html += '<h3 style="font-size:15px;color:var(--text-0);margin:0 0 12px;">Historico de Anomalias</h3>';
+
+        html += '<div style="display:flex;gap:4px;align-items:flex-end;height:120px;margin-bottom:8px;">';
+        meses.forEach(function (m) {
+            var d = porMes[m];
+            var h = maxTotal > 0 ? Math.round((d.total / maxTotal) * 100) : 0;
+            var cor = d.alta > 0 ? '#EF4444' : d.media > 0 ? '#FBBF24' : '#3B82F6';
+            html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">';
+            html += '<span style="font-size:10px;font-weight:600;color:var(--text-1);">' + d.total + '</span>';
+            html += '<div style="width:100%;height:' + Math.max(h, 4) + 'px;background:' + cor + ';border-radius:4px 4px 0 0;"></div>';
+            html += '<span style="font-size:9px;color:var(--text-2);">' + m.split('-')[1] + '/' + m.split('-')[0].substr(2) + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        html += '<h3 style="font-size:15px;color:var(--text-0);margin:16px 0 8px;">Por Tipo de Anomalia</h3>';
+        html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+        indicadores.forEach(function (ind) {
+            var count = porIndicador[ind];
+            var pct = Math.round((count / anomalias.length) * 100);
+            var cor = coresIndicador[ind] || '#64748B';
+            html += '<div style="display:flex;align-items:center;gap:8px;">';
+            html += '<span style="font-size:11px;color:var(--text-1);min-width:140px;">' + ind.replace(/_/g, ' ') + '</span>';
+            html += '<div style="flex:1;height:16px;background:var(--bg-0);border-radius:4px;overflow:hidden;">';
+            html += '<div style="width:' + pct + '%;height:100%;background:' + cor + ';border-radius:4px;"></div>';
+            html += '</div>';
+            html += '<span style="font-size:11px;font-weight:600;color:var(--text-0);min-width:30px;text-align:right;">' + count + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '</div>';
+
+        var existingDash = document.getElementById('auditoria-dashboard');
+        if (existingDash) {
+            existingDash.innerHTML = html;
+        } else {
+            var dashDiv = document.createElement('div');
+            dashDiv.id = 'auditoria-dashboard';
+            dashDiv.innerHTML = html;
+            listaEl.parentNode.insertBefore(dashDiv, listaEl);
+        }
+    }
+
+    function syncAuditLogToFirestore() {
+        if (!window.firebaseSync || !window.firebaseSync.db || !window.firebaseSync.fazendaId || !window.firebaseSync.user) return;
+
+        var auditLog = (window.data && window.data.getAuditLog) ? window.data.getAuditLog() : [];
+        if (auditLog.length === 0) return;
+
+        var db = window.firebaseSync.db;
+        var fazendaId = window.firebaseSync.fazendaId;
+        var ref = db.collection('fazendas').doc(fazendaId).collection('audit_log');
+
+        var batch = db.batch();
+        var ultimos = auditLog.slice(-100);
+
+        ultimos.forEach(function (log) {
+            var docId = 'AL-' + (log.eventoId || Date.now()) + '-' + (log.timestamp || '').replace(/[^0-9]/g, '').substr(0, 14);
+            batch.set(ref.doc(docId), log, { merge: true });
+        });
+
+        batch.commit().then(function () {
+            console.log('[Auditoria] AuditLog sincronizado com Firestore (' + ultimos.length + ' registros)');
+        }).catch(function (err) {
+            console.warn('[Auditoria] Falha ao sincronizar AuditLog:', err);
+        });
+
+        var anomalias = _carregarAnomalias();
+        if (anomalias.length > 0) {
+            var refAnom = db.collection('fazendas').doc(fazendaId).collection('anomalias');
+            var batchAnom = db.batch();
+            anomalias.forEach(function (a) {
+                batchAnom.set(refAnom.doc(a.id), a, { merge: true });
+            });
+            batchAnom.commit().then(function () {
+                console.log('[Auditoria] Anomalias sincronizadas com Firestore (' + anomalias.length + ')');
+            }).catch(function (err) {
+                console.warn('[Auditoria] Falha ao sincronizar anomalias:', err);
+            });
+        }
+    }
+
+    function limparAnomalias() {
+        if (!confirm('Tem certeza que deseja limpar todas as anomalias? Esta acao nao pode ser desfeita.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        renderView();
+        if (window.app && window.app.showToast) {
+            window.app.showToast('Anomalias limpas com sucesso', 'success');
+        }
+    }
+
     return {
         SCHEMA_VERSION: SCHEMA_VERSION,
         init: function () { console.log('[IA Auditoria] Modulo inicializado'); },
@@ -536,6 +825,11 @@ window.iaAuditoria = (function () {
         renderView: renderView,
         aprovarAnomalia: aprovarAnomalia,
         rejeitarAnomalia: rejeitarAnomalia,
-        analisarComIA: analisarComIA
+        analisarComIA: analisarComIA,
+        exportarRelatorio: exportarRelatorio,
+        _exportarJSON: _exportarJSON,
+        renderDashboardHistorico: renderDashboardHistorico,
+        syncAuditLogToFirestore: syncAuditLogToFirestore,
+        limparAnomalias: limparAnomalias
     };
 })();
