@@ -168,6 +168,38 @@ window.relatorio = {
             html += '</div>';
         }
 
+        // Seção Auditoria
+        var anomalias = JSON.parse(localStorage.getItem('agromacro_anomalias_v1') || '[]');
+        if (anomalias.length > 0) {
+            var pendentes = anomalias.filter(function (a) { return a.status === 'PENDENTE'; });
+            var aprovadas = anomalias.filter(function (a) { return a.status === 'APROVADA'; });
+            var rejeitadas = anomalias.filter(function (a) { return a.status === 'REJEITADA'; });
+            var altas = anomalias.filter(function (a) { return a.severidade === 'ALTA'; });
+
+            html += '<h2>🛡 Auditoria IA — ' + anomalias.length + ' Anomalia(s)</h2>';
+            html += '<div class="kpi-row">';
+            html += '<div class="kpi"><div class="kpi-label">Pendentes</div><div class="kpi-value negative">' + pendentes.length + '</div></div>';
+            html += '<div class="kpi"><div class="kpi-label">Aprovadas</div><div class="kpi-value positive">' + aprovadas.length + '</div></div>';
+            html += '<div class="kpi"><div class="kpi-label">Rejeitadas</div><div class="kpi-value">' + rejeitadas.length + '</div></div>';
+            html += '<div class="kpi"><div class="kpi-label">Sev. Alta</div><div class="kpi-value negative">' + altas.length + '</div></div>';
+            html += '</div>';
+
+            html += '<table><thead><tr><th>Sev.</th><th>Escopo</th><th>Indicador</th><th>Descricao</th><th>Status</th><th>Revisor</th></tr></thead><tbody>';
+            anomalias.forEach(function (a) {
+                var sevClass = a.severidade === 'ALTA' ? 'badge-red' : (a.severidade === 'MEDIA' ? 'badge-yellow' : 'badge-blue');
+                var statusClass = a.status === 'PENDENTE' ? 'badge-yellow' : (a.status === 'APROVADA' ? 'badge-green' : 'badge-red');
+                html += '<tr>';
+                html += '<td><span class="badge ' + sevClass + '">' + (a.severidade || '--') + '</span></td>';
+                html += '<td>' + (a.escopo || '--') + '</td>';
+                html += '<td>' + (a.indicador || '--') + '</td>';
+                html += '<td>' + (a.descricao || '--').substring(0, 80) + '</td>';
+                html += '<td><span class="badge ' + statusClass + '">' + (a.status || '--') + '</span></td>';
+                html += '<td>' + (a.revisor || '--') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+        }
+
         html += self._footer();
         self._abrir(html, modo);
     },

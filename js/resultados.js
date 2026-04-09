@@ -223,6 +223,35 @@ window.resultados = {
             html += '</div>';
         }
 
+        // ══════════════════════════════════════════════════════
+        // 5) AUDITORIA — Anomalias pendentes
+        // ══════════════════════════════════════════════════════
+        var anomaliasAudit = JSON.parse(localStorage.getItem('agromacro_anomalias_v1') || '[]');
+        var pendentesAudit = anomaliasAudit.filter(function (a) { return a.status === 'PENDENTE'; });
+        if (pendentesAudit.length > 0) {
+            var altasAudit = pendentesAudit.filter(function (a) { return a.severidade === 'ALTA'; });
+            var mediasAudit = pendentesAudit.filter(function (a) { return a.severidade === 'MEDIA'; });
+
+            html += '<div class="res-section">';
+            html += '<div class="res-section-title">🛡 Auditoria</div>';
+            html += '<div class="res-finance-card">';
+            html += '<div class="res-fin-row"><span>Pendentes</span><span class="res-negative" style="font-weight:700">' + pendentesAudit.length + '</span></div>';
+            if (altasAudit.length > 0) {
+                html += '<div class="res-fin-row"><span>Severidade Alta</span><span class="res-negative">' + altasAudit.length + '</span></div>';
+            }
+            if (mediasAudit.length > 0) {
+                html += '<div class="res-fin-row"><span>Severidade Media</span><span style="color:#ca8a04;font-weight:600">' + mediasAudit.length + '</span></div>';
+            }
+            html += '<div class="res-fin-row" style="border-top:1px solid #e5e7eb;padding-top:8px;margin-top:4px">';
+            html += '<span>Total anomalias</span><span style="font-weight:700">' + anomaliasAudit.length + '</span>';
+            html += '</div>';
+            html += '<div style="text-align:center;margin-top:8px">';
+            html += '<button type="button" onclick="window.app.navigate(\'auditoria\')" style="background:#7C3AED;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer">Ver Auditoria</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+
         container.innerHTML = html;
     }
 };
