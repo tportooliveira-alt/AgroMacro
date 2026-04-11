@@ -8,6 +8,9 @@
 
 /* ═══════ DESIGN TOKENS — CAMPO VIVO ═══════ */
 :root {
+    /* Smooth theme transitions */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
     /* Primary — Verde Teal campo */
     --primary: #00796B;
     --primary-light: #26A69A;
