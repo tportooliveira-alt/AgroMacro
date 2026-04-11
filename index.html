@@ -22,6 +22,25 @@
 
     <!-- ══ AgroMacro — Campo Vivo v4 ══ -->
     <link rel="stylesheet" href="styles.css?v=20260407">
+    <!-- ══ AgroMacro — Brutalismo Premium Design System ══ -->
+    <link rel="stylesheet" href="brutalismo-premium.css?v=20260412">
+    <!-- ══ BRUTALISMO OVERRIDE — força tema escuro industrial independente de data-theme ══ -->
+    <style id="brutalismo-force">
+        /* Força variáveis ANTES do JS setar data-theme */
+        :root { --bg-0: #0F1318; --bg-1: #1A1A1A; --bg-2: #2A2A2A; --bg-3: #3D3D3D; --bg-4: #4A4A4A; --text-0: #FFFEF0; --text-1: #FFFEF0; --text-2: #B8B8B0; --text-3: #7A7A74; --primary: #8B4513; --primary-light: #9B5126; --primary-dark: #6B3410; --primary-surface: rgba(139,69,19,0.15); --primary-glow: rgba(139,69,19,0.30); --secondary: #00796B; --accent: #B45309; --accent-light: #D97706; --green: #00796B; --green-surface: rgba(0,121,107,0.15); --red: #DC2626; --red-surface: rgba(220,38,38,0.15); --border-default: rgba(255,254,240,0.13); --header-bg: rgba(15,19,24,0.96); --nav-bg: rgba(15,19,24,0.98); --card-gradient: linear-gradient(160deg,#1A1A1A,#0F1318); --shadow-sm: 0 2px 8px rgba(0,0,0,0.50); --shadow-md: 0 4px 16px rgba(0,0,0,0.60); }
+        /* Sobrescreve QUALQUER tema que o JS definir */
+        :root[data-theme="claro"], :root[data-theme="branco"], :root[data-theme="escuro"], :root[data-theme="dark"], [data-theme="dark"] { --bg-0: #0F1318 !important; --bg-1: #1A1A1A !important; --bg-2: #2A2A2A !important; --bg-3: #3D3D3D !important; --bg-4: #4A4A4A !important; --text-0: #FFFEF0 !important; --text-1: #FFFEF0 !important; --primary: #8B4513 !important; --primary-light: #9B5126 !important; --primary-surface: rgba(139,69,19,0.15) !important; --header-bg: rgba(15,19,24,0.96) !important; --nav-bg: rgba(15,19,24,0.98) !important; }
+        /* Força no body e elementos principais */
+        html, body { background-color: #0F1318 !important; color: #FFFEF0 !important; }
+        .app-header, header { background: rgba(15,19,24,0.96) !important; border-bottom: 1px solid rgba(139,69,19,0.3) !important; }
+        .bottom-nav, nav.bottom-nav { background: rgba(15,19,24,0.98) !important; border-top: 1px solid rgba(139,69,19,0.3) !important; }
+        .card, .kpi-card, .alert-card { background: #1A1A1A !important; border: 1px solid #3D3D3D !important; }
+        .btn-primary, .submit-btn, button[type="submit"] { background: #8B4513 !important; color: #FFFEF0 !important; border: none !important; }
+        .btn-primary:hover, .submit-btn:hover { background: #9B5126 !important; }
+        input, select, textarea { background: #2A2A2A !important; border: 1px solid #4A4A4A !important; color: #FFFEF0 !important; }
+        input:focus, select:focus, textarea:focus { border-color: #8B4513 !important; }
+        .nav-tab.active, .nav-tab:hover { color: #8B4513 !important; }
+    </style>
     <link rel="manifest" href="manifest.json">
 
     <!-- Leaflet.js — Mapa Interativo -->
@@ -1900,6 +1919,9 @@
     <!-- Scripts -->
     <script src="js/icons.js?v=20260212a"></script>
     <script src="js/data.js?v=20260219b"></script>
+    <script src="js/context-builder.js?v=20260411a"></script>
+    <script src="js/action-bus.js?v=20260411a"></script>
+    <script src="js/agent-orchestrator.js?v=20260411a"></script>
     <script src="js/rebanho.js?v=20260211r"></script>
     <script src="js/pastos.js?v=20260211r"></script>
     <script src="js/lotes.js?v=20260211r"></script>

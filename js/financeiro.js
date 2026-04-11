@@ -372,16 +372,18 @@ window.financeiro = {
             date: data || new Date().toISOString().split('T')[0]
         });
 
-        if (payment.outstanding > 0 || payment.mode === 'avista') {
+        // CONTA_RECEBER só para valor em aberto (prazo/parcial)
+        // Venda avista não cria CONTA_RECEBER — evita dupla contagem no fluxo de caixa
+        if (payment.outstanding > 0) {
             var contaReceber = window.data.saveEvent({
                 type: 'CONTA_RECEBER',
                 nome: 'Venda Gado: ' + (desc || qty + ' cab'),
                 desc: qty + ' cabecas - ' + (comprador || 'sem comprador'),
-                value: payment.outstanding > 0 ? payment.outstanding : valor,
+                value: payment.outstanding,
                 categoria: 'gado',
                 centerCost: 'GADO_CORTE',
-                status: payment.outstanding > 0 ? 'pendente' : 'pago',
-                pago: payment.outstanding <= 0,
+                status: 'pendente',
+                pago: false,
                 formaPagamento: payment.mode,
                 vencimento: payment.dueDate || vendaEvent.date,
                 linkedEventIds: [vendaEvent.id],
@@ -391,6 +393,16 @@ window.financeiro = {
         }
 
         var novaQtd = Math.max(0, (loteAtual.qtdAnimais || 0) - qty);
+        if (novaQtd === 0) {
+            window.data.saveEvent({
+                type: 'FECHAMENTO_LOTE',
+                nome: lote,
+                desc: 'Lote encerrado por venda total — ' + qty + ' cabecas',
+                linkedEventIds: [vendaEvent.id],
+                centerCost: 'GADO_CORTE',
+                date: data || new Date().toISOString().split('T')[0]
+            });
+        }
         var loteEvent = window.data.saveEvent({
             type: 'LOTE',
             nome: lote,
@@ -852,11 +864,22 @@ window.financeiro = {
 
         var linked = this.getLinkedEvents(evento);
         linked.forEach(function (linkedEvent) {
-            if (linkedEvent.type === 'CONTA_PAGAR' || linkedEvent.type === 'CONTA_RECEBER') {
+            if (!linkedEvent) return;
+            var tiposEstornaveis = ['CONTA_PAGAR', 'CONTA_RECEBER', 'SAIDA_ESTOQUE', 'LOTE'];
+            if (tiposEstornaveis.indexOf(linkedEvent.type) >= 0) {
                 linkedEvent.estornado = true;
                 linkedEvent.dataEstorno = new Date().toISOString();
+                // Cascata: estornar eventos filhos do linked também (ex: SAIDA_ESTOQUE de obras)
+                var subLinked = window.data ? window.data.getLinkedEvents(linkedEvent) : [];
+                subLinked.forEach(function (sub) {
+                    if (sub && sub.type === 'SAIDA_ESTOQUE' && !sub.estornado) {
+                        sub.estornado = true;
+                        sub.dataEstorno = new Date().toISOString();
+                    }
+                });
             }
         });
+        window.data.save();
 
         if ((evento.type === 'COMPRA' || evento.type === 'VENDA') && evento.lote && window.lotes && window.lotes.getLoteByNome) {
             var loteAtual = window.lotes.getLoteByNome(evento.lote);

@@ -157,31 +157,36 @@ window.manejo = {
         // ══ BAIXA NO ESTOQUE ══
         // Nutrição: descontar a quantidade de sal/ração usada
         if (tipo === 'nutricao' && qtyProduto > 0 && desc) {
-            var saida = {
+            var saidaNutricao = window.data.saveEvent({
                 type: 'SAIDA_ESTOQUE',
                 desc: 'Nutrição: ' + desc + (lote ? ' (' + lote + ')' : ''),
                 items: [{ name: desc, qty: qtyProduto }],
                 motivo: 'Nutrição manejo',
+                linkedEventIds: [manejoEvent.id],
                 date: data || new Date().toISOString().split('T')[0]
-            };
-            window.data.saveEvent(saida);
+            });
+            window.data.linkEvents(manejoEvent.id, saidaNutricao.id);
         }
 
-        // Vacinação: descontar materiais do estoque
+        // Vacinação/Vermifugação: descontar materiais do estoque
         if (materials.length > 0) {
-            var saidaVacinacao = {
+            var saidaVacinacao = window.data.saveEvent({
                 type: 'SAIDA_ESTOQUE',
                 desc: 'Manejo: ' + desc,
                 items: materials,
                 motivo: 'Manejo: ' + desc,
+                linkedEventIds: [manejoEvent.id],
                 date: data || new Date().toISOString().split('T')[0]
-            };
-            window.data.saveEvent(saidaVacinacao);
+            });
+            window.data.linkEvents(manejoEvent.id, saidaVacinacao.id);
         }
 
         // Toast informativo
         if (tipo === 'nutricao') {
             window.app.showToast('✅ Nutrição: ' + qtyProduto + ' kg de ' + desc + (lote ? ' p/ ' + lote : '') + ' — baixa no estoque');
+        } else if (materials.length > 0) {
+            var totalMat = materials.reduce(function (s, m) { return s + (m.qty || 0); }, 0);
+            window.app.showToast('✅ Manejo: ' + desc + ' — ' + totalMat.toFixed(1) + ' un. baixados do almoxarifado');
         } else {
             window.app.showToast('✅ Manejo registrado: ' + desc);
         }

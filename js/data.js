@@ -154,13 +154,18 @@ window.data = {
                 }
                 if (ev.centerCost) changed = true;
             }
-            if (ev.type === 'CONTA_PAGAR') {
+            if (ev.type === 'CONTA_PAGAR' || ev.type === 'CONTA_RECEBER') {
                 if (ev.status === 'pago' && ev.pago === undefined) {
                     ev.pago = true;
                     changed = true;
                 }
                 if (ev.pago === true && ev.status !== 'pago') {
                     ev.status = 'pago';
+                    changed = true;
+                }
+                // Garantir que pendente nunca fique com pago=true
+                if (ev.status === 'pendente' && ev.pago === true) {
+                    ev.pago = false;
                     changed = true;
                 }
                 if (self.normalizeValueField(ev)) changed = true;
@@ -297,24 +302,41 @@ window.data = {
             if (!result.porCentro[cc]) result.porCentro[cc] = { entradas: 0, saidas: 0 };
             if (!result.porTipo[ev.type]) result.porTipo[ev.type] = { entradas: 0, saidas: 0 };
 
+            // ══ ENTRADAS ══
             if (ev.type === 'VENDA') {
+                // Conta apenas o que foi recebido imediatamente (prazo terá CONTA_RECEBER separada)
+                var recebidoAgora = ev.valorRecebidoAgora !== undefined ? ev.valorRecebidoAgora : valor;
+                if (recebidoAgora > 0) {
+                    result.entradas += recebidoAgora;
+                    result.porCentro[cc].entradas += recebidoAgora;
+                    result.porTipo[ev.type].entradas += recebidoAgora;
+                }
+            } else if (ev.type === 'CONTA_RECEBER') {
+                // Só conta quando efetivamente recebida (pago=true)
+                if (!ev.pago && ev.status !== 'pago') return;
                 result.entradas += valor;
                 result.porCentro[cc].entradas += valor;
                 result.porTipo[ev.type].entradas += valor;
+
+            // ══ ESTORNO ══
             } else if (ev.type === 'ESTORNO') {
-                if (ev.tipoOriginal === 'VENDA') {
+                if (ev.tipoOriginal === 'VENDA' || ev.tipoOriginal === 'CONTA_RECEBER') {
                     result.entradas -= valor;
                 } else {
                     result.saidas -= valor;
                 }
-            } else if (valor > 0) {
-                if (ev.type === 'CONTA_PAGAR' && !ev.pago && ev.status !== 'pago') {
-                    return;
-                }
+
+            // ══ SAÍDAS ══
+            // COMPRA, OBRA_REGISTRO, ESTOQUE_ENTRADA, MANEJO geram CONTA_PAGAR — não contar direto
+            } else if (ev.type === 'CONTA_PAGAR') {
+                // Só conta saída quando paga (cash-basis)
+                if (!ev.pago && ev.status !== 'pago') return;
                 result.saidas += valor;
                 result.porCentro[cc].saidas += valor;
                 result.porTipo[ev.type].saidas += valor;
             }
+            // COMPRA, ESTOQUE_ENTRADA, OBRA_REGISTRO, MANEJO: ignorados aqui
+            // (contados via CONTA_PAGAR para evitar dupla contagem)
         });
         result.saldo = result.entradas - result.saidas;
         return result;

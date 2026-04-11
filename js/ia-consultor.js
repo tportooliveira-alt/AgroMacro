@@ -199,6 +199,10 @@ window.iaConsultor = {
 
     // ══ COLETA CONTEXTO REAL DA FAZENDA ══
     getContextoFazenda: function () {
+        if (window.contextBuilder && typeof window.contextBuilder.getPromptContext === 'function') {
+            return window.contextBuilder.getPromptContext();
+        }
+
         var ctx = [];
         try {
             var events = window.data ? window.data.events : [];
@@ -1202,6 +1206,17 @@ window.iaConsultor = {
         acoes.forEach(function (acao) {
             try {
                 var d = acao.dados || {};
+
+                if (window.actionBus && typeof window.actionBus.canHandle === 'function' && window.actionBus.canHandle(acao.tipo)) {
+                    var actionResult = window.actionBus.execute(acao, {
+                        agentName: 'iaConsultor',
+                        actorType: 'agent',
+                        requestedBy: 'user'
+                    });
+                    resultados.push(actionResult.message || ('Acao processada: ' + acao.tipo));
+                    return;
+                }
+
                 switch (acao.tipo) {
                     case 'REGISTRAR_LOTE':
                         if (window.lotes && window.lotes.salvar) {

@@ -167,22 +167,42 @@ window.lotes = {
 
         var pastoAntigo = lote.pasto;
 
-        // Save movimentacao event
-        window.data.saveEvent({
+        var hoje = new Date().toISOString().split('T')[0];
+
+        // 1) Evento imutável de movimentação (rastreabilidade)
+        var movEvent = window.data.saveEvent({
             type: 'MOVIMENTACAO_PASTO',
             lote: loteNome,
             pastoAnterior: pastoAntigo,
             pastoNovo: novoPasto,
             qtdAnimais: lote.qtdAnimais,
-            date: new Date().toISOString().split('T')[0]
+            pesoMedio: lote.pesoMedio,
+            date: hoje
         });
 
-        // Update the lot with new pasto
-        lote.pasto = novoPasto;
-        window.data.save();
+        // 2) Novo evento LOTE com pasto atualizado (preserva event-sourcing — não muta evento anterior)
+        var loteAtualizado = window.data.saveEvent({
+            type: 'LOTE',
+            nome: lote.nome,
+            categoria: lote.categoria,
+            raca: lote.raca,
+            qtdAnimais: lote.qtdAnimais,
+            pesoMedio: lote.pesoMedio,
+            pasto: novoPasto,
+            status: lote.status || 'ATIVO',
+            dataEntrada: lote.dataEntrada,
+            salMineral: lote.salMineral,
+            salConsumo: lote.salConsumo,
+            racao: lote.racao,
+            racaoConsumo: lote.racaoConsumo,
+            centerCost: 'GADO_CORTE',
+            linkedEventIds: [movEvent.id],
+            date: hoje
+        });
+        window.data.linkEvents(movEvent.id, loteAtualizado.id);
 
         this.fecharModal('modal-trocar-pasto');
-        window.app.showToast('🔄 Lote ' + loteNome + ' movido para ' + novoPasto + '!');
+        window.app.showToast('Lote ' + loteNome + ' movido de ' + (pastoAntigo || 'sem pasto') + ' para ' + novoPasto);
         this.renderList();
     },
 

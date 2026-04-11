@@ -117,6 +117,7 @@ window.app = {
         if (this._modulesInitialized) return;
         this._modulesInitialized = true;
         [
+            'contextBuilder', 'actionBus', 'agentOrchestrator',
             'rebanho', 'pastos', 'lotes', 'financeiro', 'estoque', 'manejo', 'obras',
             'funcionarios', 'rebanhoOps', 'pastoMgmt', 'clima', 'nutricao',
             'nutricaoIA', 'zooIndices', 'formulacaoRacao', 'balanca', 'safebeef',

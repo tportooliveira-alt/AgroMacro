@@ -218,6 +218,7 @@ window.estoque = {
                 products[key] = {
                     nome: name,
                     qtdTotal: 0,
+                    qtdEntrada: 0,   // total de entradas (para CMP correto)
                     custoTotal: 0,
                     categoria: ev.category || ev.categoria || 'outros',
                     qtdMinima: ev.qtdMinima || 10,
@@ -228,6 +229,7 @@ window.estoque = {
             }
             var qty = ev.qtdKg || ev.qty || 0;
             products[key].qtdTotal += qty;
+            products[key].qtdEntrada += qty;  // acumula total de entradas separadamente
             products[key].custoTotal += (ev.value || 0);
             if (ev.qtdMinima && ev.qtdMinima > products[key].qtdMinima) {
                 products[key].qtdMinima = ev.qtdMinima;
@@ -271,8 +273,15 @@ window.estoque = {
         for (var key in products) {
             if (products.hasOwnProperty(key)) {
                 var p = products[key];
-                p.qtdTotal = Math.max(0, p.qtdTotal);
-                p.custoMedioPonderado = p.qtdTotal > 0 ? p.custoTotal / p.qtdTotal : 0;
+                var saldoReal = p.qtdTotal; // pode ser negativo = erro de dados
+                if (saldoReal < 0) {
+                    console.warn('[Estoque] Saldo negativo em "' + p.nome + '": ' + saldoReal + '. Verifique lançamentos.');
+                }
+                p.saldoNegativo = saldoReal < 0;
+                p.qtdTotal = Math.max(0, saldoReal);
+                // CMP correto: custo total de ENTRADAS / quantidade total de entradas (não divide pelo saldo restante)
+                p.custoMedioPonderado = p.qtdEntrada > 0 ? p.custoTotal / p.qtdEntrada : 0;
+                p.valorEstoque = p.qtdTotal * p.custoMedioPonderado; // valor atual em estoque
                 p.alertaBaixo = p.qtdTotal < p.qtdMinima;
                 p.name = p.nome;
                 p.qty = p.qtdTotal;
@@ -481,15 +490,18 @@ window.estoque = {
         if (el) el.remove();
     },
 
-    registrarSaida: function (productName, qty, loteId, motivo) {
-        window.data.saveEvent({
+    registrarSaida: function (productName, qty, loteId, motivo, linkedEventId) {
+        var ev = window.data.saveEvent({
             type: 'SAIDA_ESTOQUE',
             desc: motivo || 'Saida: ' + productName,
             items: [{ name: productName, qty: qty }],
             motivo: motivo || 'Uso operacional',
             lote: loteId || '',
+            linkedEventIds: linkedEventId ? [linkedEventId] : [],
             date: new Date().toISOString().split('T')[0]
         });
+        if (linkedEventId) window.data.linkEvents(linkedEventId, ev.id);
+        return ev;
     },
 
     registrarConsumo: function (productName, qty, loteId) {

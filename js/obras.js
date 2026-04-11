@@ -212,11 +212,15 @@ window.obras = {
 
         materiaisUsados.forEach(function (mat) {
             if (window.estoque) {
-                window.estoque.registrarSaida(mat.name, mat.qty, '', 'Obra: ' + nome);
+                window.estoque.registrarSaida(mat.name, mat.qty, '', 'Obra: ' + nome, obraEvent.id);
             }
         });
 
-        window.app.showToast('Obra registrada: ' + nome);
+        if (materiaisUsados.length > 0) {
+            window.app.showToast('Obra registrada: ' + nome + ' — ' + materiaisUsados.length + ' material(is) baixado(s) do almoxarifado.');
+        } else {
+            window.app.showToast('Obra registrada: ' + nome);
+        }
         this.fecharModal();
         this.render();
     },
