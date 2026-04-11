@@ -139,53 +139,53 @@
     color-scheme: light;
 }
 
-/* ═══════ TEMA: ESCURO (floresta densa — NÃO é preto) ═══════ */
+/* ═══════ TEMA: ESCURO (warm night — tons aquecidos) ═══════ */
 :root[data-theme="escuro"],
 [data-theme="dark"] {
-    --bg-0: #0C1E14;
-    --bg-1: #132A1C;
-    --bg-2: #1A3A26;
-    --bg-3: #132A1C;
-    --bg-4: #254D34;
-    --text-0: #D4EDDA;
-    --text-1: #B0D8BA;
-    --text-2: #7EAF8A;
-    --text-3: #4A7758;
-    --border-subtle: rgba(212, 237, 218, 0.07);
-    --border-default: rgba(212, 237, 218, 0.14);
-    --border-emphasis: rgba(38, 166, 154, 0.50);
-    --primary: #26A69A;
-    --primary-light: #4DB6AC;
-    --primary-dark: #00897B;
-    --primary-surface: rgba(38, 166, 154, 0.14);
-    --primary-glow: rgba(38, 166, 154, 0.28);
-    --accent: #F59E0B;
-    --accent-light: #FBbf24;
-    --green: #4ADE80;
-    --green-surface: rgba(74, 222, 128, 0.14);
-    --red: #F87171;
-    --red-surface: rgba(248, 113, 113, 0.13);
-    --blue: #60A5FA;
-    --blue-surface: rgba(96, 165, 250, 0.13);
-    --amber: #FBBF24;
-    --amber-surface: rgba(251, 191, 36, 0.13);
-    --purple: #A78BFA;
-    --purple-surface: rgba(167, 139, 250, 0.13);
-    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.22);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.30);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.36);
-    --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.42);
-    --shadow-xl: 0 16px 52px rgba(0, 0, 0, 0.50);
-    --header-bg: rgba(12, 30, 20, 0.96);
-    --nav-bg: rgba(19, 42, 28, 0.97);
-    --card-gradient: linear-gradient(160deg, #132A1C, #0C1E14);
+    --bg-0: #1A1A1A;
+    --bg-1: #252525;
+    --bg-2: #2D2D2D;
+    --bg-3: #353535;
+    --bg-4: #404040;
+    --text-0: #E8E4DF;
+    --text-1: #D4CFC7;
+    --text-2: #A89F94;
+    --text-3: #7A7368;
+    --border-subtle: rgba(232, 228, 223, 0.06);
+    --border-default: rgba(232, 228, 223, 0.12);
+    --border-emphasis: rgba(210, 160, 100, 0.45);
+    --primary: #D4A574;
+    --primary-light: #E8C49A;
+    --primary-dark: #B8894A;
+    --primary-surface: rgba(212, 165, 116, 0.15);
+    --primary-glow: rgba(212, 165, 116, 0.25);
+    --accent: #E8B44A;
+    --accent-light: #F0D070;
+    --green: #7CB87C;
+    --green-surface: rgba(124, 184, 124, 0.15);
+    --red: #D87070;
+    --red-surface: rgba(216, 112, 112, 0.15);
+    --blue: #7090C0;
+    --blue-surface: rgba(112, 144, 192, 0.15);
+    --amber: #D4A040;
+    --amber-surface: rgba(212, 160, 64, 0.15);
+    --purple: #A090C8;
+    --purple-surface: rgba(160, 144, 200, 0.15);
+    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.50);
+    --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.55);
+    --shadow-xl: 0 16px 52px rgba(0, 0, 0, 0.60);
+    --header-bg: rgba(37, 37, 37, 0.95);
+    --nav-bg: rgba(45, 45, 45, 0.95);
+    --card-gradient: linear-gradient(160deg, #2D2D2D, #1A1A1A);
     color-scheme: dark;
 }
 
-/* ── Component overrides escuro ── */
+/* ── Component overrides escuro (warm) ── */
 :root[data-theme="escuro"] .login-screen,
 [data-theme="dark"] .login-screen {
-    background: linear-gradient(160deg, #071410 0%, #0F2318 50%, #0A1F16 100%);
+    background: linear-gradient(160deg, #1F1F1F 0%, #252525 50%, #1A1A1A 100%);
 }
 
 :root[data-theme="escuro"] .login-card,
