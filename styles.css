@@ -190,20 +190,38 @@
 
 :root[data-theme="escuro"] .login-card,
 [data-theme="dark"] .login-card {
-    background: rgba(19, 42, 28, 0.85);
-    border: 1px solid rgba(212, 237, 218, 0.10);
+    background: rgba(45, 45, 45, 0.90);
+    border: 1px solid rgba(212, 165, 116, 0.15);
+    backdrop-filter: blur(12px);
 }
 
 :root[data-theme="escuro"] .login-btn-google,
 [data-theme="dark"] .login-btn-google {
-    background: rgba(37, 77, 52, 0.6);
-    color: #D4EDDA;
-    border-color: rgba(212, 237, 218, 0.15);
+    background: rgba(212, 165, 116, 0.15);
+    color: #E8C49A;
+    border-color: rgba(212, 165, 116, 0.25);
+}
+
+:root[data-theme="escuro"] .login-btn-google:hover,
+[data-theme="dark"] .login-btn-google:hover {
+    background: rgba(212, 165, 116, 0.25);
 }
 
 :root[data-theme="escuro"] input,
 :root[data-theme="escuro"] select,
-:root[data-theme="escuro"] textarea,
+:root[data-theme="escuro"] textarea {
+    background: rgba(37, 37, 37, 0.80);
+    border-color: rgba(212, 165, 116, 0.20);
+    color: #E8E4DF;
+}
+
+:root[data-theme="escuro"] input:focus,
+:root[data-theme="escuro"] select:focus,
+:root[data-theme="escuro"] textarea:focus {
+    border-color: #D4A574;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+}
+
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea {
