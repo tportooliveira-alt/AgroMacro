@@ -995,8 +995,15 @@ window.app = {
         var value = (mode || '').toLowerCase();
         if (value === 'dark') return 'escuro';
         if (value === 'light') return 'claro';
-        if (value === 'auto') return 'claro';
+        if (value === 'auto') return this._detectSystemTheme();
         if (value === 'branco' || value === 'claro' || value === 'escuro') return value;
+        return 'claro';
+    },
+
+    _detectSystemTheme: function() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'escuro';
+        }
         return 'claro';
     },
 
