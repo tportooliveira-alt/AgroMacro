@@ -2642,6 +2642,7 @@ main {
     border: 1px solid rgba(13, 31, 23, 0.08);
     border-radius: 24px;
     padding: 16px;
+    padding-bottom: max(190px, calc(150px + env(safe-area-inset-bottom)));
     box-shadow: 0 16px 30px rgba(13, 31, 23, 0.08);
 }
 
