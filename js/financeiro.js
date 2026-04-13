@@ -665,6 +665,8 @@ window.financeiro = {
         ];
 
         return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">'
+            + '<button type="button" class="filter-btn" style="background:#0F766E22;color:#0F766E;border-color:#0F766E;" onclick="window.app.navigate(\'compra\')">+ Compra de Gado</button>'
+            + '<button type="button" class="filter-btn" style="background:#2563EB22;color:#1D4ED8;border-color:#1D4ED8;" onclick="window.app.navigate(\'venda\')">+ Venda de Gado</button>'
             + items.map(function (item) {
                 var active = self.filters.area === item.id;
                 return '<button type="button" class="filter-btn' + (active ? ' active' : '') + '" '

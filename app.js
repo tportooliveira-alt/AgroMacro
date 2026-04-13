@@ -313,6 +313,10 @@ window.app = {
             case 'estoque':
                 if (window.estoque) window.estoque.render();
                 break;
+            case 'financeiro':
+                if (window.financeiro) window.financeiro.updateFluxoUI();
+                if (window.indicadores) window.indicadores.renderIndicadoresFinanceiros();
+                break;
             case 'fluxo':
                 if (window.financeiro) window.financeiro.updateFluxoUI();
                 if (window.indicadores) window.indicadores.renderIndicadoresFinanceiros();
