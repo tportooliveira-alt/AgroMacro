@@ -212,7 +212,7 @@ window.obras = {
 
         materiaisUsados.forEach(function (mat) {
             if (window.estoque) {
-                window.estoque.registrarSaida(mat.name, mat.qty, '', 'Obra: ' + nome, obraEvent.id);
+                window.estoque.registrarSaida(mat.name, mat.qty, '', 'Obra: ' + nome, obraEvent.id, 'INFRAESTRUTURA', 'obras');
             }
         });
 

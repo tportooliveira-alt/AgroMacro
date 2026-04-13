@@ -490,13 +490,15 @@ window.estoque = {
         if (el) el.remove();
     },
 
-    registrarSaida: function (productName, qty, loteId, motivo, linkedEventId) {
+    registrarSaida: function (productName, qty, loteId, motivo, linkedEventId, centerCost, categoria) {
         var ev = window.data.saveEvent({
             type: 'SAIDA_ESTOQUE',
             desc: motivo || 'Saida: ' + productName,
             items: [{ name: productName, qty: qty }],
             motivo: motivo || 'Uso operacional',
             lote: loteId || '',
+            centerCost: centerCost || 'OPERACIONAL',
+            categoria: categoria || 'outros',
             linkedEventIds: linkedEventId ? [linkedEventId] : [],
             date: new Date().toISOString().split('T')[0]
         });

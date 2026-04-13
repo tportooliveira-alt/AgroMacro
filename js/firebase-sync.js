@@ -7,9 +7,12 @@ window.firebaseSync = {
     fazendaNome: null,
     isOnline: navigator.onLine,
     SYNC_KEY: 'agromacro_sync_config',
+    DEVICE_KEY: 'agromacro_device_id',
+    MERGE_LOG_KEY: 'agromacro_sync_merge_log',
     unsubscribe: null,
     _isRegisterMode: false,
     _appReady: false,
+    _isSyncing: false,
 
     _normalizePerfil: function (perfil) {
         if (!perfil) return 'admin';
@@ -24,14 +27,17 @@ window.firebaseSync = {
     init: function () {
         var self = this;
 
+        var cfg = window.agromacroConfig || {};
+        var cfgFirebase = cfg.firebase || {};
+
         // Firebase config
         var firebaseConfig = {
-            apiKey: "AIzaSyAQgFA5Ea3AYkk1IZ-0d3Jb1j8aiaugX5U",
-            authDomain: "fazenda-antares.firebaseapp.com",
-            projectId: "fazenda-antares",
-            storageBucket: "fazenda-antares.firebasestorage.app",
-            messagingSenderId: "1019641259951",
-            appId: "1:1019641259951:web:c0bd2c970c1001b740f15a"
+            apiKey: cfgFirebase.apiKey || "AIzaSyAQgFA5Ea3AYkk1IZ-0d3Jb1j8aiaugX5U",
+            authDomain: cfgFirebase.authDomain || "fazenda-antares.firebaseapp.com",
+            projectId: cfgFirebase.projectId || "fazenda-antares",
+            storageBucket: cfgFirebase.storageBucket || "fazenda-antares.firebasestorage.app",
+            messagingSenderId: cfgFirebase.messagingSenderId || "1019641259951",
+            appId: cfgFirebase.appId || "1:1019641259951:web:c0bd2c970c1001b740f15a"
         };
 
         // Initialize Firebase
@@ -52,10 +58,12 @@ window.firebaseSync = {
         window.addEventListener('online', function () {
             self.isOnline = true;
             console.log('[Sync] Online — syncing...');
+            self._updateSyncDot('syncing');
             self.syncLocalToFirestore();
         });
         window.addEventListener('offline', function () {
             self.isOnline = false;
+            self._updateSyncDot('offline');
             console.log('[Sync] Offline — using local data');
         });
 
@@ -71,6 +79,21 @@ window.firebaseSync = {
                 if (self.fazendaId) {
                     self._showApp();
                 } else {
+                    // Auto-join from deep-link if pending code
+                    if (self._pendingJoinCode) {
+                        var code = self._pendingJoinCode;
+                        self._pendingJoinCode = null;
+                        if (window.app && window.app.showToast) {
+                            window.app.showToast('Entrando na fazenda com código ' + code + '…', 'info');
+                        }
+                        self.entrarFazenda(code).then(function () {
+                            self._showApp();
+                        }).catch(function () {
+                            self._showFazendaSelect([]);
+                        });
+                        return;
+                    }
+
                     // Check Firestore for user's fazendas
                     self.getMinhasFazendas().then(function (fazendas) {
                         if (fazendas.length === 1) {
@@ -96,6 +119,21 @@ window.firebaseSync = {
         // Load saved sync config
         this._loadSyncConfig();
 
+        // Deep-link: ?join=CODE auto-fill on load
+        var joinCode = (new URLSearchParams(window.location.search)).get('join');
+        if (joinCode) {
+            var cleanCode = ('' + joinCode).replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8);
+            if (cleanCode) {
+                // Remove param from URL without reload
+                var newUrl = window.location.pathname + window.location.hash;
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', newUrl);
+                }
+                console.log('[Sync] Deep-link join code detected:', cleanCode);
+                this._pendingJoinCode = cleanCode;
+            }
+        }
+
         console.log('[Sync] Firebase initialized (offline-first)');
     },
 
@@ -112,7 +150,8 @@ window.firebaseSync = {
                 return self.auth.signInWithRedirect(provider);
             }
             console.error('[Auth] Login error:', err);
-            self._showLoginError('Erro no login Google: ' + err.message);
+            var msg = self._translateAuthError(err.code);
+            self._showLoginError(msg + ' (' + err.code + ')');
         });
     },
 
@@ -235,7 +274,8 @@ window.firebaseSync = {
             'auth/email-already-in-use': 'Este email já está em uso.',
             'auth/weak-password': 'Senha muito fraca (mín. 6 caracteres).',
             'auth/too-many-requests': 'Muitas tentativas. Aguarde um momento.',
-            'auth/invalid-credential': 'Email ou senha incorretos.'
+            'auth/invalid-credential': 'Email ou senha incorretos.',
+            'auth/unauthorized-domain': 'Domínio não autorizado no Firebase Auth. Adicione localhost e 127.0.0.1 em Authentication > Settings > Authorized domains.'
         };
         return map[code] || 'Erro: ' + code;
     },
@@ -483,27 +523,228 @@ window.firebaseSync = {
 
     // ══ SYNC LOCAL → FIRESTORE ══
     syncLocalToFirestore: function () {
-        if (!this.db || !this.fazendaId || !this.user) return;
+        if (!this.db || !this.fazendaId || !this.user || this._isSyncing) return;
 
         var self = this;
         var events = window.data ? window.data.events : [];
         if (events.length === 0) return;
 
-        console.log('[Sync] Uploading ' + events.length + ' events to Firestore...');
+        var cfg = window.agromacroConfig || {};
+        var appCfg = cfg.app || {};
+        var chunkSize = parseInt(appCfg.batchSize, 10) || 50;
+        if (chunkSize > 500) chunkSize = 500;
+        if (chunkSize < 1) chunkSize = 50;
 
-        var batch = this.db.batch();
+        console.log('[Sync] Uploading ' + events.length + ' events to Firestore (chunkSize=' + chunkSize + ')...');
+
+        self._isSyncing = true;
+        self._updateSyncDot('syncing');
+
+        var prepared = events.map(function (ev) {
+            return self._prepareEventForSync(ev);
+        });
+
         var ref = this.db.collection('fazendas').doc(this.fazendaId).collection('events');
+        var totalChunks = Math.ceil(prepared.length / chunkSize);
+        var chunkIndex = 0;
 
-        events.forEach(function (ev) {
-            var docRef = ref.doc(ev.id);
-            batch.set(docRef, ev, { merge: true });
-        });
+        var commitNextChunk = function () {
+            if (chunkIndex >= totalChunks) {
+                self._isSyncing = false;
+                self._updateSyncDot('synced');
+                console.log('[Sync] ✅ ' + prepared.length + ' events synced to Firestore in ' + totalChunks + ' batch(es)');
+                return;
+            }
 
-        batch.commit().then(function () {
-            console.log('[Sync] ✅ ' + events.length + ' events synced to Firestore');
-        }).catch(function (err) {
-            console.error('[Sync] ❌ Upload failed:', err);
-        });
+            var start = chunkIndex * chunkSize;
+            var end = Math.min(start + chunkSize, prepared.length);
+            var chunk = prepared.slice(start, end);
+            var batch = self.db.batch();
+
+            chunk.forEach(function (ev) {
+                var docRef = ref.doc(ev.id);
+                batch.set(docRef, ev, { merge: true });
+            });
+
+            batch.commit().then(function () {
+                chunkIndex++;
+                console.log('[Sync] Batch ' + chunkIndex + '/' + totalChunks + ' committed (' + chunk.length + ' events)');
+                commitNextChunk();
+            }).catch(function (err) {
+                self._isSyncing = false;
+                self._updateSyncDot('error');
+                console.error('[Sync] ❌ Upload failed on batch ' + (chunkIndex + 1) + '/' + totalChunks + ':', err);
+            });
+        };
+
+        commitNextChunk();
+    },
+
+    _prepareEventForSync: function (ev) {
+        var prepared = Object.assign({}, ev);
+        if (!prepared.id) {
+            prepared.id = 'ev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        }
+        if (!prepared.fazendaId && this.fazendaId) {
+            prepared.fazendaId = this.fazendaId;
+        }
+        if (!prepared.updatedAt) {
+            prepared.updatedAt = prepared.timestamp || Date.now();
+        }
+
+        if (!prepared._syncUpdatedAt) {
+            prepared._syncUpdatedAt = this._toMillis(prepared.updatedAt || prepared.timestamp);
+        }
+        if (!prepared._syncUpdatedAt) prepared._syncUpdatedAt = Date.now();
+        if (!prepared._syncDeviceId) prepared._syncDeviceId = this._getDeviceId();
+        if (!prepared._syncUserId && this.user && this.user.uid) prepared._syncUserId = this.user.uid;
+        if (!prepared._syncUserEmail && this.user && this.user.email) prepared._syncUserEmail = this.user.email;
+        if (!prepared._syncUserPerfil) prepared._syncUserPerfil = this._getPerfilForSync();
+        return prepared;
+    },
+
+    _toMillis: function (value) {
+        if (value == null) return 0;
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+            var parsed = Date.parse(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+    },
+
+    _getPerfilForSync: function () {
+        try {
+            var cached = localStorage.getItem('agromacro_user_perfil');
+            if (cached) return this._normalizePerfil(cached);
+        } catch (e) { }
+        return 'admin';
+    },
+
+    _perfilRank: function (perfil) {
+        var p = this._normalizePerfil(perfil);
+        if (p === 'dono') return 3;
+        if (p === 'admin') return 2;
+        return 1;
+    },
+
+    _getDeviceId: function () {
+        try {
+            var existing = localStorage.getItem(this.DEVICE_KEY);
+            if (existing) return existing;
+            var generated = 'dv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+            localStorage.setItem(this.DEVICE_KEY, generated);
+            return generated;
+        } catch (e) {
+            return 'dv_fallback';
+        }
+    },
+
+    // Regras deterministicas: updatedAt -> perfil -> deviceId -> source(remote)
+    _resolveConflict: function (localEv, remoteEv) {
+        if (!localEv) return { winner: remoteEv, reason: 'new_remote' };
+        if (!remoteEv) return { winner: localEv, reason: 'keep_local' };
+
+        var localPrepared = this._prepareEventForSync(localEv);
+        var remotePrepared = this._prepareEventForSync(remoteEv);
+
+        var localTs = localPrepared._syncUpdatedAt || this._toMillis(localPrepared.timestamp);
+        var remoteTs = remotePrepared._syncUpdatedAt || this._toMillis(remotePrepared.timestamp);
+        if (remoteTs > localTs) return { winner: remotePrepared, reason: 'remote_newer_timestamp' };
+        if (localTs > remoteTs) return { winner: localPrepared, reason: 'local_newer_timestamp' };
+
+        var localPerfilRank = this._perfilRank(localPrepared._syncUserPerfil);
+        var remotePerfilRank = this._perfilRank(remotePrepared._syncUserPerfil);
+        if (remotePerfilRank > localPerfilRank) return { winner: remotePrepared, reason: 'remote_higher_role' };
+        if (localPerfilRank > remotePerfilRank) return { winner: localPrepared, reason: 'local_higher_role' };
+
+        var localDevice = '' + (localPrepared._syncDeviceId || '');
+        var remoteDevice = '' + (remotePrepared._syncDeviceId || '');
+        if (remoteDevice > localDevice) return { winner: remotePrepared, reason: 'remote_device_tiebreak' };
+        if (localDevice > remoteDevice) return { winner: localPrepared, reason: 'local_device_tiebreak' };
+
+        return { winner: remotePrepared, reason: 'remote_default_tiebreak' };
+    },
+
+    _recordMergeDecision: function (id, winnerSource, reason, localEv, remoteEv) {
+        try {
+            var logs = JSON.parse(localStorage.getItem(this.MERGE_LOG_KEY) || '[]');
+            var prevLen = logs.length;
+            logs.push({
+                id: id,
+                winner: winnerSource,
+                reason: reason,
+                timestamp: new Date().toISOString(),
+                localUpdatedAt: localEv ? (localEv._syncUpdatedAt || localEv.updatedAt || localEv.timestamp || '') : '',
+                remoteUpdatedAt: remoteEv ? (remoteEv._syncUpdatedAt || remoteEv.updatedAt || remoteEv.timestamp || '') : '',
+                localDevice: localEv ? (localEv._syncDeviceId || '') : '',
+                remoteDevice: remoteEv ? (remoteEv._syncDeviceId || '') : ''
+            });
+            if (logs.length > 2000) logs = logs.slice(-2000);
+            localStorage.setItem(this.MERGE_LOG_KEY, JSON.stringify(logs));
+            if (prevLen <= 1500 && logs.length > 1500) {
+                if (window.app && window.app.showToast) {
+                    window.app.showToast('⚠️ Histórico de merge: ' + logs.length + '/2000 entradas', 'warning');
+                }
+            }
+        } catch (e) { }
+    },
+
+    _updateSyncDot: function (state) {
+        var dot = document.getElementById('sync-dot');
+        if (!dot) return;
+        var states = ['offline', 'syncing', 'synced', 'error'];
+        states.forEach(function (s) { dot.classList.remove('sync-dot--' + s); });
+        dot.classList.add('sync-dot--' + state);
+        var labels = { offline: 'Offline', syncing: 'Sincronizando…', synced: 'Sincronizado', error: 'Erro de sync' };
+        dot.title = labels[state] || state;
+        // Auto-reset 'synced' to subtle after 4s
+        if (state === 'synced') {
+            clearTimeout(this._syncDotTimer);
+            var self = this;
+            this._syncDotTimer = setTimeout(function () {
+                var d = document.getElementById('sync-dot');
+                if (d) { d.classList.remove('sync-dot--synced'); }
+            }, 4000);
+        }
+        // Update pending-events badge
+        this._updateSyncBadge();
+    },
+
+    _updateSyncBadge: function () {
+        var dot = document.getElementById('sync-dot');
+        if (!dot) return;
+        var badge = document.getElementById('sync-pending-badge');
+        var pending = 0;
+        if (window.data && window.data.events && !this.isOnline) {
+            // Count events modified after last known sync (no _syncDeviceId from remote = locally created)
+            var deviceId = this._getDeviceId();
+            pending = window.data.events.filter(function (ev) {
+                return ev._syncDeviceId === deviceId && !ev._remoteConfirmed;
+            }).length;
+        }
+        if (pending > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.id = 'sync-pending-badge';
+                badge.style.cssText = 'position:absolute;top:-3px;right:-3px;min-width:14px;height:14px;'
+                    + 'background:#EF4444;color:#fff;border-radius:10px;font-size:9px;font-weight:800;'
+                    + 'display:flex;align-items:center;justify-content:center;padding:0 3px;'
+                    + 'box-shadow:0 0 0 2px var(--bg-1,#fff);pointer-events:none;';
+                // Wrap dot in relative container if not already
+                if (!dot.parentElement || dot.parentElement.style.position !== 'relative') {
+                    var wrap = document.createElement('span');
+                    wrap.style.cssText = 'position:relative;display:inline-flex;align-items:center;';
+                    dot.parentNode.insertBefore(wrap, dot);
+                    wrap.appendChild(dot);
+                }
+                dot.parentElement.appendChild(badge);
+            }
+            badge.textContent = pending > 99 ? '99+' : ('' + pending);
+            badge.style.display = 'flex';
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
     },
 
     // ══ LOAD FROM FIRESTORE → LOCAL ══
@@ -524,7 +765,7 @@ window.firebaseSync = {
                 events.push(doc.data());
             });
 
-            // Merge with local: keep newer version based on timestamp
+            // Merge with local: deterministic conflict resolution
             var localEvents = window.data ? window.data.events : [];
             var mergedMap = {};
 
@@ -533,11 +774,15 @@ window.firebaseSync = {
                 mergedMap[ev.id] = ev;
             });
 
-            // Merge remote events (remote wins if newer)
+            // Merge remote events with deterministic tie-breaks
             events.forEach(function (ev) {
                 var localEv = mergedMap[ev.id];
-                if (!localEv || (ev.timestamp && localEv.timestamp && ev.timestamp > localEv.timestamp)) {
-                    mergedMap[ev.id] = ev;
+                var remoteEv = Object.assign({}, ev, { _remoteConfirmed: true });
+                var result = self._resolveConflict(localEv, remoteEv);
+                if (result.winner) result.winner._remoteConfirmed = true;
+                mergedMap[ev.id] = result.winner;
+                if (localEv && result.winner && result.reason.indexOf('remote_') === 0) {
+                    self._recordMergeDecision(ev.id, 'remote', result.reason, localEv, ev);
                 }
             });
 
@@ -546,6 +791,7 @@ window.firebaseSync = {
             if (window.data) {
                 window.data.events = merged;
                 window.data.save();
+                self._updateSyncDot('synced');
                 console.log('[Sync] ✅ Loaded ' + merged.length + ' events (merged)');
 
                 // Refresh current view
@@ -554,6 +800,7 @@ window.firebaseSync = {
                 }
             }
         }).catch(function (err) {
+            self._updateSyncDot('error');
             console.error('[Sync] ❌ Load from Firestore failed:', err);
         });
     },
@@ -578,9 +825,19 @@ window.firebaseSync = {
                         if (window.data.events[i].id === ev.id) { idx = i; break; }
                     }
                     if (idx >= 0) {
-                        window.data.events[idx] = ev;
+                        var localEv = window.data.events[idx];
+                        var remoteEvRt = Object.assign({}, ev, { _remoteConfirmed: true });
+                        var result = self._resolveConflict(localEv, remoteEvRt);
+                        if (result.winner) result.winner._remoteConfirmed = true;
+                        window.data.events[idx] = result.winner;
+                        if (result.winner && result.reason.indexOf('remote_') === 0) {
+                            self._recordMergeDecision(ev.id, 'remote', result.reason, localEv, ev);
+                        }
                     } else {
-                        window.data.events.push(ev);
+                        var newEv = Object.assign({}, self._prepareEventForSync(ev), { _remoteConfirmed: true });
+                        window.data.events.push(newEv);
+                                self._updateSyncBadge();
+                                self._updateSyncBadge();
                     }
                     changes++;
                 }
@@ -606,16 +863,27 @@ window.firebaseSync = {
 
         window.data.saveEvent = function (ev) {
             var savedEv = originalSaveEvent(ev);
+            var preparedEv = self._prepareEventForSync(savedEv);
+
+            // Persist migração local para novos eventos sem fazendaId
+            if (window.data && Array.isArray(window.data.events)) {
+                for (var i = 0; i < window.data.events.length; i++) {
+                    if (window.data.events[i].id === preparedEv.id) {
+                        window.data.events[i] = preparedEv;
+                        break;
+                    }
+                }
+            }
 
             // Also save to Firestore if connected
             if (self.db && self.fazendaId && self.user) {
                 var ref = self.db.collection('fazendas').doc(self.fazendaId).collection('events');
-                ref.doc(savedEv.id).set(savedEv, { merge: true }).catch(function (err) {
+                ref.doc(preparedEv.id).set(preparedEv, { merge: true }).catch(function (err) {
                     console.warn('[Sync] Firestore write queued (offline):', err.code);
                 });
             }
 
-            return savedEv;
+            return preparedEv;
         };
     },
 
@@ -792,6 +1060,119 @@ window.firebaseSync = {
         }
     },
 
+    // ══ RENDER MEMBROS DA FAZENDA (admin dashboard) ══
+    renderMembros: function () {
+        var container = document.getElementById('admin-membros-list');
+        if (!container) return;
+        if (!this.db || !this.fazendaId) {
+            container.innerHTML = '<p style="font-size:12px;color:var(--text-3);">Faça login e selecione uma fazenda para ver membros.</p>';
+            return;
+        }
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-3);">Carregando membros…</p>';
+        var self = this;
+        this.db.collection('fazendas').doc(this.fazendaId).get().then(function (doc) {
+            if (!doc.exists) {
+                container.innerHTML = '<p style="font-size:12px;color:var(--red);">Fazenda não encontrada.</p>';
+                return;
+            }
+            var data = doc.data();
+            var membros = data.membrosInfo || [];
+            if (membros.length === 0) {
+                container.innerHTML = '<p style="font-size:12px;color:var(--text-3);">Nenhum membro registrado.</p>';
+                return;
+            }
+            // Is current user the dono?
+            var isDono = self.user && data.dono && self.user.uid === data.dono;
+            var colors = {
+                dono:  { bg:'#FEF3C7', fg:'#D97706' },
+                admin: { bg:'#DBEAFE', fg:'#2563EB' },
+                peao:  { bg:'#F3F4F6', fg:'#6B7280' }
+            };
+            var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+            membros.forEach(function (m) {
+                var c = colors[m.perfil] || colors.peao;
+                var initials = (m.nome || m.email || '?').charAt(0).toUpperCase();
+                var nome = (m.nome || m.email || 'Usuário').replace(/</g, '&lt;');
+                var email = (m.email || '').replace(/</g, '&lt;');
+                var perfil = (m.perfil || 'peao').replace(/</g, '&lt;');
+                var isSelf = self.user && m.uid === self.user.uid;
+                var uidEsc = (m.uid || '').replace(/'/g, '');
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-3);border-radius:10px;">'
+                    + '<div style="width:34px;height:34px;border-radius:50%;background:var(--primary-surface);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">' + initials + '</div>'
+                    + '<div style="flex:1;min-width:0;">'
+                    +   '<div style="font-size:13px;font-weight:700;color:var(--text-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + nome + (isSelf ? ' <span style="font-size:10px;color:var(--primary);">(você)</span>' : '') + '</div>'
+                    +   '<div style="font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + email + '</div>'
+                    + '</div>'
+                    + '<span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:' + c.bg + ';color:' + c.fg + ';">' + perfil + '</span>';
+                // Dono management actions (not for self, not for other dono)
+                if (isDono && !isSelf && m.perfil !== 'dono') {
+                    var nextPerfil = m.perfil === 'admin' ? 'peao' : 'admin';
+                    var nextLabel = m.perfil === 'admin' ? '↓ Peao' : '↑ Admin';
+                    html += '<div style="display:flex;gap:4px;flex-shrink:0;">'
+                        + '<button onclick="window.firebaseSync._alterarPerfilMembro(\'' + uidEsc + '\',\'' + nextPerfil + '\')" '
+                        +   'style="padding:4px 8px;font-size:10px;font-weight:700;border:1.5px solid var(--border-default);border-radius:6px;background:var(--bg-1);color:var(--primary);cursor:pointer;">' + nextLabel + '</button>'
+                        + '<button onclick="window.firebaseSync._removerMembro(\'' + uidEsc + '\',\'' + nome.replace(/'/g,'').slice(0,20) + '\')" '
+                        +   'style="padding:4px 8px;font-size:10px;font-weight:700;border:1.5px solid rgba(220,38,38,0.3);border-radius:6px;background:var(--red-surface,#FEF2F2);color:var(--red,#DC2626);cursor:pointer;">X</button>'
+                        + '</div>';
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+            html += '<p style="font-size:11px;color:var(--text-3);margin-top:8px;">' + membros.length + ' membro(s) • ' + (data.nome || self.fazendaNome || self.fazendaId) + '</p>';
+            container.innerHTML = html;
+        }).catch(function (err) {
+            container.innerHTML = '<p style="font-size:12px;color:var(--red);">Erro ao carregar membros.</p>';
+            console.error('[Admin] renderMembros error:', err);
+        });
+    },
+
+    _alterarPerfilMembro: function (uid, novoPerfil) {
+        if (!this.db || !this.fazendaId || !uid) return;
+        var self = this;
+        var perfilValido = { admin: true, peao: true };
+        if (!perfilValido[novoPerfil]) return;
+        var ref = this.db.collection('fazendas').doc(this.fazendaId);
+        ref.get().then(function (doc) {
+            if (!doc.exists) return;
+            var membrosInfo = (doc.data().membrosInfo || []).map(function (m) {
+                if (m.uid === uid) return Object.assign({}, m, { perfil: novoPerfil });
+                return m;
+            });
+            return ref.update({ membrosInfo: membrosInfo });
+        }).then(function () {
+            if (window.app && window.app.showToast) window.app.showToast('✅ Perfil atualizado para ' + novoPerfil, 'success');
+            window.firebaseSync.renderMembros();
+        }).catch(function (err) {
+            if (window.app && window.app.showToast) window.app.showToast('❌ Erro ao alterar perfil', 'error');
+            console.error('[Admin] _alterarPerfilMembro error:', err);
+        });
+    },
+
+    _removerMembro: function (uid, nomeDisplay) {
+        if (!this.db || !this.fazendaId || !uid) return;
+        // Prevent removing self
+        if (this.user && uid === this.user.uid) {
+            if (window.app && window.app.showToast) window.app.showToast('Use “Sair da conta” para sair da fazenda.', 'warning');
+            return;
+        }
+        if (!confirm('Remover ' + (nomeDisplay || 'membro') + ' da fazenda?')) return;
+        var self = this;
+        var ref = this.db.collection('fazendas').doc(this.fazendaId);
+        ref.get().then(function (doc) {
+            if (!doc.exists) return;
+            var data = doc.data();
+            var membrosInfo = (data.membrosInfo || []).filter(function (m) { return m.uid !== uid; });
+            var membros = (data.membros || []).filter(function (id) { return id !== uid; });
+            return ref.update({ membrosInfo: membrosInfo, membros: membros });
+        }).then(function () {
+            if (window.app && window.app.showToast) window.app.showToast('✅ Membro removido', 'success');
+            window.firebaseSync.renderMembros();
+        }).catch(function (err) {
+            if (window.app && window.app.showToast) window.app.showToast('❌ Erro ao remover membro', 'error');
+            console.error('[Admin] _removerMembro error:', err);
+        });
+    },
+
     // ══ RENDER SYNC/LOGIN UI (for config page) ══
     renderSyncUI: function (containerId) {
         var container = document.getElementById(containerId);
@@ -877,7 +1258,7 @@ window.firebaseSync = {
                 + 'style="width:100%;padding:10px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔄 Forçar Sincronização</button>';
 
             // Get invite code
-            html += '<button onclick="window.firebaseSync._mostrarCodigo()" '
+            html += '<button onclick="window.firebaseSync._mostrarConvite()" '
                 + 'style="width:100%;padding:10px;background:#D97706;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">📋 Código de Convite</button>';
 
             // Switch farm
@@ -890,6 +1271,93 @@ window.firebaseSync = {
         }
 
         container.innerHTML = html;
+    },
+
+    _mostrarConvite: function () {
+        var self = this;
+        if (!this.db || !this.fazendaId) return;
+        this.db.collection('fazendas').doc(this.fazendaId).get().then(function (doc) {
+            if (!doc.exists) return;
+            var codigo = doc.data().codigo || '';
+            var nomeFazenda = doc.data().nome || self.fazendaNome || 'Fazenda';
+            var baseUrl = window.location.origin + window.location.pathname;
+            var link = baseUrl + '?join=' + encodeURIComponent(codigo);
+
+            // Build bottom-sheet modal
+            var modal = document.createElement('div');
+            modal.id = 'convite-modal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:20000;'
+                + 'background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);'
+                + 'display:flex;align-items:flex-end;justify-content:center;'
+                + 'animation:fadeIn 0.2s ease;';
+
+            var sheet = document.createElement('div');
+            sheet.style.cssText = 'background:var(--bg-1,#fff);border-radius:24px 24px 0 0;'
+                + 'width:100%;max-width:640px;padding:28px 24px 40px;'
+                + 'box-shadow:0 -6px 36px rgba(0,0,0,0.16);animation:sheetUp 0.32s var(--ease-out,ease);';
+
+            var canShare = !!(navigator.share);
+            sheet.innerHTML = '<div style="width:38px;height:5px;background:var(--bg-4,#e2e8f0);border-radius:3px;margin:0 auto 20px;"></div>'
+                + '<div style="font-size:18px;font-weight:800;color:var(--text-0,#1E293B);margin-bottom:4px;">🔗 Convite para ' + nomeFazenda.replace(/</g,'&lt;') + '</div>'
+                + '<div style="font-size:12px;color:var(--text-3,#94A3B8);margin-bottom:20px;">Compartilhe o link ou o código para novos membros entrarem.</div>'
+                + '<div style="background:var(--bg-3,#F1F5F9);border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">'
+                +   '<div style="font-size:11px;color:var(--text-3,#94A3B8);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Código de Acesso</div>'
+                +   '<div style="font-size:32px;font-weight:900;color:var(--primary,#059669);letter-spacing:6px;font-family:monospace;">' + codigo.replace(/</g,'&lt;') + '</div>'
+                + '</div>'
+                + '<div style="background:var(--bg-3,#F1F5F9);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">'
+                +   '<div style="font-size:11px;color:var(--text-2,#64748B);word-break:break-all;flex:1;">' + link.replace(/</g,'&lt;') + '</div>'
+                +   '<button id="convite-copy-btn" onclick="window.firebaseSync._copiarConvite(\'' + encodeURIComponent(link) + '\')" '
+                +     'style="padding:6px 12px;background:var(--primary,#059669);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Copiar</button>'
+                + '</div>'
+                + (canShare
+                    ? '<button onclick="window.firebaseSync._nativeShare(\'' + encodeURIComponent(link) + '\',\'' + encodeURIComponent(codigo) + '\',\'' + encodeURIComponent(nomeFazenda) + '\')" '
+                    +   'style="width:100%;padding:13px;background:var(--primary,#059669);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">📤 Compartilhar</button>'
+                    : '')
+                + '<button onclick="document.getElementById(\'convite-modal\').remove()" '
+                +   'style="width:100%;padding:10px;background:none;border:1.5px solid var(--border-default,#E2E8F0);color:var(--text-2,#64748B);border-radius:10px;font-size:13px;cursor:pointer;">Fechar</button>';
+
+            modal.appendChild(sheet);
+            modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
+
+            // Remove previous if exists
+            var prev = document.getElementById('convite-modal');
+            if (prev) prev.remove();
+            document.body.appendChild(modal);
+        });
+    },
+
+    _copiarConvite: function (encodedLink) {
+        var link = decodeURIComponent(encodedLink);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(function () {
+                if (window.app && window.app.showToast) window.app.showToast('✅ Link copiado!', 'success');
+            }).catch(function () {
+                if (window.app && window.app.showToast) window.app.showToast('Copie manualmente: ' + link, 'info');
+            });
+        } else {
+            // Fallback: textarea select
+            var ta = document.createElement('textarea');
+            ta.value = link;
+            ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); if (window.app && window.app.showToast) window.app.showToast('✅ Link copiado!', 'success'); }
+            catch (e) { if (window.app && window.app.showToast) window.app.showToast('Copie manualmente: ' + link, 'info'); }
+            document.body.removeChild(ta);
+        }
+    },
+
+    _nativeShare: function (encodedLink, encodedCodigo, encodedNome) {
+        var link = decodeURIComponent(encodedLink);
+        var codigo = decodeURIComponent(encodedCodigo);
+        var nome = decodeURIComponent(encodedNome);
+        if (navigator.share) {
+            navigator.share({
+                title: 'AgroMacro — ' + nome,
+                text: 'Entre na fazenda "' + nome + '" no AgroMacro. Código: ' + codigo,
+                url: link
+            }).catch(function () { /* user cancelled */ });
+        }
     },
 
     _mostrarCodigo: function () {

@@ -5,3 +5,15 @@ Thumbs.db
 .vscode/
 .backup-*/
 .firebase/
+
+# Variáveis de ambiente — NUNCA versionar
+.env
+.env.local
+.env.*.local
+*.local
+
+# Firebase debug logs
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+ui-debug.log

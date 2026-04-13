@@ -21,26 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
     <!-- ══ AgroMacro — Campo Vivo v4 ══ -->
-    <link rel="stylesheet" href="styles.css?v=20260413e">
-    <!-- ══ AgroMacro — Brutalismo Premium Design System ══ -->
-    <link rel="stylesheet" href="brutalismo-premium.css?v=20260412" media="not all">
-    <!-- ══ BRUTALISMO OVERRIDE — força tema escuro industrial independente de data-theme ══ -->
-    <style id="brutalismo-force" media="not all">
-        /* Força variáveis ANTES do JS setar data-theme */
-        :root { --bg-0: #0F1318; --bg-1: #1A1A1A; --bg-2: #2A2A2A; --bg-3: #3D3D3D; --bg-4: #4A4A4A; --text-0: #FFFEF0; --text-1: #FFFEF0; --text-2: #B8B8B0; --text-3: #7A7A74; --primary: #8B4513; --primary-light: #9B5126; --primary-dark: #6B3410; --primary-surface: rgba(139,69,19,0.15); --primary-glow: rgba(139,69,19,0.30); --secondary: #00796B; --accent: #B45309; --accent-light: #D97706; --green: #00796B; --green-surface: rgba(0,121,107,0.15); --red: #DC2626; --red-surface: rgba(220,38,38,0.15); --border-default: rgba(255,254,240,0.13); --header-bg: rgba(15,19,24,0.96); --nav-bg: rgba(15,19,24,0.98); --card-gradient: linear-gradient(160deg,#1A1A1A,#0F1318); --shadow-sm: 0 2px 8px rgba(0,0,0,0.50); --shadow-md: 0 4px 16px rgba(0,0,0,0.60); }
-        /* Sobrescreve QUALQUER tema que o JS definir */
-        :root[data-theme="claro"], :root[data-theme="branco"], :root[data-theme="escuro"], :root[data-theme="dark"], [data-theme="dark"] { --bg-0: #0F1318 !important; --bg-1: #1A1A1A !important; --bg-2: #2A2A2A !important; --bg-3: #3D3D3D !important; --bg-4: #4A4A4A !important; --text-0: #FFFEF0 !important; --text-1: #FFFEF0 !important; --primary: #8B4513 !important; --primary-light: #9B5126 !important; --primary-surface: rgba(139,69,19,0.15) !important; --header-bg: rgba(15,19,24,0.96) !important; --nav-bg: rgba(15,19,24,0.98) !important; }
-        /* Força no body e elementos principais */
-        html, body { background-color: #0F1318 !important; color: #FFFEF0 !important; }
-        .app-header, header { background: rgba(15,19,24,0.96) !important; border-bottom: 1px solid rgba(139,69,19,0.3) !important; }
-        .bottom-nav, nav.bottom-nav { background: rgba(15,19,24,0.98) !important; border-top: 1px solid rgba(139,69,19,0.3) !important; }
-        .card, .kpi-card, .alert-card { background: #1A1A1A !important; border: 1px solid #3D3D3D !important; }
-        .btn-primary, .submit-btn, button[type="submit"] { background: #8B4513 !important; color: #FFFEF0 !important; border: none !important; }
-        .btn-primary:hover, .submit-btn:hover { background: #9B5126 !important; }
-        input, select, textarea { background: #2A2A2A !important; border: 1px solid #4A4A4A !important; color: #FFFEF0 !important; }
-        input:focus, select:focus, textarea:focus { border-color: #8B4513 !important; }
-        .nav-tab.active, .nav-tab:hover { color: #8B4513 !important; }
-    </style>
+    <link rel="stylesheet" href="styles.css?v=20260414a">
     <link rel="manifest" href="manifest.json">
 
     <!-- Leaflet.js — Mapa Interativo -->
@@ -377,6 +358,7 @@
         </div>
         <div class="header-actions">
             <span class="header-farm-chip" id="fazenda-nome-topbar"></span>
+            <span id="sync-dot" class="sync-dot sync-dot--offline" title="Offline" aria-label="Status de sincronização"></span>
             <button id="topbar-config-btn" class="header-action-btn gerencia-only" onclick="window.app.navigate('config')" aria-label="Configurações">
                 <span class="material-symbols-outlined" style="font-size:20px">settings</span>
             </button>
@@ -879,7 +861,7 @@
         <!-- ===================== COMPRA DE GADO ===================== -->
         <section id="view-compra" class="view hidden module-view gerencia-only">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Compra de Gado</h2>
             </div>
             <form id="form-compra" class="card-form">
@@ -953,7 +935,7 @@
         <!-- ===================== VENDA DE GADO ===================== -->
         <section id="view-venda" class="view hidden module-view gerencia-only">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Venda de Gado</h2>
             </div>
             <form id="form-venda" class="card-form">
@@ -1026,7 +1008,7 @@
         <!-- ===================== REBANHO ===================== -->
         <section id="view-rebanho" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Cadastro de Rebanho</h2>
             </div>
             <!-- Tabs -->
@@ -1172,7 +1154,7 @@
         <!-- ===================== LOTES ===================== -->
         <section id="view-lotes" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Gestão de Lotes</h2>
             </div>
             <form id="form-lote" class="card-form">
@@ -1275,7 +1257,7 @@
         <!-- ===================== PASTOS ===================== -->
         <section id="view-pastos" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Cadastro de Pastos</h2>
             </div>
             <form id="form-pasto" class="card-form">
@@ -1335,7 +1317,7 @@
         <!-- ===================== ESTOQUE ===================== -->
         <section id="view-estoque" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Estoque de Insumos</h2>
             </div>
             <!-- Quick add form -->
@@ -1407,7 +1389,7 @@
         <!-- ===================== FLUXO DE CAIXA ===================== -->
         <section id="view-fluxo" class="view hidden module-view gerencia-only">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Fluxo de Caixa</h2>
             </div>
             <div id="fluxo-content"></div>
@@ -1424,7 +1406,7 @@
         <!-- ===================== MANEJO ===================== -->
         <section id="view-manejo" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Manejo</h2>
             </div>
             <form id="form-manejo" class="card-form">
@@ -1502,7 +1484,7 @@
         <!-- ===================== OBRAS ===================== -->
         <section id="view-rastreabilidade" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Rastreabilidade SISBOV</h2>
             </div>
             <div id="rastreabilidade-content">
@@ -1512,7 +1494,7 @@
 
         <section id="view-obras" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Registrar Obra</h2>
             </div>
             <form id="form-obra" class="card-form">
@@ -1570,7 +1552,7 @@
         <!-- ===================== FUNCIONÁRIOS ===================== -->
         <section id="view-funcionarios" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Funcionários</h2>
             </div>
             <form id="form-funcionario" class="card-form">
@@ -1633,7 +1615,7 @@
         <!-- ===================== BALANÇO / DRE ===================== -->
         <section id="view-balanco" class="view hidden module-view gerencia-only">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Balanço & DRE</h2>
             </div>
             <div id="balanco-content"></div>
@@ -1648,7 +1630,7 @@
         <!-- ===================== OPERAÇÕES (HUB) ===================== -->
         <section id="view-operacoes" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Operações</h2>
             </div>
 
@@ -1728,7 +1710,7 @@
         <!-- ===================== CONFIGURAÇÕES ===================== -->
         <section id="view-config" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Configurações</h2>
             </div>
 
@@ -1839,6 +1821,17 @@
                 <button type="button" id="config-logout-btn" class="submit-btn danger-btn"
                     style="margin-top:10px; display:none;" onclick="window.firebaseSync.logout()">🚪 Sair da
                     Conta</button>
+            </div>
+
+            <!-- Dashboard Admin — Membros da Fazenda -->
+            <div class="card-form gerencia-only" style="margin-top:16px;">
+                <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>👥 Membros da Fazenda</span>
+                    <button type="button" class="btn-sm" onclick="window.firebaseSync.renderMembros()">↻ Atualizar</button>
+                </div>
+                <div id="admin-membros-list">
+                    <p style="font-size:12px;color:var(--text-3);">Fa&ccedil;a login para ver membros.</p>
+                </div>
             </div>
 
             <div class="card-form" style="margin-top:16px;">
@@ -1964,7 +1957,7 @@
         <!-- ===================== CALENDÁRIO SANITÁRIO ===================== -->
         <section id="view-calendario" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Calendário Sanitário</h2>
             </div>
             <div id="calendario-content"></div>
@@ -1980,7 +1973,7 @@
         <!-- ===================== CONTAS A PAGAR ===================== -->
         <section id="view-contas" class="view hidden module-view gerencia-only">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Contas a Pagar</h2>
             </div>
             <div id="contas-pagar-content"></div>
@@ -1998,7 +1991,7 @@
         <!-- ===================== CABEÇAS INDIVIDUAIS ===================== -->
         <section id="view-cabecas" class="view hidden module-view">
             <div class="view-header">
-                <button class="back-btn" onclick="window.app.navigate('home')">←</button>
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
                 <h2>Cabeças Individuais</h2>
             </div>
 
@@ -2113,7 +2106,7 @@
         <!-- ===================== MAPA INTERATIVO ===================== -->
         <section id="view-mapa" class="view hidden module-view">
             <div class="mapa-header">
-                <button class="mapa-back-btn" onclick="window.app.navigate('home')">← Voltar</button>
+                <button class="mapa-back-btn" onclick="window.app.navigateBack()">← Voltar</button>
                 <h2 class="mapa-title">🗺️ Mapa da Fazenda</h2>
             </div>
 
@@ -2295,10 +2288,11 @@
     <script src="js/fotos.js?v=20260213a"></script>
     <script src="js/fazenda-data.js?v=20260219a"></script>
     <script src="js/mapa.js?v=20260220b"></script>
-    <script src="js/ia-consultor.js?v=20260220a"></script>
+    <script src="js/ia-consultor.js?v=20260413d"></script>
     <script src="js/ux-helpers.js?v=20260219a"></script>
     <script src="js/resultados.js?v=20260219a"></script>
-    <script src="js/firebase-sync.js?v=20260413b"></script>
+    <script src="js/config-loader.js?v=20260413b"></script>
+    <script src="js/firebase-sync.js?v=20260413g"></script>
     <script src="js/ia-chefa.js?v=20260301a"></script>
 
     <!-- Arquitetura Refatorada -->
@@ -2316,7 +2310,7 @@
     <script src="refatoracao/architecture/index.js"></script>
     <script src="js/ia-auditoria.js?v=20260409a"></script>
 
-    <script src="app.js?v=20260413c"></script>
+    <script src="app.js?v=20260413d"></script>
     <script>
         (function () {
             var panelInfo = {

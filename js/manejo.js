@@ -139,12 +139,15 @@ window.manejo = {
         var manejoEvent = window.data.saveEvent(ev);
 
         if (custo > 0) {
+            var categoriaConta = 'operacional';
+            if (centerCost === 'NUTRICAO') categoriaConta = 'nutricao';
+            else if (centerCost === 'SANIDADE') categoriaConta = 'sanidade';
             var contaEvent = window.data.saveEvent({
                 type: 'CONTA_PAGAR',
                 nome: 'Manejo: ' + desc,
                 desc: tipo + ' - ' + desc + (lote ? ' (' + lote + ')' : ''),
                 value: custo,
-                categoria: 'sanidade',
+                categoria: categoriaConta,
                 centerCost: centerCost,
                 status: 'pago',
                 pago: true,
@@ -162,6 +165,8 @@ window.manejo = {
                 desc: 'Nutrição: ' + desc + (lote ? ' (' + lote + ')' : ''),
                 items: [{ name: desc, qty: qtyProduto }],
                 motivo: 'Nutrição manejo',
+                categoria: 'racao_sal',
+                centerCost: 'NUTRICAO',
                 linkedEventIds: [manejoEvent.id],
                 date: data || new Date().toISOString().split('T')[0]
             });
@@ -175,6 +180,8 @@ window.manejo = {
                 desc: 'Manejo: ' + desc,
                 items: materials,
                 motivo: 'Manejo: ' + desc,
+                categoria: 'remedios',
+                centerCost: centerCost,
                 linkedEventIds: [manejoEvent.id],
                 date: data || new Date().toISOString().split('T')[0]
             });

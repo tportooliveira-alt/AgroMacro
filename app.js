@@ -116,6 +116,7 @@ window.app = {
     _initModules: function () {
         if (this._modulesInitialized) return;
         this._modulesInitialized = true;
+        var iaConfig = this._getIAConfig();
         [
             'contextBuilder', 'actionBus', 'agentOrchestrator', 'leitorCocho', 'learningStore',
             'rebanho', 'pastos', 'lotes', 'financeiro', 'estoque', 'manejo', 'obras',
@@ -125,7 +126,11 @@ window.app = {
             'fotos', 'mapa', 'iaConsultor', 'uxHelpers', 'resultados', 'iaAuditoria'
         ].forEach(function (moduleName) {
             if (window[moduleName] && typeof window[moduleName].init === 'function') {
-                window[moduleName].init();
+                if (moduleName === 'iaConsultor') {
+                    window[moduleName].init(iaConfig);
+                } else {
+                    window[moduleName].init();
+                }
             }
         });
 
@@ -145,6 +150,16 @@ window.app = {
                 } catch (e) { }
             }
         }, 3000);
+    },
+
+    _getIAConfig: function () {
+        var cfg = (window.agromacroConfig && window.agromacroConfig.ia) ? window.agromacroConfig.ia : {};
+        return {
+            apiKey: cfg.gemini || '',
+            groqKey: cfg.groq || '',
+            cerebrasKey: cfg.cerebras || '',
+            openrouterKey: cfg.openrouter || ''
+        };
     },
 
     // ══ PWA — Service Worker Registration ══
@@ -215,7 +230,26 @@ window.app = {
     },
 
 
+    _navHistory: [],
+    _isBackNav: false,
+
+    navigateBack: function () {
+        // Pega a última tela visitada; se não houver, volta para home
+        var prev = this._navHistory[this._navHistory.length - 1] || 'home';
+        this._isBackNav = true;
+        this.navigate(prev);
+        this._isBackNav = false;
+        // Consome apenas 1 passo do histórico
+        if (this._navHistory.length > 0) this._navHistory.pop();
+    },
+
     navigate: function (pageId) {
+        // Empilha tela atual antes de navegar (máx 20 entradas)
+        if (!this._isBackNav && this.currentPage && this.currentPage !== pageId) {
+            this._navHistory.push(this.currentPage);
+            if (this._navHistory.length > 20) this._navHistory.shift();
+        }
+
         // Hide all views
         document.querySelectorAll('.view').forEach(function (el) {
             el.classList.remove('active');
@@ -372,6 +406,7 @@ window.app = {
                 this.loadConfig();
                 this.loadArrobaPrice();
                 if (window.firebaseSync) window.firebaseSync.renderSyncUI('sync-container');
+                if (window.firebaseSync) window.firebaseSync.renderMembros();
                 break;
             case 'auditoria':
                 if (window.iaAuditoria) window.iaAuditoria.renderView();
@@ -443,6 +478,23 @@ window.app = {
         select.innerHTML = html;
     },
 
+    _calcKPIMetrics: function (evts) {
+        var lm = {}, tp = 0, ps = {};
+        evts.forEach(function (ev) {
+            if (ev.type === 'LOTE') lm[ev.nome] = ev;
+            if (ev.type === 'PASTO' && !ps[ev.nome]) { ps[ev.nome] = true; tp++; }
+        });
+        var ta = 0, tl = 0, pt = 0, pes = 0;
+        for (var n in lm) {
+            var lt = lm[n];
+            if (lt.status === 'ATIVO') {
+                tl++; var q = lt.qtdAnimais || 0; ta += q;
+                if (lt.pesoMedio && q > 0) { pt += lt.pesoMedio * q; pes += q; }
+            }
+        }
+        return { totalAnimais: ta, totalLotes: tl, totalPastos: tp, pesoMedio: pes > 0 ? pt / pes : 0, totalArrobas: pt > 0 ? pt / 30 : 0 };
+    },
+
     renderKPIs: function () {
         var container = document.getElementById('kpi-grid');
         if (!container || !window.data) return;
@@ -483,9 +535,20 @@ window.app = {
         }
 
         var pesoMedio = pesados > 0 ? (pesoTotal / pesados).toFixed(0) : '--';
-        // 1@ vivo = 30 kg (15 kg só após abate)
         var pesoArrobas = pesados > 0 ? (pesoTotal / pesados / 30).toFixed(1) : '--';
         var totalArrobas = pesoTotal > 0 ? (pesoTotal / 30) : 0;
+
+        // Tendências: snapshot 30 dias atrás
+        var cutoff30 = new Date(); cutoff30.setDate(cutoff30.getDate() - 30);
+        var old30 = events.filter(function (ev) { return ev.date && new Date(ev.date) < cutoff30; });
+        var past = old30.length > 3 ? this._calcKPIMetrics(old30) : null;
+        function trend(curr, prev) {
+            if (!past || !prev || prev === 0) return '';
+            var d = (curr - prev) / prev * 100;
+            if (Math.abs(d) < 1) return '<span class="kpi-trend neutral">↔</span>';
+            return d > 0 ? '<span class="kpi-trend up">▲ ' + Math.abs(d).toFixed(0) + '%</span>'
+                         : '<span class="kpi-trend down">▼ ' + Math.abs(d).toFixed(0) + '%</span>';
+        }
 
         // Valor do rebanho em pé (@ total × preço da @)
         var precoArroba = window.contas ? window.contas.getPrecoArroba() : 0;
@@ -504,11 +567,11 @@ window.app = {
         }
 
         container.innerHTML = ''
-            + '<div class="kpi-card"><div class="kpi-label">Rebanho</div><div class="kpi-value positive">' + totalAnimais + ' cab</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value">' + totalLotes + '</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Rebanho</div><div class="kpi-value positive">' + totalAnimais + ' cab</div>' + trend(totalAnimais, past && past.totalAnimais) + '</div>'
+            + '<div class="kpi-card"><div class="kpi-label">Lotes Ativos</div><div class="kpi-value">' + totalLotes + '</div>' + trend(totalLotes, past && past.totalLotes) + '</div>'
             + '<div class="kpi-card"><div class="kpi-label">Pastos</div><div class="kpi-value">' + totalPastos + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div><div style="font-size:11px;color:var(--text-2,#6B7280);font-weight:600;margin-top:2px;">@ ' + pesoArrobas + '</div></div>'
-            + '<div class="kpi-card"><div class="kpi-label">@ Total Rebanho</div><div class="kpi-value">' + totalArrobas.toFixed(0) + ' @</div></div>'
+            + '<div class="kpi-card"><div class="kpi-label">Peso Médio</div><div class="kpi-value">' + pesoMedio + ' kg</div><div style="font-size:11px;color:var(--text-2,#6B7280);font-weight:600;margin-top:2px;">@ ' + pesoArrobas + '</div>' + trend(pesoTotal / (pesados || 1), past && past.pesoMedio) + '</div>'
+            + '<div class="kpi-card"><div class="kpi-label">@ Total Rebanho</div><div class="kpi-value">' + totalArrobas.toFixed(0) + ' @</div>' + trend(totalArrobas, past && past.totalArrobas) + '</div>'
             + '<div class="kpi-card"><div class="kpi-label">💰 Valor Rebanho</div><div class="kpi-value ' + (valorRebanho > 0 ? 'positive' : '') + '">' + (valorRebanho > 0 ? 'R$ ' + valorRebanho.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 'Definir @ em Config') + '</div></div>'
             + projStr;
     },

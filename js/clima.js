@@ -83,6 +83,11 @@ window.clima = {
     carregarPrevisao: function () {
         var self = this;
 
+        // Garantir coords inicializadas (caso chamado antes de init())
+        if (this.LAT === null || this.LON === null) {
+            this._calcCoordsFromFazenda();
+        }
+
         // Tentar cache primeiro
         var cached = this._getCache();
         if (cached) {

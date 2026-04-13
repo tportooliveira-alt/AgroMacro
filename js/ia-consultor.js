@@ -23,19 +23,27 @@ window.iaConsultor = {
     _modoVozContinuo: false,
     _ttsAtiva: false,
 
-    init: function () {
+    init: function (externalConfig) {
         this.historico = this._carregarHistorico();
         this._criarBotao();
         this._bindEventos();
+
+        // Config recebida do boot (ex.: config-loader)
+        if (externalConfig) {
+            if (externalConfig.apiKey) this.API_KEY = externalConfig.apiKey;
+            if (externalConfig.groqKey) this.GROQ_KEY = externalConfig.groqKey;
+            if (externalConfig.cerebrasKey) this.CEREBRAS_KEY = externalConfig.cerebrasKey;
+            if (externalConfig.openrouterKey) this.OPENROUTER_KEY = externalConfig.openrouterKey;
+        }
 
         // Carregar config salva
         try {
             var config = JSON.parse(localStorage.getItem('agromacro_ia_config') || '{}');
             if (config.workerUrl) this.WORKER_URL = config.workerUrl;
-            if (config.apiKey) this.API_KEY = config.apiKey;
-            if (config.groqKey) this.GROQ_KEY = config.groqKey;
-            if (config.cerebrasKey) this.CEREBRAS_KEY = config.cerebrasKey;
-            if (config.openrouterKey) this.OPENROUTER_KEY = config.openrouterKey;
+            if (config.apiKey && ('' + config.apiKey).trim()) this.API_KEY = config.apiKey;
+            if (config.groqKey && ('' + config.groqKey).trim()) this.GROQ_KEY = config.groqKey;
+            if (config.cerebrasKey && ('' + config.cerebrasKey).trim()) this.CEREBRAS_KEY = config.cerebrasKey;
+            if (config.openrouterKey && ('' + config.openrouterKey).trim()) this.OPENROUTER_KEY = config.openrouterKey;
         } catch (e) { }
 
         var provCount = this._contarProvedores();
@@ -2151,6 +2159,7 @@ window.iaConsultor = {
             welcomeDiv.innerHTML = introHtml + '<div>' + welcomeMsg + '</div>';
             container.appendChild(welcomeDiv);
             // Data-driven suggestions
+            var suggestions = [];
             if (mercado && mercado.arrobaSP) {
                 suggestions.push({ icon: '📈', text: 'Como está o mercado hoje?', q: 'Como está o mercado da arroba hoje? Analise tendência, escalas e me aconselhe.' });
             }
