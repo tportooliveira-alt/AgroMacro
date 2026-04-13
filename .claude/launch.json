@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Firebase Hosting",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["serve", "--only", "hosting"],
+      "port": 5000
+    },
+    {
+      "name": "Cloudflare Worker",
+      "runtimeExecutable": "wrangler",
+      "runtimeArgs": ["dev", "--config", "worker/wrangler.toml"],
+      "port": 8787
+    }
+  ]
+}
