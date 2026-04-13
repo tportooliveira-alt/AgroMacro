@@ -1,0 +1,233 @@
+{
+  "projectName": "AgroMacro — Brutalismo Premium",
+  "description": "Design System + Wireframes — PWA Gestão Pecuária",
+  
+  "designSystem": {
+    "colors": {
+      "primary": {
+        "name": "Preto Titânio",
+        "hex": "#0F1318",
+        "rgb": "15, 19, 24",
+        "usage": "Fundo principal"
+      },
+      "accent": {
+        "name": "Terra Roxa",
+        "hex": "#8B4513",
+        "rgb": "139, 69, 19",
+        "usage": "CTAs, alertas, dados críticos"
+      },
+      "text": {
+        "name": "Branco Osso",
+        "hex": "#FFFEF0",
+        "rgb": "255, 254, 240",
+        "usage": "Tipografia, max contrast"
+      },
+      "secondary": {
+        "name": "Verde Titânio",
+        "hex": "#00796B",
+        "rgb": "0, 121, 107",
+        "usage": "Complemento, sucesso"
+      },
+      "error": {
+        "name": "Vermelho Alerta",
+        "hex": "#DC2626",
+        "rgb": "220, 38, 38",
+        "usage": "Erros, avisos críticos"
+      },
+      "warning": {
+        "name": "Âmbar Cautela",
+        "hex": "#B45309",
+        "rgb": "180, 83, 9",
+        "usage": "Avisos moderados"
+      }
+    },
+    
+    "typography": {
+      "display": { "font": "Inter", "size": "32px", "weight": "700", "lineHeight": "1.2" },
+      "heading1": { "font": "Inter", "size": "24px", "weight": "700", "lineHeight": "1.3" },
+      "heading2": { "font": "Inter", "size": "20px", "weight": "600", "lineHeight": "1.3" },
+      "body": { "font": "Inter", "size": "14px", "weight": "400", "lineHeight": "1.5" },
+      "small": { "font": "Inter", "size": "12px", "weight": "400", "lineHeight": "1.4" },
+      "mono": { "font": "JetBrains Mono", "size": "14px", "weight": "600", "lineHeight": "1.4" },
+      "kpi": { "font": "JetBrains Mono", "size": "28-42px", "weight": "700", "lineHeight": "1" }
+    },
+    
+    "components": {
+      "button": {
+        "primary": { "bg": "#8B4513", "text": "#FFFEF0", "padding": "12px 24px", "radius": "6px" },
+        "secondary": { "bg": "#3D3D3D", "text": "#FFFEF0", "border": "1px #5A5A5A", "radius": "6px" },
+        "small": { "padding": "8px 16px", "fontSize": "12px" }
+      },
+      "card": {
+        "bg": "#1A1A1A",
+        "border": "1px #3D3D3D",
+        "radius": "8px",
+        "padding": "16px"
+      },
+      "kpiCard": {
+        "bg": "#1A1A1A",
+        "border": "1px #3D3D3D",
+        "radius": "8px",
+        "padding": "16px",
+        "minHeight": "120px",
+        "display": "flex center"
+      },
+      "input": {
+        "bg": "#2A2A2A",
+        "border": "1px #4A4A4A",
+        "focusBorder": "#8B4513",
+        "radius": "6px",
+        "padding": "12px 16px"
+      }
+    }
+  },
+  
+  "screens": [
+    {
+      "name": "Splash Screen",
+      "description": "Animação de abertura com logo topográfico",
+      "elements": [
+        "Fundo Preto Titânio",
+        "Logo SVG com efeito laser scan (linhas desenhadas progressivamente)",
+        "Texto: AgroMacro",
+        "Subtexto: Gestão Pecuária Inteligente",
+        "Loading bar ou progresso"
+      ]
+    },
+    {
+      "name": "Home - Dashboard",
+      "description": "Tela principal com KPIs e ações rápidas",
+      "sections": [
+        "Header: Olá, [Fazenda] | Data",
+        "KPI Grid 4 colunas: GMD | Arroba | Lotação | Rebanho",
+        "Cards informativos: Alertas (estoque, contas, superlotação)",
+        "Previsão climática (Open-Meteo)",
+        "Cotação do rebanho",
+        "Ações rápidas: +Compra | +Venda | +Manejo"
+      ]
+    },
+    {
+      "name": "Rebanho - Hub",
+      "description": "Menu hub com 6 sub-módulos",
+      "sections": [
+        "Header: Rebanho",
+        "6 Cards grandes clicáveis:",
+        "- 📋 Lotes",
+        "- 🐂 Cabeças Individuais",
+        "- 💉 Manejo Sanitário",
+        "- 📅 Calendário",
+        "- 🌿 Pastos",
+        "- 📊 Indicadores"
+      ]
+    },
+    {
+      "name": "Rebanho - Lotes",
+      "description": "Lista de lotes com números-chave",
+      "elements": [
+        "Tabela/Cards: Lote | Cabeças | Peso Médio | Dias | Status",
+        "Cards de alta densidade",
+        "Botão +Novo Lote",
+        "Filtros: Categoria, Status"
+      ]
+    },
+    {
+      "name": "Rebanho - Cabeças",
+      "description": "Cadastro individual de animais",
+      "elements": [
+        "Form: Brinco | Raça | Sexo | Peso | Nascimento | Origem | Obs",
+        "Botões: Salvar | Cancelar",
+        "Lista abaixo com cabeças cadastradas",
+        "Busca por brinco"
+      ]
+    },
+    {
+      "name": "Financeiro - Hub",
+      "description": "Menu financeiro com 4 sub-módulos",
+      "sections": [
+        "4 Cards grandes:",
+        "- 💰 Compra de Gado",
+        "- 🏪 Venda de Gado",
+        "- 📊 Fluxo de Caixa",
+        "- 📈 Balanço (DRE)"
+      ]
+    },
+    {
+      "name": "Financeiro - Compra/Venda",
+      "description": "Registro de transações",
+      "elements": [
+        "Form: Data | Quantidade | Valor | Lote | Obs",
+        "Botão Salvar",
+        "Lista de transações recentes",
+        "Filtros: Data, Lote, Status"
+      ]
+    },
+    {
+      "name": "Operações - Hub",
+      "description": "Menu operações com 3 sub-módulos",
+      "sections": [
+        "3 Cards:",
+        "- 📦 Estoque",
+        "- 🔨 Obras",
+        "- 👥 Funcionários"
+      ]
+    },
+    {
+      "name": "Config",
+      "description": "Configurações da fazenda",
+      "elements": [
+        "Seção: Identidade da Fazenda",
+        "  - Nome | Proprietário | Cidade | Estado | Área",
+        "Seção: Dados",
+        "  - Botão Exportar JSON",
+        "  - Botão Resetar (com confirmação)",
+        "Seção: Perfil",
+        "  - Radio: Peão | Gerência | Dono",
+        "Seção: PWA",
+        "  - Botão Instalar App"
+      ]
+    }
+  ],
+  
+  "componentLibrary": [
+    {
+      "name": "Button Primary",
+      "variants": ["Default", "Hover", "Active", "Disabled", "Small"]
+    },
+    {
+      "name": "Button Secondary",
+      "variants": ["Default", "Hover", "Disabled"]
+    },
+    {
+      "name": "Card",
+      "variants": ["Default", "With Header", "With Badge", "Hover"]
+    },
+    {
+      "name": "KPI Card",
+      "variants": ["Default", "With Badge", "Alternative Color"]
+    },
+    {
+      "name": "Input Field",
+      "variants": ["Default", "Focused", "Filled", "Error", "Disabled"]
+    },
+    {
+      "name": "Badge",
+      "variants": ["Terra", "Verde", "Alerta", "Cautela"]
+    },
+    {
+      "name": "Alert Box",
+      "variants": ["Info", "Warning", "Error", "Success"]
+    },
+    {
+      "name": "Form Group",
+      "variants": ["Text Input", "Select", "Textarea"]
+    },
+    {
+      "name": "Navigation",
+      "variants": ["Bottom Nav", "Header"]
+    },
+    {
+      "name": "Table Cell",
+      "variants": ["Header", "Data", "Numeric"]
+    }
+  ]
+}

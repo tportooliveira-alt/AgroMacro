@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroMacro — Brutalismo Premium Preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="brutalismo-premium.css">
+    <style>
+        body {
+            padding: var(--spacing-2xl);
+        }
+        .preview-section {
+            margin-bottom: var(--spacing-2xl);
+        }
+        .preview-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--color-terra-roxa);
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        .logo-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-dark);
+            border: 1px solid var(--color-mid);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            width: 200px;
+            height: 200px;
+        }
+        .logo-preview svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 AgroMacro — Design System "Brutalismo Premium"</h1>
+    <p style="margin-bottom: var(--spacing-2xl); color: var(--color-light);">
+        Uma abordagem industrial e premium para o software de gestão pecuária
+    </p>
+
+    <!-- LOGO -->
+    <section class="preview-section">
+        <h2>Logo — Topografia Nelore</h2>
+        <p style="margin-bottom: var(--spacing-lg); color: var(--color-light);">
+            Linhas de contorno formando o cupim e dorso de um Nelore. Escaneamento a laser 3D.
+        </p>
+        <div class="logo-preview">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="topoGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#00796B;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect width="200" height="200" fill="#0F1318"/>
+                <path d="M 70 140 Q 100 120 130 140" stroke="url(#topoGradient)" stroke-width="1.2" fill="none" opacity="0.4"/>
+                <path d="M 75 125 Q 100 110 125 125" stroke="url(#topoGradient)" stroke-width="1.5" fill="none" opacity="0.6"/>
+                <path d="M 80 110 Q 100 95 120 110" stroke="url(#topoGradient)" stroke-width="1.8" fill="none" opacity="0.7"/>
+                <path d="M 85 95 Q 100 80 115 95" stroke="url(#topoGradient)" stroke-width="2" fill="none" opacity="0.8"/>
+                <path d="M 90 80 Q 100 70 110 80" stroke="url(#topoGradient)" stroke-width="2.2" fill="none" opacity="0.9"/>
+                <path d="M 95 65 Q 100 58 105 65" stroke="url(#topoGradient)" stroke-width="2.4" fill="none" opacity="1"/>
+                <path d="M 60 110 Q 75 90 100 60 Q 125 90 140 110" stroke="url(#topoGradient)" stroke-width="1.5" fill="none" opacity="0.5"/>
+                <path d="M 55 120 Q 75 95 100 55 Q 125 95 145 120" stroke="url(#topoGradient)" stroke-width="2" fill="none" opacity="0.75"/>
+                <path d="M 50 130 Q 70 100 100 50 Q 130 100 150 130" stroke="url(#topoGradient)" stroke-width="2.5" fill="none" opacity="0.9"/>
+                <circle cx="100" cy="58" r="2" fill="#FFFEF0" opacity="0.8"/>
+                <circle cx="100" cy="58" r="6" stroke="#00796B" stroke-width="0.5" fill="none" opacity="0.4"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- PALETA -->
+    <section class="preview-section">
+        <h2>Paleta de Cores</h2>
+        <div class="preview-grid">
+            <div class="card">
+                <div style="width: 100%; height: 80px; background: var(--color-preto-titanio); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border: 1px solid var(--color-mid);"></div>
+                <strong>Preto Titânio</strong>
+                <span class="text-small text-light">#0F1318</span>
+                <p class="text-small">Fundo principal</p>
+            </div>
+
+            <div class="card">
+                <div style="width: 100%; height: 80px; background: var(--color-terra-roxa); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);"></div>
+                <strong>Terra Roxa</strong>
+                <span class="text-small text-light">#8B4513</span>
+                <p class="text-small">Alertas, CTAs, dados críticos</p>
+            </div>
+
+            <div class="card">
+                <div style="width: 100%; height: 80px; background: var(--color-branco-osso); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border: 1px solid var(--color-mid);"></div>
+                <strong class="text-light">Branco Osso</strong>
+                <span class="text-small text-light">#FFFEF0</span>
+                <p class="text-small">Tipografia, max contrast</p>
+            </div>
+
+            <div class="card">
+                <div style="width: 100%; height: 80px; background: var(--color-verde-titanio); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);"></div>
+                <strong>Verde Titânio</strong>
+                <span class="text-small text-light">#00796B</span>
+                <p class="text-small">Complemento, sucesso</p>
+            </div>
+
+            <div class="card">
+                <div style="width: 100%; height: 80px; background: var(--color-vermelho-alerta); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);"></div>
+                <strong>Vermelho Alerta</strong>
+                <span class="text-small text-light">#DC2626</span>
+                <p class="text-small">Erros, avisos críticos</p>
+            </div>
+
+            <div class="card">
+                <div style="width: 100%; height: 80px; background: var(--color-ambar-cautela); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);"></div>
+                <strong>Âmbar Cautela</strong>
+                <span class="text-small text-light">#B45309</span>
+                <p class="text-small">Avisos moderados</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMPONENTES -->
+    <section class="preview-section">
+        <h2>Componentes</h2>
+
+        <h3 style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md);">Buttons</h3>
+        <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap; margin-bottom: var(--spacing-lg);">
+            <button class="btn btn-primary">Primário</button>
+            <button class="btn btn-secondary">Secundário</button>
+            <button class="btn btn-alert">Alerta</button>
+            <button class="btn btn-success">Sucesso</button>
+            <button class="btn btn-primary btn-small">Pequeno</button>
+        </div>
+
+        <h3 style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md);">KPI Cards (Dashboard Industrial)</h3>
+        <div class="grid-4">
+            <div class="kpi-card">
+                <div class="kpi-label">GMD</div>
+                <div class="kpi-value">1.245</div>
+                <div class="kpi-unit">kg/dia</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Arroba (@)</div>
+                <div class="kpi-value accent">52.8</div>
+                <div class="kpi-unit">projeção</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Lotação</div>
+                <div class="kpi-value">2.8</div>
+                <div class="kpi-unit">UA/ha</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Rebanho</div>
+                <div class="kpi-value accent">384</div>
+                <div class="kpi-unit">cabeças</div>
+            </div>
+        </div>
+
+        <h3 style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md);">Cards Padrão</h3>
+        <div class="preview-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Lote A1</div>
+                        <div class="card-subtitle">24 cabeças · Engorda</div>
+                    </div>
+                    <span class="badge badge-verde">ATIVO</span>
+                </div>
+                <p class="text-small">Pasto: Braquiária · Peso Médio: 380 kg · 35 dias</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Compra Gado</div>
+                        <div class="card-subtitle">10/04/2026</div>
+                    </div>
+                    <span class="badge badge-terra">R$ 24.000</span>
+                </div>
+                <p class="text-small">32 cabeças · Zebu Nelore · 280 kg</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">⚠️ Estoque Baixo</div>
+                        <div class="card-subtitle">Ração Premium</div>
+                    </div>
+                    <span class="badge badge-cautela">CRÍTICO</span>
+                </div>
+                <p class="text-small">Apenas 120 kg disponíveis. Reposição recomendada.</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md);">Badges</h3>
+        <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap; margin-bottom: var(--spacing-lg);">
+            <span class="badge badge-terra">CRÍTICO</span>
+            <span class="badge badge-verde">ATIVO</span>
+            <span class="badge badge-alerta">ALERTA</span>
+            <span class="badge badge-cautela">AVISO</span>
+        </div>
+
+        <h3 style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md);">Form</h3>
+        <form style="max-width: 400px;">
+            <div class="form-group">
+                <label for="exemplo-input">Nome do Lote</label>
+                <input type="text" id="exemplo-input" placeholder="Ex: Lote A1 - Engorda">
+            </div>
+            <div class="form-group">
+                <label for="exemplo-select">Categoria</label>
+                <select id="exemplo-select">
+                    <option>Cria</option>
+                    <option>Recria</option>
+                    <option>Engorda</option>
+                    <option>Matrizes</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+
+        <h3 style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md);">Alerts</h3>
+        <div class="alert alert-info">
+            <strong>ℹ️ Informação:</strong> Lotação ideal para este pasto é 2.4 UA/ha. Você está em 2.8.
+        </div>
+        <div class="alert alert-warning">
+            <strong>⚠️ Aviso:</strong> 3 contas a pagar vencidas hoje.
+        </div>
+        <div class="alert alert-error">
+            <strong>❌ Erro:</strong> Não foi possível sincronizar dados com Firebase.
+        </div>
+    </section>
+
+    <!-- TIPOGRAFIA -->
+    <section class="preview-section">
+        <h2>Tipografia</h2>
+        <h1>Heading 1 — 32px</h1>
+        <h2>Heading 2 — 24px</h2>
+        <h3>Heading 3 — 20px</h3>
+        <h4>Heading 4 — 16px</h4>
+        <p>Body Text — 14px. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <p class="text-small">Small Text — 12px. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+        <p class="text-mono">Monospace (DM Mono) — Números e dados técnicos: <strong>1.245 kg</strong> | <strong>R$ 24.000</strong></p>
+    </section>
+
+    <!-- RESPONSIVIDADE -->
+    <section class="preview-section">
+        <h2>Grid Responsivo</h2>
+        <div class="grid-2">
+            <div class="card">
+                <strong>Grid 2 — Desktop</strong>
+                <p class="text-small">Em tablets reduz para 1 coluna</p>
+            </div>
+            <div class="card">
+                <strong>Grid 2 — Exemplo</strong>
+                <p class="text-small">Responsivo automático</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="margin-top: var(--spacing-2xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--color-mid); text-align: center; color: var(--color-light);">
+        <p>AgroMacro — Design System "Brutalismo Premium" | 2026</p>
+    </footer>
+</body>
+</html>

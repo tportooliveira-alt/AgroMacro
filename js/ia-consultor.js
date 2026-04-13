@@ -19,6 +19,9 @@ window.iaConsultor = {
     _tooltipTimer: null,
     _badgeCount: 0,
     _telaAtual: 'home',
+    _vozTTS: false,
+    _modoVozContinuo: false,
+    _ttsAtiva: false,
 
     init: function () {
         this.historico = this._carregarHistorico();
@@ -378,6 +381,13 @@ window.iaConsultor = {
 
         if (!texto || !texto.trim()) return;
 
+        // Phase C: Roteamento com AgentOrchestrator
+        var mission = null;
+        if (window.agentOrchestrator && typeof window.agentOrchestrator.planMission === 'function') {
+            mission = window.agentOrchestrator.planMission(texto);
+            console.log('🎯 Mission planejada:', mission);
+        }
+
         if (!this._temConexao()) {
             this._mostrarConfig();
             return;
@@ -389,6 +399,11 @@ window.iaConsultor = {
         this._mostrarDigitando(true);
 
         var contexto = this.getContextoFazenda();
+
+        // Enriquecer contexto baseado em domains da mission
+        if (mission && mission.domains && Array.isArray(mission.domains)) {
+            contexto = this._enriquecerContextoPorDominio(contexto, mission.domains);
+        }
 
         // Últimas 6 mensagens para contexto (3 pares)
         var mensagensRecentes = this.historico.slice(-7, -1).map(function (m) {
@@ -410,6 +425,39 @@ window.iaConsultor = {
             this.historico.push({ role: 'model', content: '⚙️ IA não configurada. Vá em Configurações e insira pelo menos uma chave API.', time: Date.now() });
             this._renderMensagens();
         }
+    },
+
+    _enriquecerContextoPorDominio: function (contexto, domains) {
+        var linhas = [contexto];
+
+        // Se domínio nutricao → adicionar alimentos disponíveis
+        if (domains.indexOf('nutricao') >= 0 && window.nutricaoIA && window.nutricaoIA.ALIMENTOS) {
+            linhas.push('\n\n═══ CONTEXTO NUTRICIONAL ═══');
+            linhas.push('Alimentos disponíveis na fazenda:');
+            var alimentosSample = window.nutricaoIA.ALIMENTOS.slice(0, 5);
+            alimentosSample.forEach(function (ali) {
+                linhas.push('  • ' + ali.nome + ' (PB:' + ali.pb + '%, NDT:' + ali.ndt + '%)');
+            });
+        }
+
+        // Se domínio auditoria → adicionar anomalias pendentes
+        if (domains.indexOf('auditoria') >= 0 && window.iaAuditoria) {
+            var storageKey = 'agromacro_anomalias_v1';
+            try {
+                var anomalias = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                var pending = anomalias.filter(function (a) { return a.status === 'PENDENTE'; });
+                if (pending.length > 0) {
+                    linhas.push('\n\n═══ AUDITORIA: ANOMALIAS PENDENTES ═══');
+                    pending.slice(0, 3).forEach(function (item) {
+                        linhas.push('  [' + item.severidade + '] ' + item.indicador + ': ' + item.descricao);
+                    });
+                }
+            } catch (e) {
+                console.warn('Erro ao carregar anomalias:', e);
+            }
+        }
+
+        return linhas.join('\n');
     },
 
     _chamarWorker: function (messages, context) {
@@ -806,6 +854,14 @@ window.iaConsultor = {
 
             + '═══ DADOS ATUAIS DA FAZENDA ═══\n' + context;
 
+        // Phase D: Adicionar padrões de Learning Store
+        if (window.learningStore && typeof window.learningStore.getSimilarPatterns === 'function') {
+            var patterns = window.learningStore.getSimilarPatterns(messages[messages.length - 1].content, 3);
+            if (patterns.length > 0) {
+                systemPrompt += window.learningStore.formatPatternsAsPrompt(patterns);
+            }
+        }
+
         var contents = [];
         contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
         contents.push({
@@ -1111,6 +1167,11 @@ window.iaConsultor = {
         self.historico.push({ role: 'model', content: textoLimpo, time: Date.now() });
         self._salvarHistorico();
         self._renderMensagens();
+
+        // Falar resposta (TTS) se ativo
+        if (self._vozTTS && textoLimpo) {
+            self._falarResposta(textoLimpo);
+        }
 
         // Se tem ações, pedir confirmação
         if (acoes && Array.isArray(acoes) && acoes.length > 0) {
@@ -1748,10 +1809,26 @@ window.iaConsultor = {
         });
 
         // Mostrar resultado no chat
-        var msg = '🤖 **Ações executadas:**\n\n' + resultados.join('\n');
+        var msg = '🤖 **Ações ex executadas:**\n\n' + resultados.join('\n');
         self.historico.push({ role: 'model', content: msg, time: Date.now() });
         self._salvarHistorico();
         self._renderMensagens();
+
+        // Phase D: Registrar sucesso para Learning Store
+        var lastUserMsg = null;
+        for (var i = self.historico.length - 1; i >= 0; i--) {
+            if (self.historico[i].role === 'user') {
+                lastUserMsg = self.historico[i].content;
+                break;
+            }
+        }
+        if (lastUserMsg && window.learningStore && typeof window.learningStore.recordSuccess === 'function') {
+            var snapshot = window.contextBuilder && typeof window.contextBuilder.getSnapshot === 'function'
+                ? window.contextBuilder.getSnapshot()
+                : null;
+            var summary = snapshot ? snapshot.summary : null;
+            window.learningStore.recordSuccess(lastUserMsg, acoes, summary);
+        }
 
         // ══ CONFIRMAÇÃO VISUAL — Toast individual para cada ação ══
         if (window.app && window.app.showToast) {
@@ -1869,6 +1946,7 @@ window.iaConsultor = {
     // ══ VOZ — Speech Recognition ══
     _vozAtiva: false,
     _recognition: null,
+    _synthesis: null,
 
     _toggleVoz: function () {
         var self = this;
@@ -1936,6 +2014,96 @@ window.iaConsultor = {
         self._recognition.start();
         if (window.app && window.app.showToast) {
             window.app.showToast('🎙️ Ouvindo... fale agora!', 'info');
+        }
+    },
+
+    // ══ TTS — Text-to-Speech (Síntese de Fala) ══
+    _falarResposta: function (texto) {
+        var self = this;
+        if (!this._vozTTS || !texto) return;
+
+        // Truncar para evitar falar texto gigante
+        var maxChars = 600;
+        var truncado = texto.length > maxChars ? texto.substring(0, maxChars) + '...' : texto;
+
+        // Limpar síntese anterior se estiver rodando
+        if (this._synthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        var utterance = new SpeechSynthesisUtterance(truncado);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        // Tentar usar voz feminina pt-BR se disponível
+        var voices = window.speechSynthesis.getVoices();
+        var ptVoice = voices.find(function (v) {
+            return v.lang === 'pt-BR' && v.name.toLowerCase().indexOf('female') >= 0;
+        }) || voices.find(function (v) {
+            return v.lang === 'pt-BR';
+        });
+        if (ptVoice) utterance.voice = ptVoice;
+
+        utterance.onend = function () {
+            self._ttsAtiva = false;
+            // Se modo contínuo ativo → reiniciar o microfone
+            if (self._modoVozContinuo) {
+                setTimeout(function () {
+                    self._toggleVoz();
+                }, 500);
+            }
+        };
+
+        utterance.onerror = function (event) {
+            console.warn('TTS erro:', event.error);
+            self._ttsAtiva = false;
+        };
+
+        this._ttsAtiva = true;
+        window.speechSynthesis.speak(utterance);
+    },
+
+    _toggleTTS: function () {
+        this._vozTTS = !this._vozTTS;
+        var btn = document.getElementById('ia-tts-btn');
+        if (btn) {
+            if (this._vozTTS) {
+                btn.classList.add('tts-active');
+                if (window.app && window.app.showToast) {
+                    window.app.showToast('🔊 TTS ligado!', 'info');
+                }
+            } else {
+                btn.classList.remove('tts-active');
+                window.speechSynthesis.cancel();
+                if (window.app && window.app.showToast) {
+                    window.app.showToast('🔇 TTS desligado', 'info');
+                }
+            }
+        }
+    },
+
+    _toggleModoVozContinuo: function () {
+        this._modoVozContinuo = !this._modoVozContinuo;
+        var btn = document.getElementById('ia-voice-loop-btn');
+        if (btn) {
+            if (this._modoVozContinuo) {
+                btn.classList.add('voice-loop-active');
+                if (window.app && window.app.showToast) {
+                    window.app.showToast('🔄 Modo contínuo ligado! Fale agora.', 'info');
+                }
+                // Iniciar primeiro ciclo de escuta
+                this._toggleVoz();
+            } else {
+                btn.classList.remove('voice-loop-active');
+                if (this._vozAtiva && this._recognition) {
+                    this._recognition.stop();
+                }
+                if (window.app && window.app.showToast) {
+                    window.app.showToast('🛑 Modo contínuo desligado', 'info');
+                }
+            }
         }
     },
 

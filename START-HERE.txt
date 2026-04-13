@@ -1,0 +1,174 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    AgroMacro — Figma Design System                        ║
+║                       "Brutalismo Premium"                                 ║
+║                                                                             ║
+║                  🎨 Kit Completo Pronto para Usar 🎨                       ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+ARQUIVOS CRIADOS:
+─────────────────────────────────────────────────────────────────────────────
+
+📚 DOCUMENTAÇÃO (Comece por aqui!)
+  ✅ FIGMA-GUIA-CRIACAO.md         ← LEIA PRIMEIRO (passo-a-passo)
+  ✅ FIGMA-README.md               ← Overview completo
+  ✅ figma-project-spec.json       ← Especificação técnica
+
+🎨 PREVISUALIZAÇÕES (Abra no navegador)
+  ✅ figma-wireframes.html         ← 8 telas principais (veja como fica!)
+  ✅ brutalismo-preview.html       ← Componentes (cores, buttons, cards)
+
+🖼️ DESIGN SYSTEM PRONTO
+  ✅ brutalismo-premium.css        ← CSS completo (500+ linhas)
+  ✅ figma-design-spec.md          ← Design specs
+  ✅ agromacro-logo-topografia.svg ← Logo topográfico Nelore
+
+─────────────────────────────────────────────────────────────────────────────
+
+🚀 COMO COMEÇAR (4 PASSOS):
+─────────────────────────────────────────────────────────────────────────────
+
+PASSO 1: Veja as referências (5 min)
+  1. Abra: figma-wireframes.html no navegador
+  2. Abra: brutalismo-preview.html no navegador
+  3. Veja como cada tela/componente deve ficar
+
+PASSO 2: Leia o guia (5 min)
+  1. Abra: FIGMA-GUIA-CRIACAO.md
+  2. Leia do início até o final
+  3. Entenda os 7 passos de criação
+
+PASSO 3: Crie no Figma (60 min)
+  1. Abra figma.com
+  2. Crie novo Design File
+  3. Siga o FIGMA-GUIA-CRIACAO.md exatamente
+  4. Setup (5 min) + Components (15 min) + Telas (30 min) + Prototyping (10 min)
+
+PASSO 4: Compartilhe (2 min)
+  1. Gere link público no Figma
+  2. Compartilhe comigo!
+
+─────────────────────────────────────────────────────────────────────────────
+
+⏱️ TEMPO ESTIMADO:
+─────────────────────────────────────────────────────────────────────────────
+
+  Visualizar referencias:       5 min
+  Ler guia:                     5 min
+  Setup Design System:          5 min
+  Criar Components:            15 min
+  Desenhar 8 Telas:           30 min
+  Prototyping + Animations:   10 min
+  ─────────────────────────────
+  TOTAL:                       60 min (~1 hora)
+
+─────────────────────────────────────────────────────────────────────────────
+
+🎨 O QUE VOCÊ VAI CRIAR:
+─────────────────────────────────────────────────────────────────────────────
+
+DESIGN SYSTEM:
+  ✓ 6 cores (Preto Titânio, Terra Roxa, Branco Osso, Verde, Vermelho, Âmbar)
+  ✓ 7 estilos tipografia (Display, H1, H2, Body, Small, Mono, KPI)
+  ✓ 10 componentes com variants (Buttons, Cards, Inputs, Badges, Alerts, etc)
+
+WIREFRAMES (8 TELAS):
+  1️⃣  Splash Screen (logo + loading)
+  2️⃣  Home Dashboard (KPIs + alertas)
+  3️⃣  Rebanho Hub (6 módulos)
+  4️⃣  Rebanho Lotes (lista + form)
+  5️⃣  Financeiro Hub (4 módulos)
+  6️⃣  Financeiro Compra/Venda (forms)
+  7️⃣  Operações Hub (3 módulos)
+  8️⃣  Config (perfil + dados)
+
+─────────────────────────────────────────────────────────────────────────────
+
+📝 PALETA CORES "BRUTALISMO PREMIUM":
+─────────────────────────────────────────────────────────────────────────────
+
+  Preto Titânio       #0F1318  ■ Fundo principal
+  Terra Roxa          #8B4513  ■ CTAs, alertas, dados críticos
+  Branco Osso         #FFFEF0  ■ Tipografia, max contrast
+  Verde Titânio       #00796B  ■ Complemento, sucesso
+  Vermelho Alerta     #DC2626  ■ Erros, avisos críticos
+  Âmbar Cautela       #B45309  ■ Avisos moderados
+
+─────────────────────────────────────────────────────────────────────────────
+
+✅ CHECKLIST RÁPIDO:
+─────────────────────────────────────────────────────────────────────────────
+
+Antes de começar:
+  ☐ Tenho conta Figma?
+  ☐ Abri figma-wireframes.html no navegador?
+  ☐ Abri brutalismo-preview.html no navegador?
+  ☐ Li FIGMA-GUIA-CRIACAO.md?
+
+Durante a criação:
+  ☐ Setup Design System (cores + tipografia)
+  ☐ Crei todos os 10 components com variants
+  ☐ Desenhei as 8 telas principais
+  ☐ Conectei telas com prototyping
+  ☐ Adicionei animações básicas
+
+Depois de terminar:
+  ☐ Criei page "Design System"
+  ☐ Gerei link público
+  ☐ Exportei assets (logo, PNGs)
+  ☐ Compartilhei comigo!
+
+─────────────────────────────────────────────────────────────────────────────
+
+🆘 DÚVIDAS FREQUENTES:
+─────────────────────────────────────────────────────────────────────────────
+
+P: Por onde começo?
+R: Abra FIGMA-GUIA-CRIACAO.md — é um passo-a-passo completo
+
+P: Como sei se está certo?
+R: Compare com figma-wireframes.html enquanto cria
+
+P: Preciso de referência de cores?
+R: Veja a seção acima "PALETA CORES" (hex codes exatos)
+
+P: Como faz responsividade?
+R: Leia FIGMA-GUIA-CRIACAO.md seção 7 (Constraints)
+
+P: Demora quanto tempo?
+R: ~60 minutos se seguir o guia
+
+P: E se eu não terminar hoje?
+R: Salva no Figma — você continua de onde parou
+
+─────────────────────────────────────────────────────────────────────────────
+
+🎯 ORDEM DE PRIORIDADE:
+─────────────────────────────────────────────────────────────────────────────
+
+1️⃣  AGORA:      Abra figma-wireframes.html (visualize o resultado final)
+2️⃣  AGORA:      Leia FIGMA-GUIA-CRIACAO.md (entenda o processo)
+3️⃣  PRÓXIMO:    Crie arquivo no Figma (novo Design File)
+4️⃣  PRÓXIMO:    Siga os 7 passos do guia
+5️⃣  DEPOIS:     Compartilhe o link Figma comigo
+
+─────────────────────────────────────────────────────────────────────────────
+
+📚 ARQUIVOS REFERÊNCIA:
+─────────────────────────────────────────────────────────────────────────────
+
+Arquivo               | Uso
+─────────────────────────────────────────────────────────────────────────────
+FIGMA-GUIA-CRIACAO   | Passo-a-passo (LEIA PRIMEIRO!)
+figma-wireframes     | Veja como cada tela deve ficar
+brutalismo-preview   | Veja componentes (cores, buttons, etc)
+brutalismo-premium   | CSS pronto para usar depois no app
+agromacro-logo      | Logo topográfico para importar
+
+─────────────────────────────────────────────────────────────────────────────
+
+Pronto? Vamos lá! 🚀
+
+Abra FIGMA-GUIA-CRIACAO.md agora mesmo!
+
+─────────────────────────────────────────────────────────────────────────────
+AgroMacro — Brutalismo Premium | 2026

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroMacro — Figma Wireframes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="brutalismo-premium.css">
+    <style>
+        body {
+            padding: var(--spacing-2xl);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .wireframes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--spacing-2xl);
+            margin-top: var(--spacing-2xl);
+        }
+        .wireframe {
+            border: 2px solid var(--color-terra-roxa);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--color-dark);
+        }
+        .wireframe-title {
+            background: linear-gradient(135deg, var(--color-terra-roxa) 0%, var(--color-verde-titanio) 100%);
+            color: var(--color-branco-osso);
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .wireframe-content {
+            padding: var(--spacing-lg);
+            font-size: 12px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        .wireframe-section {
+            padding: var(--spacing-md);
+            background: var(--color-mid-dark);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--color-terra-roxa);
+        }
+        .wireframe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .wireframe-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        .wireframe-kpi {
+            background: var(--color-dark);
+            border: 1px solid var(--color-mid);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+        .wireframe-kpi-label {
+            font-size: 10px;
+            color: var(--color-light);
+            margin-bottom: 2px;
+        }
+        .wireframe-kpi-value {
+            font-family: var(--font-mono);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-terra-roxa);
+        }
+        .wireframe-card {
+            background: var(--color-dark);
+            border: 1px solid var(--color-mid);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+        }
+        .wireframe-card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .wireframe-card-title {
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .wireframe-card-badge {
+            background: rgba(139, 69, 19, 0.2);
+            color: var(--color-terra-roxa);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .wireframe-card-subtitle {
+            font-size: 11px;
+            color: var(--color-light);
+        }
+        .wireframe-form-input {
+            background: var(--color-mid-dark);
+            border: 1px solid var(--color-light);
+            border-radius: var(--radius-md);
+            padding: 6px 8px;
+            margin-bottom: var(--spacing-sm);
+            font-size: 11px;
+            width: 100%;
+            color: var(--color-branco-osso);
+        }
+        .wireframe-button {
+            background: var(--color-terra-roxa);
+            color: var(--color-branco-osso);
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 4px;
+            margin-bottom: var(--spacing-sm);
+        }
+        .wireframe-button-secondary {
+            background: var(--color-mid);
+            border: 1px solid var(--color-border);
+        }
+        .wireframe-nav {
+            display: flex;
+            gap: 4px;
+            margin-top: auto;
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-mid);
+        }
+        .wireframe-nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 6px;
+            background: var(--color-mid);
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .wireframe-nav-item.active {
+            background: var(--color-terra-roxa);
+            color: var(--color-branco-osso);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+        .intro {
+            text-align: center;
+            color: var(--color-light);
+            margin-bottom: var(--spacing-2xl);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 AgroMacro — Wireframes Figma</h1>
+    <div class="intro">
+        <p>
+            Abaixo estão os wireframes das 8 telas principais para criar no Figma.
+            Use como referência visual + siga o guia <strong>FIGMA-GUIA-CRIACAO.md</strong>
+        </p>
+    </div>
+
+    <div class="wireframes-grid">
+        <!-- 1. SPLASH SCREEN -->
+        <div class="wireframe">
+            <div class="wireframe-title">1️⃣ Splash Screen</div>
+            <div class="wireframe-content">
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+                    <div style="width: 80px; height: 80px; border: 2px dashed var(--color-terra-roxa); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 24px;">🎯</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 4px;">AgroMacro</div>
+                        <div style="color: var(--color-light); font-size: 12px;">Gestão Pecuária Inteligente</div>
+                    </div>
+                    <div style="width: 100%; height: 4px; background: var(--color-mid); border-radius: 2px; overflow: hidden;">
+                        <div style="width: 60%; height: 100%; background: var(--color-terra-roxa);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. HOME - DASHBOARD -->
+        <div class="wireframe">
+            <div class="wireframe-title">2️⃣ Home - Dashboard</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div>
+                        <div style="font-weight: 600;">Olá, Fazenda</div>
+                        <div style="font-size: 10px; color: var(--color-light);">10/04/2026</div>
+                    </div>
+                    <span>⚙️</span>
+                </div>
+
+                <div>
+                    <div style="font-size: 10px; color: var(--color-light); margin-bottom: 4px; text-transform: uppercase;">KPIs</div>
+                    <div class="wireframe-kpi-grid">
+                        <div class="wireframe-kpi">
+                            <div class="wireframe-kpi-label">GMD</div>
+                            <div class="wireframe-kpi-value">1.245</div>
+                            <div style="font-size: 9px; color: var(--color-light);">kg/dia</div>
+                        </div>
+                        <div class="wireframe-kpi">
+                            <div class="wireframe-kpi-label">Arroba</div>
+                            <div class="wireframe-kpi-value">52.8</div>
+                            <div style="font-size: 9px; color: var(--color-light);">@</div>
+                        </div>
+                        <div class="wireframe-kpi">
+                            <div class="wireframe-kpi-label">Lotação</div>
+                            <div class="wireframe-kpi-value">2.8</div>
+                            <div style="font-size: 9px; color: var(--color-light);">UA/ha</div>
+                        </div>
+                        <div class="wireframe-kpi">
+                            <div class="wireframe-kpi-label">Rebanho</div>
+                            <div class="wireframe-kpi-value">384</div>
+                            <div style="font-size: 9px; color: var(--color-light);">cab</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wireframe-section" style="border-left-color: #DC2626;">
+                    <div style="font-weight: 600; font-size: 11px; margin-bottom: 4px;">⚠️ Alertas</div>
+                    <div style="font-size: 10px;">Estoque baixo • Contas vencidas</div>
+                </div>
+
+                <div style="font-size: 10px; color: var(--color-light);">📍 Previsão | 💰 Cotação</div>
+
+                <div style="display: flex; gap: 4px; margin-top: auto;">
+                    <button class="wireframe-button">+Compra</button>
+                    <button class="wireframe-button">+Venda</button>
+                </div>
+
+                <div class="wireframe-nav">
+                    <div class="wireframe-nav-item active">Home</div>
+                    <div class="wireframe-nav-item">Rebanho</div>
+                    <div class="wireframe-nav-item">Financeiro</div>
+                    <div class="wireframe-nav-item">Ops</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. REBANHO HUB -->
+        <div class="wireframe">
+            <div class="wireframe-title">3️⃣ Rebanho - Hub</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div style="font-weight: 700;">Rebanho</div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">📋</div>
+                        <div style="font-weight: 600;">Lotes</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">🐂</div>
+                        <div style="font-weight: 600;">Cabeças</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">💉</div>
+                        <div style="font-weight: 600;">Manejo</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">📅</div>
+                        <div style="font-weight: 600;">Calendário</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-nav">
+                    <div class="wireframe-nav-item">Home</div>
+                    <div class="wireframe-nav-item active">Rebanho</div>
+                    <div class="wireframe-nav-item">Financeiro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. LOTES LIST -->
+        <div class="wireframe">
+            <div class="wireframe-title">4️⃣ Rebanho - Lotes</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div style="font-weight: 700;">Lotes</div>
+                    <button class="wireframe-button">+Novo</button>
+                </div>
+
+                <div class="wireframe-card">
+                    <div class="wireframe-card-header">
+                        <div class="wireframe-card-title">Lote A1</div>
+                        <div class="wireframe-card-badge">ATIVO</div>
+                    </div>
+                    <div class="wireframe-card-subtitle">24 cabeças • 380kg • 35 dias</div>
+                </div>
+
+                <div class="wireframe-card">
+                    <div class="wireframe-card-header">
+                        <div class="wireframe-card-title">Lote B2</div>
+                        <div class="wireframe-card-badge">ATIVO</div>
+                    </div>
+                    <div class="wireframe-card-subtitle">32 cabeças • 350kg • 28 dias</div>
+                </div>
+
+                <div class="wireframe-card">
+                    <div class="wireframe-card-header">
+                        <div class="wireframe-card-title">Matrizes</div>
+                        <div class="wireframe-card-badge">ATIVO</div>
+                    </div>
+                    <div class="wireframe-card-subtitle">18 cabeças • 480kg • Reprodução</div>
+                </div>
+
+                <div class="wireframe-nav">
+                    <div class="wireframe-nav-item">Home</div>
+                    <div class="wireframe-nav-item active">Rebanho</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. FINANCEIRO HUB -->
+        <div class="wireframe">
+            <div class="wireframe-title">5️⃣ Financeiro - Hub</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div style="font-weight: 700;">Financeiro</div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">💰</div>
+                        <div style="font-weight: 600;">Compra Gado</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">🏪</div>
+                        <div style="font-weight: 600;">Venda Gado</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">📊</div>
+                        <div style="font-weight: 600;">Fluxo Caixa</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">📈</div>
+                        <div style="font-weight: 600;">Balanço (DRE)</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-nav" style="margin-top: auto;">
+                    <div class="wireframe-nav-item">Rebanho</div>
+                    <div class="wireframe-nav-item active">Financeiro</div>
+                    <div class="wireframe-nav-item">Ops</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. COMPRA FORM -->
+        <div class="wireframe">
+            <div class="wireframe-title">6️⃣ Financeiro - Compra Gado</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div style="font-weight: 700;">Compra Gado</div>
+                </div>
+
+                <input type="text" class="wireframe-form-input" placeholder="Data" value="10/04/2026">
+                <input type="text" class="wireframe-form-input" placeholder="Quantidade">
+                <input type="text" class="wireframe-form-input" placeholder="Valor (R$)">
+                <input type="text" class="wireframe-form-input" placeholder="Lote">
+                <input type="text" class="wireframe-form-input" placeholder="Observações" style="resize: vertical; height: 40px;">
+
+                <div>
+                    <button class="wireframe-button">Salvar</button>
+                    <button class="wireframe-button wireframe-button-secondary">Cancelar</button>
+                </div>
+
+                <div style="font-size: 10px; color: var(--color-light); margin-top: 8px;">Transações recentes:</div>
+                <div class="wireframe-card" style="background: var(--color-mid-dark); margin-bottom: 4px;">
+                    <div style="font-size: 10px;">32 cab • R$ 24.000 • 10/04</div>
+                </div>
+
+                <div class="wireframe-nav" style="margin-top: auto;">
+                    <div class="wireframe-nav-item">Home</div>
+                    <div class="wireframe-nav-item">Financeiro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. OPERAÇÕES HUB -->
+        <div class="wireframe">
+            <div class="wireframe-title">7️⃣ Operações - Hub</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div style="font-weight: 700;">Operações</div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">📦</div>
+                        <div style="font-weight: 600;">Estoque</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">🔨</div>
+                        <div style="font-weight: 600;">Obras</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-card" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 121, 107, 0.1) 100%); border-color: var(--color-terra-roxa);">
+                    <div style="text-align: center; padding: 8px 0;">
+                        <div style="font-size: 18px; margin-bottom: 4px;">👥</div>
+                        <div style="font-weight: 600;">Funcionários</div>
+                    </div>
+                </div>
+
+                <div class="wireframe-nav" style="margin-top: auto;">
+                    <div class="wireframe-nav-item">Home</div>
+                    <div class="wireframe-nav-item">Rebanho</div>
+                    <div class="wireframe-nav-item active">Operações</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. CONFIG -->
+        <div class="wireframe">
+            <div class="wireframe-title">8️⃣ Configurações</div>
+            <div class="wireframe-content">
+                <div class="wireframe-header">
+                    <div style="font-weight: 700;">Configurações</div>
+                </div>
+
+                <div class="wireframe-section">
+                    <div style="font-weight: 600; font-size: 11px; margin-bottom: 6px;">Fazenda</div>
+                    <input type="text" class="wireframe-form-input" placeholder="Nome" value="Fazenda XYZ">
+                    <input type="text" class="wireframe-form-input" placeholder="Proprietário">
+                    <input type="text" class="wireframe-form-input" placeholder="Área (ha)">
+                </div>
+
+                <div class="wireframe-section">
+                    <div style="font-weight: 600; font-size: 11px; margin-bottom: 6px;">Dados</div>
+                    <button class="wireframe-button" style="width: 100%; margin-bottom: 4px;">Exportar JSON</button>
+                    <button class="wireframe-button wireframe-button-secondary" style="width: 100%;">Resetar</button>
+                </div>
+
+                <div class="wireframe-section">
+                    <div style="font-weight: 600; font-size: 11px; margin-bottom: 6px;">Perfil</div>
+                    <div style="font-size: 10px;">
+                        <label><input type="radio" name="perfil"> Peão</label><br>
+                        <label><input type="radio" name="perfil" checked> Admin</label><br>
+                        <label><input type="radio" name="perfil"> Dono</label>
+                    </div>
+                </div>
+
+                <div class="wireframe-nav" style="margin-top: auto;">
+                    <div class="wireframe-nav-item">Home</div>
+                    <div class="wireframe-nav-item">Rebanho</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: var(--spacing-2xl); padding: var(--spacing-xl); background: var(--color-dark); border-radius: var(--radius-lg); border: 1px solid var(--color-mid);">
+        <h2 style="margin-bottom: var(--spacing-md);">📋 Próximos Passos</h2>
+        <ol style="color: var(--color-light); line-height: 1.8;">
+            <li><strong>Abra</strong> <a href="FIGMA-GUIA-CRIACAO.md" style="color: var(--color-terra-roxa); text-decoration: none;">FIGMA-GUIA-CRIACAO.md</a> para instruções passo-a-passo</li>
+            <li><strong>Crie</strong> um novo arquivo Figma com nome "AgroMacro — Brutalismo Premium"</li>
+            <li><strong>Setup</strong> Design System (5 min): Cores + Tipografia</li>
+            <li><strong>Crie Components</strong> (15 min): Buttons, Cards, Inputs, Badges</li>
+            <li><strong>Desenhe Telas</strong> (30 min): 8 wireframes acima</li>
+            <li><strong>Prototyping</strong> (10 min): Conecte telas + adicione animações</li>
+            <li><strong>Compartilhe</strong> o link Figma quando terminar!</li>
+        </ol>
+    </div>
+
+    <footer style="margin-top: var(--spacing-2xl); text-align: center; padding-top: var(--spacing-xl); border-top: 1px solid var(--color-mid); color: var(--color-light);">
+        <p>AgroMacro — Brutalismo Premium | Figma Wireframes | 2026</p>
+    </footer>
+</body>
+</html>

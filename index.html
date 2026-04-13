@@ -21,11 +21,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
     <!-- ══ AgroMacro — Campo Vivo v4 ══ -->
-    <link rel="stylesheet" href="styles.css?v=20260407">
+    <link rel="stylesheet" href="styles.css?v=20260413e">
     <!-- ══ AgroMacro — Brutalismo Premium Design System ══ -->
-    <link rel="stylesheet" href="brutalismo-premium.css?v=20260412">
+    <link rel="stylesheet" href="brutalismo-premium.css?v=20260412" media="not all">
     <!-- ══ BRUTALISMO OVERRIDE — força tema escuro industrial independente de data-theme ══ -->
-    <style id="brutalismo-force">
+    <style id="brutalismo-force" media="not all">
         /* Força variáveis ANTES do JS setar data-theme */
         :root { --bg-0: #0F1318; --bg-1: #1A1A1A; --bg-2: #2A2A2A; --bg-3: #3D3D3D; --bg-4: #4A4A4A; --text-0: #FFFEF0; --text-1: #FFFEF0; --text-2: #B8B8B0; --text-3: #7A7A74; --primary: #8B4513; --primary-light: #9B5126; --primary-dark: #6B3410; --primary-surface: rgba(139,69,19,0.15); --primary-glow: rgba(139,69,19,0.30); --secondary: #00796B; --accent: #B45309; --accent-light: #D97706; --green: #00796B; --green-surface: rgba(0,121,107,0.15); --red: #DC2626; --red-surface: rgba(220,38,38,0.15); --border-default: rgba(255,254,240,0.13); --header-bg: rgba(15,19,24,0.96); --nav-bg: rgba(15,19,24,0.98); --card-gradient: linear-gradient(160deg,#1A1A1A,#0F1318); --shadow-sm: 0 2px 8px rgba(0,0,0,0.50); --shadow-md: 0 4px 16px rgba(0,0,0,0.60); }
         /* Sobrescreve QUALQUER tema que o JS definir */
@@ -131,6 +131,168 @@
         .audit-btn-approve{background:#22C55E22;color:#22C55E;}
         .audit-btn-reject{background:#EF444422;color:#EF4444;}
         .audit-btn-ia{background:#3B82F622;color:#3B82F6;}
+        /* Pasto hub cards */
+        .pasto-hub{
+            margin:24px 16px;
+            padding:18px;
+            border-radius:20px;
+            background:var(--bg-1);
+            border:1px solid rgba(22,38,27,0.15);
+            box-shadow:0 15px 35px rgba(0,0,0,0.12);
+        }
+        .pasto-hub-header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:18px;
+        }
+        .pasto-hub-subtitle{
+            font-size:11px;
+            letter-spacing:0.5px;
+            text-transform:uppercase;
+            color:var(--text-2);
+            margin-bottom:4px;
+        }
+        .pasto-hub-title{
+            margin:0;
+            font-size:22px;
+            color:var(--text-0);
+        }
+        .pasto-hub-button{
+            background:var(--primary);
+            color:#fff;
+            border:none;
+            border-radius:999px;
+            padding:10px 18px;
+            font-weight:600;
+            cursor:pointer;
+            transition:transform .2s ease, box-shadow .2s ease;
+        }
+        .pasto-hub-button:hover{
+            transform:translateY(-1px);
+            box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        }
+        .pasto-card-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+            gap:12px;
+        }
+        .pasto-card{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            padding:16px;
+            border-radius:16px;
+            border:1px solid rgba(13,31,23,0.08);
+            background:var(--bg-0);
+            cursor:pointer;
+            transition:border-color .2s ease, transform .2s ease, background .2s ease;
+            text-align:left;
+        }
+        .pasto-card:hover{
+            border-color:var(--primary);
+            transform:translateY(-2px);
+        }
+        .pasto-card.active{
+            border-color:var(--primary);
+            background:rgba(0,121,107,0.07);
+        }
+        .pasto-card-icon{
+            font-size:28px;
+        }
+        .pasto-card-title{
+            margin:0;
+            font-size:15px;
+            font-weight:600;
+            color:var(--text-0);
+        }
+        .pasto-card-sub{
+            margin:0;
+            font-size:12px;
+            color:var(--text-2);
+        }
+        .pasto-panel{
+            margin-top:16px;
+            padding:16px;
+            border:1px dashed rgba(55,65,81,0.25);
+            border-radius:16px;
+            background:linear-gradient(180deg, rgba(0,121,107,0.08), rgba(255,255,255,0.05));
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .pasto-panel-label{
+            margin:0;
+            font-size:10px;
+            letter-spacing:0.3px;
+            text-transform:uppercase;
+            color:var(--text-2);
+        }
+        .pasto-panel h3{
+            margin:0;
+            font-size:18px;
+            color:var(--text-0);
+        }
+        .pasto-panel p{
+            margin:0;
+            color:var(--text-1);
+            font-size:13px;
+            line-height:1.5;
+        }
+        .pasto-panel-apps{
+            list-style:none;
+            margin:0;
+            padding:0;
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            color:var(--text-2);
+            font-size:13px;
+        }
+        .pasto-panel-actions{
+            display:flex;
+            align-items:center;
+            justify-content:flex-start;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+        .pasto-open-btn{
+            border:none;
+            padding:10px 16px;
+            border-radius:12px;
+            background:var(--primary);
+            color:#fff;
+            font-weight:600;
+            cursor:pointer;
+        }
+        .pasto-panel-hint{
+            font-size:12px;
+            color:var(--text-2);
+        }
+        .pasto-apps{
+            margin-top:16px;
+        }
+        .pasto-apps-label{
+            font-size:12px;
+            letter-spacing:0.4px;
+            text-transform:uppercase;
+            color:var(--text-2);
+            margin-bottom:6px;
+        }
+        .pasto-tags{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .pasto-tags span{
+            padding:6px 12px;
+            border-radius:999px;
+            background:rgba(0,121,107,0.08);
+            border:1px solid rgba(0,121,107,0.2);
+            font-size:12px;
+            color:var(--text-0);
+        }
     </style>
 </head>
 
@@ -208,10 +370,13 @@
     <header class="top-header">
         <div class="brand">
             <span class="brand-icon">🐄</span>
-            <span class="brand-name">AgroMacro</span>
+            <div class="brand-copy">
+                <span class="brand-name">AgroMacro</span>
+                <span class="brand-meta">Operacao diaria no celular</span>
+            </div>
         </div>
         <div class="header-actions">
-            <span style="font-size:11px;font-weight:700;color:var(--text-3);padding:0 6px;" id="fazenda-nome-topbar"></span>
+            <span class="header-farm-chip" id="fazenda-nome-topbar"></span>
             <button id="topbar-config-btn" class="header-action-btn gerencia-only" onclick="window.app.navigate('config')" aria-label="Configurações">
                 <span class="material-symbols-outlined" style="font-size:20px">settings</span>
             </button>
@@ -221,23 +386,125 @@
     <main id="app-container">
 
         <!-- ===================== HOME ===================== -->
-        <section id="view-home" class="view active">
-
-            <!-- Hero Greeting -->
-            <div class="hero-greeting">
-                <div class="greeting-text" id="greeting-text">Boa tarde</div>
-                <div class="greeting-sub" id="greeting-date"></div>
-            </div>
-
-            <!-- ══ HOME PEÃO — Ações rápidas de campo ══ -->
-            <div id="home-peao" class="peao-only" style="display:none">
-                <div class="hero-greeting" style="padding-bottom:0;">
-                    <div class="greeting-text" id="peao-greeting-text">Bom dia</div>
-                    <div class="greeting-sub" id="peao-greeting-date"></div>
+        <section id="view-home" class="view active home-view">
+            <div id="home-peao" class="home-layout peao-only" style="display:none">
+                <div class="hero-greeting">
+                    <div class="greeting-text" id="greeting-text">Boa tarde</div>
+                    <div class="greeting-sub" id="greeting-date"></div>
                 </div>
-                
-                <!-- Cards de Ação Rápida — Foco em frequência -->
-                <div class="peao-home-grid" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:80px;">
+
+                <section class="mobile-command-deck" aria-label="Atalhos principais do campo">
+                    <button class="command-card" type="button" onclick="window.app.navigate('pastos')">
+                        <span class="material-symbols-outlined command-card-icon">grass</span>
+                        <span class="command-card-body">
+                            <strong>Pastos</strong>
+                            <small>Talhoes, cercas e rotacao</small>
+                        </span>
+                    </button>
+                    <button class="command-card" type="button" onclick="window.app.navigate('lotes')">
+                        <span class="material-symbols-outlined command-card-icon">pets</span>
+                        <span class="command-card-body">
+                            <strong>Rebanho</strong>
+                            <small>Lotes, peso e movimentacao</small>
+                        </span>
+                    </button>
+                    <button class="command-card" type="button" onclick="window.app.navigate('manejo')">
+                        <span class="material-symbols-outlined command-card-icon">vaccines</span>
+                        <span class="command-card-body">
+                            <strong>Manejo</strong>
+                            <small>Aplicacoes e rotina de campo</small>
+                        </span>
+                    </button>
+                    <button class="command-card" type="button" onclick="window.app.navigate('calendario')">
+                        <span class="material-symbols-outlined command-card-icon">event</span>
+                        <span class="command-card-body">
+                            <strong>Agenda</strong>
+                            <small>Alertas sanitarios e rotina</small>
+                        </span>
+                    </button>
+                </section>
+
+                <div id="pasto-hub" class="pasto-hub">
+                    <div class="pasto-hub-header">
+                        <div>
+                            <p class="pasto-hub-subtitle">Cadastros + Aplicações</p>
+                            <h2 class="pasto-hub-title">Pastos em movimento</h2>
+                        </div>
+                        <button type="button" class="pasto-hub-button" onclick="window.app.navigate('pastos')">
+                            Ver todos os pastos
+                        </button>
+                    </div>
+                    <div class="pasto-card-grid">
+                        <button type="button" class="pasto-card active" data-panel-key="cadastro"
+                            data-panel-route="pastos" aria-selected="true">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">assignment</span></div>
+                            <p class="pasto-card-title">Cadastro completo</p>
+                            <p class="pasto-card-sub">Áreas, solo e talhões</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="aplicacoes"
+                            data-panel-route="manejo">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">vaccines</span></div>
+                            <p class="pasto-card-title">Aplicações</p>
+                            <p class="pasto-card-sub">Dose, defensivo e carência</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="rotacao"
+                            data-panel-route="calendario">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">cycle</span></div>
+                            <p class="pasto-card-title">Rotação inteligente</p>
+                            <p class="pasto-card-sub">Plano de descanso</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="alertas"
+                            data-panel-route="pastos">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">warning</span></div>
+                            <p class="pasto-card-title">Alertas críticos</p>
+                            <p class="pasto-card-sub">Carência e estoque</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="mapa"
+                            data-panel-route="mapa">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">map</span></div>
+                            <p class="pasto-card-title">Mapa e fotos</p>
+                            <p class="pasto-card-sub">Geografia + imagens</p>
+                        </button>
+                    </div>
+                    <div class="pasto-panel">
+                        <div>
+                            <p class="pasto-panel-label">Fluxos ativos</p>
+                            <h3 id="pasto-panel-title">Cadastro completo</h3>
+                            <p id="pasto-panel-description">Construa um cadastro completo do pasto (nome, capacidade,
+                                talhão,
+                                sondagem e círculo de cercas) para governança de rotação.</p>
+                        </div>
+                        <ul id="pasto-panel-apps" class="pasto-panel-apps">
+                            <li>Descreva capins e solos com atributos técnicos.</li>
+                            <li>Associe lotes e talhões para rotacionar automaticamente.</li>
+                            <li>Registre medições, fotos e alertas de baixa cobertura.</li>
+                        </ul>
+                        <div class="pasto-panel-actions">
+                            <button type="button" id="pasto-panel-open" class="pasto-open-btn">
+                                Abrir módulo selecionado
+                            </button>
+                            <span class="pasto-panel-hint">Mantenha o pasto em movimento e visível.</span>
+                        </div>
+                    </div>
+                    <div class="pasto-apps">
+                        <p class="pasto-apps-label">Aplicações rápidas cadastradas</p>
+                        <div class="pasto-tags">
+                            <span>Controle de capim</span>
+                            <span>Ferros e cercas</span>
+                            <span>Rotação dinâmica</span>
+                            <span>Densidade UA/ha</span>
+                            <span>Alertas de carência</span>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="home-section-block">
+                    <div class="section-eyebrow">Execucao do dia</div>
+                    <div class="section-heading-row">
+                        <h2 class="section-heading">Rotina do campo</h2>
+                        <span class="section-caption">Fluxos prioritarios</span>
+                    </div>
+                    <div class="peao-home-grid" style="padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;">
                     <button class="peao-action-card" onclick="window.app.navigate('pastos')" style="grid-column:1/3;">
                         <div class="peao-action-icon">🌿</div>
                         <div class="peao-action-title">Gerenciar Pastos</div>
@@ -268,20 +535,21 @@
                         <div class="peao-action-title">Agenda</div>
                         <div class="peao-action-sub">Do dia</div>
                     </button>
-                </div>
+                    </div>
+                </section>
 
                 <!-- Alertas Críticos para Peão -->
-                <div style="padding:16px;padding-top:0;margin-bottom:60px;">
+                <div class="home-alert-strip home-section-block" style="padding:16px;margin-bottom:0;">
                     <div style="font-weight:700;font-size:13px;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Atenção</div>
                     <div id="peao-alerts-list" style="display:flex;flex-direction:column;gap:10px;"></div>
                 </div>
             </div>
 
             <!-- ══ HOME ADMIN (Gerente) — Layout completo ══ -->
-            <div id="home-admin" class="admin-only gerencia-only space-y-4 p-4">
+            <div id="home-admin" class="admin-only gerencia-only space-y-4 p-4 home-profile dashboard-shell dashboard-shell-admin">
 
                 <!-- Greeting Card -->
-                <div class="relative overflow-hidden rounded-xl p-5"
+                <div class="relative overflow-hidden rounded-xl p-5 spotlight-card"
                     style="background: var(--primary-surface); border: 1.5px solid var(--border-emphasis);">
                     <div class="relative z-10">
                         <h2 class="text-xl font-black" style="color: var(--primary);" id="admin-greeting-text">Bom dia, Produtor!</h2>
@@ -290,9 +558,47 @@
                     <div class="absolute -right-4 -top-4 text-6xl opacity-10" aria-hidden="true">🐄</div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <section class="home-section-block management-quick-actions">
+                    <div class="section-eyebrow">Centro de comando</div>
+                    <div class="section-heading-row">
+                        <h2 class="section-heading">Operacoes principais</h2>
+                        <span class="section-caption">Acesso rapido</span>
+                    </div>
+                    <div class="mobile-command-deck mobile-command-deck-management" aria-label="Atalhos gerenciais">
+                        <button class="command-card" type="button" onclick="window.app.navigate('mapa')">
+                            <span class="material-symbols-outlined command-card-icon">map</span>
+                            <span class="command-card-body">
+                                <strong>Mapa</strong>
+                                <small>Talhoes, cercas e fotos</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('financeiro')">
+                            <span class="material-symbols-outlined command-card-icon">account_balance_wallet</span>
+                            <span class="command-card-body">
+                                <strong>Caixa</strong>
+                                <small>Fluxo, custos e balanco</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('estoque')">
+                            <span class="material-symbols-outlined command-card-icon">inventory_2</span>
+                            <span class="command-card-body">
+                                <strong>Estoque</strong>
+                                <small>Entradas, saidas e insumos</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('manejo')">
+                            <span class="material-symbols-outlined command-card-icon">health_and_safety</span>
+                            <span class="command-card-body">
+                                <strong>Manejo</strong>
+                                <small>Agenda sanitaria e aplicacoes</small>
+                            </span>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-2 gap-3 mobile-overview-grid">
                     <!-- Map Card -->
-                    <div class="relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer"
+                    <div class="relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer feature-media-card"
                         style="background: var(--bg-3); border: 1.5px solid var(--border-default);"
                         onclick="window.app.navigate('mapa')">
                         <div class="absolute inset-0 bg-cover bg-center"
@@ -309,7 +615,7 @@
                     </div>
 
                     <!-- Weather / Climate Card -->
-                    <div class="aspect-[4/3] rounded-xl p-3 flex flex-col justify-between cursor-pointer"
+                    <div class="aspect-[4/3] rounded-xl p-3 flex flex-col justify-between cursor-pointer feature-info-card"
                         style="background: linear-gradient(135deg, rgba(29,78,216,0.10), rgba(0,121,107,0.08)); border: 1.5px solid rgba(29,78,216,0.18);"
                         onclick="window.app.navigate('clima')">
                         <div id="clima-widget" class="clima-widget w-full h-full">Carregando clima...</div>
@@ -317,7 +623,7 @@
                 </div>
 
                 <!-- KPI Dashboard (Will be populated by app.js rendering) -->
-                <section>
+                <section class="dashboard-section">
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3 px-1">Indicadores Chave
                     </h3>
                     <div class="grid grid-cols-2 gap-3" id="kpi-grid">
@@ -326,7 +632,7 @@
                 </section>
 
                 <!-- Menina (Clara AI) Insight Card -->
-                <div class="border-2 rounded-xl p-4 relative overflow-hidden mt-2"
+                <div class="border-2 rounded-xl p-4 relative overflow-hidden mt-2 assistant-brief-card"
                     style="background: var(--primary-surface); border-color: var(--border-emphasis);">
                     <div class="flex gap-4 relative z-10">
                         <div
@@ -404,71 +710,109 @@
             </div>
 
             <!-- ══ HOME DONO — Gestão, controle e estratégia ══ -->
-            <div id="home-dono" class="dono-only" style="display:none;padding:16px;padding-bottom:100px;">
+            <div id="home-dono" class="dono-only home-profile dashboard-shell dashboard-shell-owner" style="display:none;">
                 
                 <!-- Greeting Card -->
-                <div style="background:var(--primary-surface);border:1.5px solid var(--border-emphasis);border-radius:12px;padding:16px;margin-bottom:16px;">
-                    <div style="color:var(--primary);font-weight:700;font-size:16px;" id="dono-greeting-text">Bem-vindo, Proprietário</div>
-                    <div style="color:var(--text-2);font-size:12px;margin-top:4px;" id="dono-greeting-date">Visão Estratégica da Fazenda</div>
+                <div class="owner-greeting-card">
+                    <div class="owner-greeting-title" id="dono-greeting-text">Bem-vindo, Proprietário</div>
+                    <div class="owner-greeting-sub" id="dono-greeting-date">Visão Estratégica da Fazenda</div>
                 </div>
 
-                <!-- Gestão de Pessoas — Rapid Access -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-                    <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;" onclick="window.app.navigate('funcionarios')">
-                        <div style="font-size:28px;margin-bottom:8px;">👥</div>
-                        <div style="font-weight:700;font-size:13px;">Membros</div>
-                        <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Gerenciar equipe</div>
+                <section class="home-section-block management-quick-actions">
+                    <div class="section-eyebrow">Direcao</div>
+                    <div class="section-heading-row">
+                        <h2 class="section-heading">Painel executivo</h2>
+                        <span class="section-caption">Gestao da fazenda</span>
                     </div>
-                    <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;" onclick="window.app.navigate('config')">
-                        <div style="font-size:28px;margin-bottom:8px;">⚙️</div>
-                        <div style="font-weight:700;font-size:13px;">Configurações</div>
-                        <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Perfis e permissões</div>
+                    <div class="mobile-command-deck mobile-command-deck-management" aria-label="Atalhos executivos">
+                        <button class="command-card" type="button" onclick="window.app.navigate('funcionarios')">
+                            <span class="material-symbols-outlined command-card-icon">group</span>
+                            <span class="command-card-body">
+                                <strong>Equipe</strong>
+                                <small>Pessoas, obras e papeis</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('financeiro')">
+                            <span class="material-symbols-outlined command-card-icon">monitoring</span>
+                            <span class="command-card-body">
+                                <strong>Resultado</strong>
+                                <small>Margem, caixa e auditoria</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('config')">
+                            <span class="material-symbols-outlined command-card-icon">settings</span>
+                            <span class="command-card-body">
+                                <strong>Config</strong>
+                                <small>Perfis, fazenda e parametros</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('lotes')">
+                            <span class="material-symbols-outlined command-card-icon">pets</span>
+                            <span class="command-card-body">
+                                <strong>Rebanho</strong>
+                                <small>Lotes e produtividade</small>
+                            </span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Gestão de Pessoas — Rapid Access -->
+                <div class="owner-people-grid">
+                    <div class="owner-mini-card" onclick="window.app.navigate('funcionarios')">
+                        <div class="owner-mini-icon">👥</div>
+                        <div class="owner-mini-title">Membros</div>
+                        <div class="owner-mini-sub">Gerenciar equipe</div>
+                    </div>
+                    <div class="owner-mini-card" onclick="window.app.navigate('config')">
+                        <div class="owner-mini-icon">⚙️</div>
+                        <div class="owner-mini-title">Configurações</div>
+                        <div class="owner-mini-sub">Perfis e permissões</div>
                     </div>
                 </div>
 
                 <!-- Indicadores Estratégicos -->
-                <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
-                    <div style="font-weight:700;font-size:13px;margin-bottom:12px;text-transform:uppercase;color:var(--text-2);letter-spacing:0.5px;">Desempenho</div>
-                    <div id="dono-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="owner-kpi-shell">
+                    <div class="owner-block-label">Desempenho</div>
+                    <div id="dono-kpis" class="owner-kpi-grid">
                         <!-- Populated by app.js -->
                     </div>
                 </div>
 
                 <!-- Financeiro — Visão Executiva -->
-                <div class="gerencia-only" style="background:linear-gradient(135deg,rgba(220,38,38,0.08),rgba(217,119,6,0.08));border:1.5px solid rgba(220,38,38,0.15);border-radius:10px;padding:14px;margin-bottom:16px;cursor:pointer;" onclick="window.app.navigate('financeiro')">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="font-size:28px;">💰</div>
-                        <div style="flex:1;">
-                            <div style="font-weight:700;font-size:13px;">Finanças Consolidadas</div>
-                            <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Receitas, custos e rentabilidade</div>
+                <div class="gerencia-only owner-finance-card" onclick="window.app.navigate('financeiro')">
+                    <div class="owner-finance-row">
+                        <div class="owner-finance-icon">💰</div>
+                        <div class="owner-finance-copy">
+                            <div class="owner-finance-title">Finanças Consolidadas</div>
+                            <div class="owner-finance-sub">Receitas, custos e rentabilidade</div>
                         </div>
-                        <div style="font-size:20px;color:var(--text-2);font-weight:700;">›</div>
+                        <div class="owner-finance-arrow">›</div>
                     </div>
                 </div>
 
                 <!-- Auditoria e Atividades -->
-                <div id="dono-audit-summary" style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
-                    <div style="font-weight:700;font-size:13px;margin-bottom:12px;text-transform:uppercase;color:var(--text-2);letter-spacing:0.5px;">Últimas Atividades</div>
-                    <div id="dono-recent-activities" style="display:flex;flex-direction:column;gap:8px;">
+                <div id="dono-audit-summary" class="owner-audit-summary">
+                    <div class="owner-block-label">Últimas Atividades</div>
+                    <div id="dono-recent-activities" class="owner-recent-activities">
                         <!-- Populated by app.js -->
                     </div>
                 </div>
 
                 <!-- Acesso Rápido para Admin -->
-                <div style="background:var(--primary-surface);border:1.5px solid var(--border-emphasis);border-radius:10px;padding:14px;">
-                    <div style="font-weight:700;font-size:12px;color:var(--primary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Operações Completas</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;">
-                        <button onclick="window.app.navigate('lotes')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Rebanho</button>
-                        <button onclick="window.app.navigate('obras')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Operações</button>
-                        <button onclick="window.app.navigate('estoque')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Insumos</button>
-                        <button onclick="window.app.navigate('manejo')" style="background:var(--primary);color:white;border:none;padding:10px;border-radius:6px;font-weight:600;cursor:pointer;">Manejo</button>
+                <div class="owner-ops-block">
+                    <div class="owner-ops-label">Operações Completas</div>
+                    <div class="owner-ops-grid">
+                        <button class="owner-ops-btn" onclick="window.app.navigate('lotes')">Rebanho</button>
+                        <button class="owner-ops-btn" onclick="window.app.navigate('obras')">Operações</button>
+                        <button class="owner-ops-btn" onclick="window.app.navigate('estoque')">Insumos</button>
+                        <button class="owner-ops-btn" onclick="window.app.navigate('manejo')">Manejo</button>
                     </div>
                 </div>
 
             </div>
 
             <!-- Alerts Section (ambos perfis) -->
-            <div class="alerts-section">
+            <div class="alerts-section home-section-block">
                 <div class="alerts-title">Alertas</div>
                 <div id="alerts-list"></div>
             </div>
@@ -476,13 +820,13 @@
         </section>
 
         <!-- ===================== FINANCEIRO (Stitch Cash Flow) ===================== -->
-        <section id="view-financeiro" class="view hidden gerencia-only">
+        <section id="view-financeiro" class="view hidden module-view gerencia-only">
             <!-- Conteúdo renderizado dinamicamente pelo financeiro.js -->
             <div id="fluxo-content"></div>
         </section>
 
         <!-- ===================== CHAT IA CHEFA (Dona Clara 3D) ===================== -->
-        <section id="view-ia-chefa" class="view hidden flex flex-col h-[100dvh]">
+        <section id="view-ia-chefa" class="view hidden module-view flex flex-col h-[100dvh]">
             <header class="sticky top-0 z-50 backdrop-blur-md border-b p-4"
                 style="background: var(--header-bg); border-color: var(--border-default);">
                 <div class="flex items-center justify-between gap-4">
@@ -533,7 +877,7 @@
         </section>
 
         <!-- ===================== COMPRA DE GADO ===================== -->
-        <section id="view-compra" class="view hidden gerencia-only">
+        <section id="view-compra" class="view hidden module-view gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Compra de Gado</h2>
@@ -607,7 +951,7 @@
         </section>
 
         <!-- ===================== VENDA DE GADO ===================== -->
-        <section id="view-venda" class="view hidden gerencia-only">
+        <section id="view-venda" class="view hidden module-view gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Venda de Gado</h2>
@@ -680,7 +1024,7 @@
         </section>
 
         <!-- ===================== REBANHO ===================== -->
-        <section id="view-rebanho" class="view hidden">
+        <section id="view-rebanho" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Cadastro de Rebanho</h2>
@@ -826,7 +1170,7 @@
         </section>
 
         <!-- ===================== LOTES ===================== -->
-        <section id="view-lotes" class="view hidden">
+        <section id="view-lotes" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Gestão de Lotes</h2>
@@ -929,7 +1273,7 @@
         </section>
 
         <!-- ===================== PASTOS ===================== -->
-        <section id="view-pastos" class="view hidden">
+        <section id="view-pastos" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Cadastro de Pastos</h2>
@@ -989,7 +1333,7 @@
         </section>
 
         <!-- ===================== ESTOQUE ===================== -->
-        <section id="view-estoque" class="view hidden">
+        <section id="view-estoque" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Estoque de Insumos</h2>
@@ -1061,7 +1405,7 @@
         </section>
 
         <!-- ===================== FLUXO DE CAIXA ===================== -->
-        <section id="view-fluxo" class="view hidden gerencia-only">
+        <section id="view-fluxo" class="view hidden module-view gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Fluxo de Caixa</h2>
@@ -1078,7 +1422,7 @@
         </section>
 
         <!-- ===================== MANEJO ===================== -->
-        <section id="view-manejo" class="view hidden">
+        <section id="view-manejo" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Manejo</h2>
@@ -1156,7 +1500,7 @@
         </section>
 
         <!-- ===================== OBRAS ===================== -->
-        <section id="view-rastreabilidade" class="view hidden">
+        <section id="view-rastreabilidade" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Rastreabilidade SISBOV</h2>
@@ -1166,7 +1510,7 @@
             </div>
         </section>
 
-        <section id="view-obras" class="view hidden">
+        <section id="view-obras" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Registrar Obra</h2>
@@ -1224,7 +1568,7 @@
         </section>
 
         <!-- ===================== FUNCIONÁRIOS ===================== -->
-        <section id="view-funcionarios" class="view hidden">
+        <section id="view-funcionarios" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Funcionários</h2>
@@ -1287,7 +1631,7 @@
         </section>
 
         <!-- ===================== BALANÇO / DRE ===================== -->
-        <section id="view-balanco" class="view hidden gerencia-only">
+        <section id="view-balanco" class="view hidden module-view gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Balanço & DRE</h2>
@@ -1302,7 +1646,7 @@
             </div>
         </section>
         <!-- ===================== OPERAÇÕES (HUB) ===================== -->
-        <section id="view-operacoes" class="view hidden">
+        <section id="view-operacoes" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Operações</h2>
@@ -1382,7 +1726,7 @@
         </section>
 
         <!-- ===================== CONFIGURAÇÕES ===================== -->
-        <section id="view-config" class="view hidden">
+        <section id="view-config" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Configurações</h2>
@@ -1618,7 +1962,7 @@
         </section>
 
         <!-- ===================== CALENDÁRIO SANITÁRIO ===================== -->
-        <section id="view-calendario" class="view hidden">
+        <section id="view-calendario" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Calendário Sanitário</h2>
@@ -1634,7 +1978,7 @@
         </section>
 
         <!-- ===================== CONTAS A PAGAR ===================== -->
-        <section id="view-contas" class="view hidden gerencia-only">
+        <section id="view-contas" class="view hidden module-view gerencia-only">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Contas a Pagar</h2>
@@ -1652,7 +1996,7 @@
         <!-- HUBS REMOVIDOS — navegação direta via bottom nav para lotes/fluxo/estoque -->
 
         <!-- ===================== CABEÇAS INDIVIDUAIS ===================== -->
-        <section id="view-cabecas" class="view hidden">
+        <section id="view-cabecas" class="view hidden module-view">
             <div class="view-header">
                 <button class="back-btn" onclick="window.app.navigate('home')">←</button>
                 <h2>Cabeças Individuais</h2>
@@ -1767,7 +2111,7 @@
         </section>
 
         <!-- ===================== MAPA INTERATIVO ===================== -->
-        <section id="view-mapa" class="view hidden">
+        <section id="view-mapa" class="view hidden module-view">
             <div class="mapa-header">
                 <button class="mapa-back-btn" onclick="window.app.navigate('home')">← Voltar</button>
                 <h2 class="mapa-title">🗺️ Mapa da Fazenda</h2>
@@ -1847,7 +2191,7 @@
         </section>
 
         <!-- ══ VIEW: AUDITORIA ══ -->
-        <section id="view-auditoria" class="view hidden gerencia-only" style="overflow-y:auto;padding-bottom:96px;min-height:100vh;background:var(--bg-0);">
+        <section id="view-auditoria" class="view hidden module-view gerencia-only" style="overflow-y:auto;padding-bottom:96px;min-height:100vh;background:var(--bg-0);">
             <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--bg-1);border-bottom:1px solid var(--border-0);">
                 <button onclick="window.app.navigate('financeiro')" style="background:none;border:none;color:var(--text-1);font-size:20px;cursor:pointer;">←</button>
                 <h2 style="margin:0;font-size:18px;color:var(--text-0);flex:1;">🛡 Auditoria Financeira</h2>
@@ -1922,6 +2266,8 @@
     <script src="js/context-builder.js?v=20260411a"></script>
     <script src="js/action-bus.js?v=20260411a"></script>
     <script src="js/agent-orchestrator.js?v=20260411a"></script>
+    <script src="js/leitor-cocho.js?v=20260411a"></script>
+    <script src="js/learning-store.js?v=20260411a"></script>
     <script src="js/rebanho.js?v=20260211r"></script>
     <script src="js/pastos.js?v=20260211r"></script>
     <script src="js/lotes.js?v=20260211r"></script>
@@ -1952,7 +2298,7 @@
     <script src="js/ia-consultor.js?v=20260220a"></script>
     <script src="js/ux-helpers.js?v=20260219a"></script>
     <script src="js/resultados.js?v=20260219a"></script>
-    <script src="js/firebase-sync.js?v=20260219a"></script>
+    <script src="js/firebase-sync.js?v=20260413b"></script>
     <script src="js/ia-chefa.js?v=20260301a"></script>
 
     <!-- Arquitetura Refatorada -->
@@ -1970,7 +2316,93 @@
     <script src="refatoracao/architecture/index.js"></script>
     <script src="js/ia-auditoria.js?v=20260409a"></script>
 
-    <script src="app.js?v=20260220b"></script>
+    <script src="app.js?v=20260413c"></script>
+    <script>
+        (function () {
+            var panelInfo = {
+                cadastro: {
+                    title: 'Cadastro completo',
+                    description: 'Construa um cadastro detalhado com nome, capacidade, talhão e fotos.',
+                    apps: [
+                        'Capins e solos com atributos técnicos',
+                        'Ligações entre lotes e pastos',
+                        'Fotos, sondagens e alertas em um só lugar'
+                    ],
+                    route: 'pastos'
+                },
+                aplicacoes: {
+                    title: 'Aplicações registradas',
+                    description: 'Aplique defensivos, rações e adubos com cálculo automático de carência.',
+                    apps: [
+                        'Aplicações por lote com dose recomendada',
+                        'Bloqueio automático de carência',
+                        'Baixa instantânea de estoque'
+                    ],
+                    route: 'manejo'
+                },
+                rotacao: {
+                    title: 'Rotação inteligente',
+                    description: 'Mapa de descanso e alertas de próximos piquetes para o rebanho.',
+                    apps: [
+                        'Calendário de rotação com lembretes',
+                        'Indicador de capacidade por dia',
+                        'Anexos de pastoreio e tempo de descanso'
+                    ],
+                    route: 'calendario'
+                },
+                alertas: {
+                    title: 'Alertas críticos',
+                    description: 'Monitore carência, Estoque ruim e perda de cobertura com prioridades.',
+                    apps: [
+                        'Badge com contagem de carência',
+                        'Alertas de estoque mínimo',
+                        'Notificações push (future)'
+                    ],
+                    route: 'pastos'
+                },
+                mapa: {
+                    title: 'Mapa & fotos',
+                    description: 'Abre a tela de mapa para ver limites, cercas e imagens aéreas.',
+                    apps: [
+                        'Visualização de talhões',
+                        'Camadas de sensores e fotos',
+                        'Marcações para campo e GPS'
+                    ],
+                    route: 'mapa'
+                }
+            };
+            var cards = document.querySelectorAll('.pasto-card');
+            var titleEl = document.getElementById('pasto-panel-title');
+            var descEl = document.getElementById('pasto-panel-description');
+            var appsEl = document.getElementById('pasto-panel-apps');
+            var openBtn = document.getElementById('pasto-panel-open');
+            if (!cards.length || !titleEl || !descEl || !appsEl || !openBtn) return;
+            function setPanel(key, card) {
+                var info = panelInfo[key] || panelInfo.cadastro;
+                titleEl.textContent = info.title;
+                descEl.textContent = info.description;
+                appsEl.innerHTML = info.apps.map(function (item) {
+                    return '<li>' + item + '</li>';
+                }).join('');
+                cards.forEach(function (node) {
+                    node.classList.toggle('active', node === card);
+                });
+                openBtn.onclick = function () {
+                    var route = info.route || (card && card.dataset.panelRoute);
+                    if (route && window.app && window.app.navigate) {
+                        window.app.navigate(route);
+                    }
+                };
+            }
+            cards.forEach(function (card) {
+                card.addEventListener('click', function () {
+                    var key = card.dataset.panelKey || 'cadastro';
+                    setPanel(key, card);
+                });
+            });
+            setPanel(cards[0].dataset.panelKey || 'cadastro', cards[0]);
+        })();
+    </script>
 
     <!-- Theme & Greeting Init -->
     <script>
@@ -2055,6 +2487,12 @@
             <div class="ia-input-bar">
                 <button id="ia-mic-btn" class="ia-mic-btn" onclick="window.iaConsultor._toggleVoz()"
                     title="Falar por voz">🎙️</button>
+                <button id="ia-tts-btn" class="ia-tts-btn" onclick="window.iaConsultor._toggleTTS()"
+                    title="Ouvir respostas (TTS)">🔇</button>
+                <button id="ia-voice-loop-btn" class="ia-voice-loop-btn" onclick="window.iaConsultor._toggleModoVozContinuo()"
+                    title="Modo voz contínuo (fala→responde→escuta)">🔄</button>
+                <button id="ia-cocho-btn" class="ia-cocho-btn" onclick="window.leitorCocho.capturarFoto()"
+                    title="Analisar cocho com câmera">📸</button>
                 <input type="text" id="ia-input" class="ia-input" placeholder="Fale ou digite..." autocomplete="off">
                 <button class="ia-send-btn" onclick="window.iaConsultor._enviarDoInput()">➤</button>
             </div>

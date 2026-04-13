@@ -378,6 +378,8 @@ window.firebaseSync = {
                 self.unsubscribe = null;
             }
             localStorage.removeItem(self.SYNC_KEY);
+            localStorage.removeItem('agromacro_user_perfil');
+            localStorage.removeItem('agromacro_perfil_override');
             self._updateLoginUI(false);
             self._showLogin();
         });

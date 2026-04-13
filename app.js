@@ -61,7 +61,7 @@ window.app = {
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'toast-notification';
-            toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:90%;text-align:center;animation:toast-in 0.3s var(--ease-out) forwards;';
+            toast.style.cssText = 'position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:9999;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:90%;text-align:center;animation:toast-in 0.3s var(--ease-out) forwards;';
             document.body.appendChild(toast);
         }
         var bgColor = type === 'error' ? '#D32F2F' : type === 'warning' ? '#FF8F00' : '#2E7D32';
@@ -117,7 +117,7 @@ window.app = {
         if (this._modulesInitialized) return;
         this._modulesInitialized = true;
         [
-            'contextBuilder', 'actionBus', 'agentOrchestrator',
+            'contextBuilder', 'actionBus', 'agentOrchestrator', 'leitorCocho', 'learningStore',
             'rebanho', 'pastos', 'lotes', 'financeiro', 'estoque', 'manejo', 'obras',
             'funcionarios', 'rebanhoOps', 'pastoMgmt', 'clima', 'nutricao',
             'nutricaoIA', 'zooIndices', 'formulacaoRacao', 'balanca', 'safebeef',
@@ -777,6 +777,8 @@ window.app = {
         var perfilNormalizado = this.normalizePerfil(perfil);
         try {
             localStorage.setItem(this.PERFIL_KEY, perfilNormalizado);
+            localStorage.setItem('agromacro_perfil_override', '1');
+            localStorage.setItem('agromacro_user_perfil', perfilNormalizado);
         } catch (e) { /* ignore */ }
         this.applyPerfil();
         this.navigate('home');
@@ -792,14 +794,31 @@ window.app = {
         var body = document.body;
         body.classList.remove('perfil-gerencia', 'perfil-campo', 'perfil-peao', 'perfil-admin', 'perfil-dono');
 
+        var perfilLocal = this.getPerfil();
+        var manualOverride = false;
+        try {
+            manualOverride = localStorage.getItem('agromacro_perfil_override') === '1';
+        } catch (e) { /* ignore */ }
+
+        if (manualOverride) {
+            this._enforceProfile(perfilLocal);
+            return;
+        }
+
         // Check Firebase profile first
-        var perfil = 'admin';
+        var perfil = perfilLocal;
         if (window.firebaseSync && window.firebaseSync.user) {
             perfil = this.normalizePerfil(window.firebaseSync.getUserPerfil());
 
             // Load async to update if needed
             var self = this;
             window.firebaseSync.loadUserPerfil(function (asyncPerfil) {
+                var stillManualOverride = false;
+                try {
+                    stillManualOverride = localStorage.getItem('agromacro_perfil_override') === '1';
+                } catch (e) { /* ignore */ }
+                if (stillManualOverride) return;
+
                 var perfilAsync = self.normalizePerfil(asyncPerfil);
                 if (perfilAsync !== perfil) {
                     self._enforceProfile(perfilAsync);
@@ -829,26 +848,27 @@ window.app = {
         var homePeao = document.getElementById('home-peao');
         var homeAdmin = document.getElementById('home-admin');
         var homeDono = document.getElementById('home-dono');
+        var gerenciaOnlyEls = document.querySelectorAll('.gerencia-only');
 
         // Hide all homes first
         if (homePeao) homePeao.style.display = 'none';
         if (homeAdmin) homeAdmin.style.display = 'none';
         if (homeDono) homeDono.style.display = 'none';
+        gerenciaOnlyEls.forEach(function (el) {
+            el.style.display = 'none';
+        });
 
         // Show the correct home based on perfil
         if (perfil === 'peao') {
-            if (homePeao) homePeao.style.display = 'block';
-            // Para peões mantemos os cards visíveis, o restante segue o layout do home peão.
+            if (homePeao) homePeao.style.display = 'grid';
         } else if (perfil === 'admin') {
-            if (homeAdmin) homeAdmin.style.display = 'block';
-            // Show all elements for admin
-            document.querySelectorAll('.gerencia-only').forEach(function (el) {
+            if (homeAdmin) homeAdmin.style.display = 'grid';
+            gerenciaOnlyEls.forEach(function (el) {
                 el.style.display = '';
             });
         } else if (perfil === 'dono') {
-            if (homeDono) homeDono.style.display = 'block';
-            // Show all elements for dono (total control)
-            document.querySelectorAll('.gerencia-only').forEach(function (el) {
+            if (homeDono) homeDono.style.display = 'grid';
+            gerenciaOnlyEls.forEach(function (el) {
                 el.style.display = '';
             });
         }
