@@ -225,6 +225,8 @@ window.financeiro = {
             lote = desc || ('Compra ' + (data || new Date().toISOString().split('T')[0]));
         }
 
+        var semPastoAlocado = !pasto;
+
         var payment = this.getPaymentBreakdown('compra', valor);
         var custoCabeca = qty > 0 ? valor / qty : 0;
         var arrobasPorCabeca = peso > 0 ? peso / 30 : 0;
@@ -241,6 +243,7 @@ window.financeiro = {
             fornecedor: fornecedor,
             lote: lote,
             pasto: pasto,
+            pastoPendente: semPastoAlocado,
             custoCabeca: custoCabeca,
             custoArroba: custoArroba,
             formaPagamento: payment.mode,
@@ -294,6 +297,7 @@ window.financeiro = {
                 qtdAnimais: (loteExistente && loteExistente.qtdAnimais ? loteExistente.qtdAnimais : 0) + qty,
                 pesoMedio: peso || (loteExistente ? loteExistente.pesoMedio : 0),
                 pasto: pasto || (loteExistente ? loteExistente.pasto : ''),
+                pastoPendente: semPastoAlocado && !(loteExistente && loteExistente.pasto),
                 status: 'ATIVO',
                 dataEntrada: loteExistente ? loteExistente.dataEntrada : compraEvent.date,
                 salMineral: loteExistente ? loteExistente.salMineral : 0,
@@ -307,6 +311,9 @@ window.financeiro = {
         }
 
         window.app.showToast('Compra registrada em Gado e Financeiro.');
+        if (semPastoAlocado) {
+            window.app.showToast('Lembrete: gado comprado sem pasto alocado. Defina o pasto em Lotes.', 'warning');
+        }
         if (this.el('form-compra')) this.el('form-compra').reset();
         this.ensureDefaultDates();
         this.togglePrazoFields('compra');
@@ -481,6 +488,7 @@ window.financeiro = {
             base.counterpart = ev.fornecedor || 'Sem fornecedor';
             base.title = 'Compra de Gado';
             base.subtitle = ev.desc || ev.nome || ((ev.qty || ev.cabecas || 0) + ' cabecas');
+            if (!base.pasto) base.subtitle += ' - sem pasto alocado';
             base.searchText = [base.title, base.counterpart, base.lote, base.pasto, ev.desc, ev.nome].join(' ').toLowerCase();
             return base;
         }

@@ -527,6 +527,25 @@ window.app = {
         }).length;
         if (semLote > 0) alerts.push({ icon: '🐄', msg: semLote + ' animais sem lote atribuído', type: 'warning' });
 
+        // ══ 1b. Lotes ativos sem pasto alocado ══
+        var lotesAtivosMap = {};
+        events.forEach(function (ev) {
+            if (ev.type === 'LOTE') {
+                lotesAtivosMap[ev.nome] = ev;
+            }
+        });
+        var lotesSemPasto = 0;
+        for (var loteNome in lotesAtivosMap) {
+            if (!lotesAtivosMap.hasOwnProperty(loteNome)) continue;
+            var loteAtual = lotesAtivosMap[loteNome];
+            if (loteAtual && loteAtual.status === 'ATIVO' && !loteAtual.pasto) {
+                lotesSemPasto++;
+            }
+        }
+        if (lotesSemPasto > 0) {
+            alerts.push({ icon: '📍', msg: lotesSemPasto + ' lote(s) ativo(s) sem pasto alocado', type: 'warning' });
+        }
+
         // ══ 2. Pastos em descanso ══
         var descanso = events.filter(function (ev) {
             return ev.type === 'PASTO' && ev.statusPasto === 'descanso';
