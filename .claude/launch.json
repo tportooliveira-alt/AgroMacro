@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "AgroMacro Novo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "C:/Users/Priscila/AgroMacro/agromacro-novo"],
+      "port": 5173
+    },
+    {
       "name": "Firebase Hosting",
       "runtimeExecutable": "firebase",
       "runtimeArgs": ["serve", "--only", "hosting"],
