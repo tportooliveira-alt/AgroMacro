@@ -9,4 +9,8 @@ export const STORAGE_KEYS = {
   pastos: 'agromacro:pastos',
   acoesPasto: 'agromacro:pastos:acoes',
   pesagens: 'agromacro:pesagens',
+  comprasGado: 'agromacro:compras-gado',
+  comprasGadoQueue: 'agromacro:compras-gado:queue',
+  obras: 'agromacro:obras',
+  obrasQueue: 'agromacro:obras:queue',
 } as const
