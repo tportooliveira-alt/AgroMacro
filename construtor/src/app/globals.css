@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --dourado: #f0a830;
+  --dourado-deep: #d48a1f;
+  --azul: #1b3a5c;
+  --azul-light: #2d5a8c;
+
+  --fg-primary: #1a1a1a;
+  --fg-secondary: #666;
+  --bg-light: #f9f9f9;
+  --bg-white: #ffffff;
+
+  --duration: 0.25s;
+  --easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  @apply transition-colors duration-200 ease-out;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-gray-900;
+}
+
+/* Glassmorphism */
+.glass {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 rounded-lg;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-dourado via-azul to-dourado bg-clip-text text-transparent;
+}
+
+/* Aurora animation */
+.aurora {
+  @apply animate-aurora;
+}
+
+/* Reveal animation */
+.reveal {
+  @apply opacity-0;
+  animation: revealIn 0.6s var(--easing) forwards;
+}
+
+@keyframes revealIn {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
