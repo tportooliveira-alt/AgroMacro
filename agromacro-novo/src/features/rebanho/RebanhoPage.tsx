@@ -45,7 +45,11 @@ const categoriaOptions = [
 
 const TIMELINE_PAGE_SIZE = 10
 
-export function RebanhoPage() {
+interface RebanhoPageProps {
+  onOpenCompraGado?: () => void
+}
+
+export function RebanhoPage({ onOpenCompraGado }: RebanhoPageProps) {
   const {
     lotes,
     movimentacoes,
@@ -202,6 +206,9 @@ export function RebanhoPage() {
         <p className="eyebrow">Rebanho</p>
         <h1>Lotes</h1>
         <p className="subtitle">Gestao de lotes com sincronizacao online e fallback offline minimo.</p>
+        <button type="button" className="mini-btn" onClick={onOpenCompraGado}>
+          🐂 Registrar compra de gado
+        </button>
       </header>
 
       {alertas.length > 0 && (
