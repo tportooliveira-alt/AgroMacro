@@ -8,8 +8,18 @@ import { OperacoesPage } from './features/operacoes/OperacoesPage'
 import { FuncionariosPage } from './features/operacoes/FuncionariosPage'
 import { RebanhoPage } from './features/rebanho/RebanhoPage'
 import { PastosPage } from './features/pastos/PastosPage'
+import { CompraGadoPage } from './features/compraGado/CompraGadoPage'
+import { ObrasPage } from './features/obras/ObrasPage'
 
-type AppView = 'dashboard' | 'pastos' | 'rebanho' | 'financeiro' | 'operacoes' | 'funcionarios'
+type AppView =
+  | 'dashboard'
+  | 'pastos'
+  | 'rebanho'
+  | 'financeiro'
+  | 'operacoes'
+  | 'funcionarios'
+  | 'compra-gado'
+  | 'obras'
 
 const navItems: Array<{ id: AppView; label: string; icon: string }> = [
   { id: 'dashboard', label: 'Inicio', icon: '🏠' },
@@ -33,7 +43,15 @@ function App() {
     }
 
     if (view === 'rebanho') {
-      return <RebanhoPage />
+      return <RebanhoPage onOpenCompraGado={() => setView('compra-gado')} />
+    }
+
+    if (view === 'compra-gado') {
+      return <CompraGadoPage />
+    }
+
+    if (view === 'obras') {
+      return <ObrasPage />
     }
 
     if (view === 'financeiro') {
@@ -44,7 +62,12 @@ function App() {
       return <FuncionariosPage />
     }
 
-    return <OperacoesPage onOpenFuncionarios={() => setView('funcionarios')} />
+    return (
+      <OperacoesPage
+        onOpenFuncionarios={() => setView('funcionarios')}
+        onOpenObras={() => setView('obras')}
+      />
+    )
   }, [view])
 
   if (loading) {
@@ -78,9 +101,14 @@ function App() {
           <strong>AgroMacro Novo</strong>
           <div className="top-actions">
             <span className="user-chip">{user.email}</span>
-            {view === 'funcionarios' ? (
+            {view === 'funcionarios' || view === 'obras' ? (
               <button type="button" className="mini-btn" onClick={() => setView('operacoes')}>
                 Voltar para Operacoes
+              </button>
+            ) : null}
+            {view === 'compra-gado' ? (
+              <button type="button" className="mini-btn" onClick={() => setView('rebanho')}>
+                Voltar para Rebanho
               </button>
             ) : null}
             <button

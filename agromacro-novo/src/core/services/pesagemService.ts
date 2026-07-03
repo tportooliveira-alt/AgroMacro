@@ -120,13 +120,6 @@ export const pesagemService = {
     )
     const gmd = (ultima.pesoMedio - penultima.pesoMedio) / diasEntreUltimas
 
-    const diasTotais = Math.max(
-      1,
-      Math.round(
-        (new Date(ultima.data).getTime() - new Date(primeira.data).getTime()) /
-          86_400_000,
-      ),
-    )
     const ganhoTotal = ultima.pesoMedio - primeira.pesoMedio
 
     return {

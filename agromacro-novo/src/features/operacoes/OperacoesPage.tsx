@@ -4,9 +4,10 @@ import { useOnlineFirst } from '../../core/hooks/useOnlineFirst'
 
 interface OperacoesPageProps {
   onOpenFuncionarios?: () => void
+  onOpenObras?: () => void
 }
 
-export function OperacoesPage({ onOpenFuncionarios }: OperacoesPageProps) {
+export function OperacoesPage({ onOpenFuncionarios, onOpenObras }: OperacoesPageProps) {
   const { operacoes, isOnline, syncing, pendentes, addOperacao, manualSync } = useOnlineFirst()
   const [nome, setNome] = useState('')
   const [valor, setValor] = useState('')
@@ -118,6 +119,14 @@ export function OperacoesPage({ onOpenFuncionarios }: OperacoesPageProps) {
         <p className="empty">Gerencie equipe e pagamentos no modulo de funcionarios.</p>
         <button type="button" className="submit-btn" onClick={onOpenFuncionarios}>
           Ir para Funcionarios
+        </button>
+      </section>
+
+      <section className="card small">
+        <h2>Obras e melhorias</h2>
+        <p className="empty">Planeje e acompanhe cercas, currais, aguadas e infraestrutura.</p>
+        <button type="button" className="submit-btn" onClick={onOpenObras}>
+          Ir para Obras
         </button>
       </section>
     </main>
