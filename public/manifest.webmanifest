@@ -1,0 +1,9 @@
+{
+  "name": "AgroMacro - Pecuaria de Corte",
+  "short_name": "AgroMacro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#1f3d2b",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
