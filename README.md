@@ -45,14 +45,6 @@ src/
 docs/          guia tecnico de pecuaria de corte e pesquisas de pastagem (referencia de dominio)
 ```
 
-## Legado
-
-A pasta `_legado/` guarda as quatro implementacoes anteriores (app vanilla com IA/blockchain/mascote,
-`new-app`, `refatoracao`, `agromacro-novo`), kits de Figma, testes em Python e documentos de sprint.
-Nada ali e carregado pelo app novo. Quando nao precisar mais consultar, apague de vez:
-
-```bash
-git rm -r _legado && git commit -m "chore: remover legado"
 ## Proximos passos sugeridos
 
 1. Sincronizacao multi-aparelho (Firebase Auth + Firestore) por cima de `src/data/db.ts`.
