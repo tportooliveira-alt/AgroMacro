@@ -1,19 +1,17 @@
 node_modules/
+dist/
+*.log
 .DS_Store
 Thumbs.db
-*.log
 .vscode/
-.backup-*/
-.firebase/
+.idea/
 
-# Variáveis de ambiente — NUNCA versionar
+# Variaveis de ambiente - nunca versionar
 .env
 .env.local
 .env.*.local
-*.local
 
-# Firebase debug logs
+# Firebase
+.firebase/
 firebase-debug.log
-firestore-debug.log
-database-debug.log
-ui-debug.log
+*.tsbuildinfo

@@ -1,0 +1,2497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroMacro Premium</title>
+
+    <!-- ══ Google Fonts — Inter (Campo Vivo Design System) ══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+
+    <!-- ══ Tailwind CSS (utilitários) + Chart.js ══ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+    <!-- ══ AgroMacro — Campo Vivo v4 ══ -->
+    <link rel="stylesheet" href="styles.css?v=20260414a">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Leaflet.js — Mapa Interativo -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <!-- ══ Tailwind config — Campo Vivo palette ══ -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#00796B',
+                        accent:  '#D97706',
+                        /* dark-X → Campo Vivo (compat seções de gerência) */
+                        dark: {
+                            900: '#F4F7F5',
+                            800: '#FFFFFF',
+                            700: '#EEF2EF',
+                            600: '#DDE6E0',
+                        },
+                        /* slate-X → legível no fundo claro (compat text-slate-xxx) */
+                        slate: {
+                            100: '#0D1F17',
+                            200: '#1A3327',
+                            300: '#2D5244',
+                            400: '#4A6A58',
+                            500: '#89A897',
+                            600: '#89A897',
+                            700: '#A8C4B4',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Flash-of-unstyled-content prevention — tokens iniciais */
+        :root {
+            --bg-0: #F4F7F5;
+            --bg-1: #FFFFFF;
+            --bg-3: #EEF2EF;
+            --text-0: #0D1F17;
+            --text-1: #1A3327;
+            --text-2: #4A6A58;
+            --text-3: #89A897;
+            --primary: #00796B;
+            --primary-surface: rgba(0,121,107,0.09);
+            --border: rgba(13,31,23,0.13);
+            /* back-compat aliases */
+            --accent-green: #26A69A;
+            --accent-red:   #DC2626;
+        }
+        html, body {
+            background-color: var(--bg-0);
+            color: var(--text-0);
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0; padding: 0;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            transition: font-variation-settings 0.2s ease;
+        }
+        .audit-kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+        .audit-kpi-card{background:var(--bg-1);border-radius:12px;padding:12px;text-align:center;}
+        .audit-kpi-label{font-size:11px;color:var(--text-2);margin-bottom:4px;}
+        .audit-kpi-value{font-size:18px;font-weight:700;}
+        .audit-status-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px;}
+        .audit-card{background:var(--bg-1);border-radius:12px;padding:16px;margin-bottom:12px;}
+        .audit-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+        .audit-badge{color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;}
+        .audit-card-date{font-size:12px;color:var(--text-2);}
+        .audit-card-status{font-size:12px;margin-left:auto;}
+        .audit-card-indicator{font-size:14px;font-weight:600;color:var(--text-0);margin-bottom:4px;}
+        .audit-card-desc{font-size:13px;color:var(--text-1);margin-bottom:8px;line-height:1.4;}
+        .audit-cot{font-size:12px;color:var(--text-2);margin-bottom:8px;}
+        .audit-cot summary{cursor:pointer;font-weight:600;color:var(--text-1);}
+        .audit-cot-steps{margin:8px 0;padding-left:20px;}
+        .audit-cot-steps li{margin-bottom:4px;}
+        .audit-cot-rec{margin-top:8px;padding:8px;background:var(--bg-0);border-radius:8px;font-size:12px;}
+        .audit-card-actions{display:flex;gap:8px;flex-wrap:wrap;}
+        .audit-btn{border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;}
+        .audit-btn-approve{background:#22C55E22;color:#22C55E;}
+        .audit-btn-reject{background:#EF444422;color:#EF4444;}
+        .audit-btn-ia{background:#3B82F622;color:#3B82F6;}
+        /* Pasto hub cards */
+        .pasto-hub{
+            margin:24px 16px;
+            padding:18px;
+            border-radius:20px;
+            background:var(--bg-1);
+            border:1px solid rgba(22,38,27,0.15);
+            box-shadow:0 15px 35px rgba(0,0,0,0.12);
+        }
+        .pasto-hub-header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:18px;
+        }
+        .pasto-hub-subtitle{
+            font-size:11px;
+            letter-spacing:0.5px;
+            text-transform:uppercase;
+            color:var(--text-2);
+            margin-bottom:4px;
+        }
+        .pasto-hub-title{
+            margin:0;
+            font-size:22px;
+            color:var(--text-0);
+        }
+        .pasto-hub-button{
+            background:var(--primary);
+            color:#fff;
+            border:none;
+            border-radius:999px;
+            padding:10px 18px;
+            font-weight:600;
+            cursor:pointer;
+            transition:transform .2s ease, box-shadow .2s ease;
+        }
+        .pasto-hub-button:hover{
+            transform:translateY(-1px);
+            box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        }
+        .pasto-card-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+            gap:12px;
+        }
+        .pasto-card{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            padding:16px;
+            border-radius:16px;
+            border:1px solid rgba(13,31,23,0.08);
+            background:var(--bg-0);
+            cursor:pointer;
+            transition:border-color .2s ease, transform .2s ease, background .2s ease;
+            text-align:left;
+        }
+        .pasto-card:hover{
+            border-color:var(--primary);
+            transform:translateY(-2px);
+        }
+        .pasto-card.active{
+            border-color:var(--primary);
+            background:rgba(0,121,107,0.07);
+        }
+        .pasto-card-icon{
+            font-size:28px;
+        }
+        .pasto-card-title{
+            margin:0;
+            font-size:15px;
+            font-weight:600;
+            color:var(--text-0);
+        }
+        .pasto-card-sub{
+            margin:0;
+            font-size:12px;
+            color:var(--text-2);
+        }
+        .pasto-panel{
+            margin-top:16px;
+            padding:16px;
+            border:1px dashed rgba(55,65,81,0.25);
+            border-radius:16px;
+            background:linear-gradient(180deg, rgba(0,121,107,0.08), rgba(255,255,255,0.05));
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .pasto-panel-label{
+            margin:0;
+            font-size:10px;
+            letter-spacing:0.3px;
+            text-transform:uppercase;
+            color:var(--text-2);
+        }
+        .pasto-panel h3{
+            margin:0;
+            font-size:18px;
+            color:var(--text-0);
+        }
+        .pasto-panel p{
+            margin:0;
+            color:var(--text-1);
+            font-size:13px;
+            line-height:1.5;
+        }
+        .pasto-panel-apps{
+            list-style:none;
+            margin:0;
+            padding:0;
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            color:var(--text-2);
+            font-size:13px;
+        }
+        .pasto-panel-actions{
+            display:flex;
+            align-items:center;
+            justify-content:flex-start;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+        .pasto-open-btn{
+            border:none;
+            padding:10px 16px;
+            border-radius:12px;
+            background:var(--primary);
+            color:#fff;
+            font-weight:600;
+            cursor:pointer;
+        }
+        .pasto-panel-hint{
+            font-size:12px;
+            color:var(--text-2);
+        }
+        .pasto-apps{
+            margin-top:16px;
+        }
+        .pasto-apps-label{
+            font-size:12px;
+            letter-spacing:0.4px;
+            text-transform:uppercase;
+            color:var(--text-2);
+            margin-bottom:6px;
+        }
+        .pasto-tags{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .pasto-tags span{
+            padding:6px 12px;
+            border-radius:999px;
+            background:rgba(0,121,107,0.08);
+            border:1px solid rgba(0,121,107,0.2);
+            font-size:12px;
+            color:var(--text-0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===================== LOGIN SCREEN ===================== -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-brand">
+            <svg width="72" height="72" viewBox="0 0 100 100">
+                <path
+                    d="M15 75 Q15 45 35 35 Q45 30 55 35 Q65 40 68 50 L85 45 Q88 42 90 45 L88 50 Q85 52 82 50 L70 54 Q72 62 68 70 L72 85 L65 85 L62 72 Q55 78 45 78 Q38 78 32 72 L30 85 L23 85 L27 70 Q22 62 22 55"
+                    fill="#2DD4BF" />
+                <circle cx="40" cy="42" r="3" fill="#0F1318" />
+            </svg>
+            <h1>AgroMacro</h1>
+            <p>Gestão Pecuária Inteligente</p>
+        </div>
+        <div class="login-card">
+            <div id="login-error" class="login-error"></div>
+
+            <!-- Google Login -->
+            <button type="button" class="login-btn-google" onclick="window.firebaseSync.loginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Entrar com Google
+            </button>
+
+            <div class="login-divider">ou</div>
+
+            <!-- Email/Password Form -->
+            <div id="login-form-fields">
+                <div id="login-nome-group" class="form-group" style="display:none;">
+                    <label>Nome Completo</label>
+                    <input type="text" id="login-nome" placeholder="Seu nome">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="login-senha" placeholder="••••••••" minlength="6">
+                </div>
+                <button type="button" id="login-submit-btn" class="login-btn-submit"
+                    onclick="window.firebaseSync.loginEmail()">
+                    Entrar
+                </button>
+            </div>
+
+            <div class="login-toggle">
+                <span id="login-toggle-text">Não tem conta?</span>
+                <a id="login-toggle-link" onclick="window.firebaseSync.toggleLoginMode()">Criar conta</a>
+            </div>
+        </div>
+        <div class="login-skip">
+            <a onclick="window.firebaseSync.skipLogin()">Usar offline sem login</a>
+        </div>
+    </div>
+
+    <!-- ===================== FAZENDA SELECTION ===================== -->
+    <div id="fazenda-select-screen" class="fazenda-select-screen hidden">
+        <div class="login-brand">
+            <svg width="56" height="56" viewBox="0 0 100 100">
+                <path
+                    d="M15 75 Q15 45 35 35 Q45 30 55 35 Q65 40 68 50 L85 45 Q88 42 90 45 L88 50 Q85 52 82 50 L70 54 Q72 62 68 70 L72 85 L65 85 L62 72 Q55 78 45 78 Q38 78 32 72 L30 85 L23 85 L27 70 Q22 62 22 55"
+                    fill="#2DD4BF" />
+                <circle cx="40" cy="42" r="3" fill="#0F1318" />
+            </svg>
+            <h1 style="font-size:24px;">Selecione sua Fazenda</h1>
+        </div>
+        <div id="fazenda-user-bar" class="fazenda-user-info"></div>
+        <div id="fazenda-select-content"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="top-header">
+        <div class="brand">
+            <span class="brand-icon">🐄</span>
+            <div class="brand-copy">
+                <span class="brand-name">AgroMacro</span>
+                <span class="brand-meta">Operacao diaria no celular</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="header-farm-chip" id="fazenda-nome-topbar"></span>
+            <span id="sync-dot" class="sync-dot sync-dot--offline" title="Offline" aria-label="Status de sincronização"></span>
+            <button id="topbar-config-btn" class="header-action-btn gerencia-only" onclick="window.app.navigate('config')" aria-label="Configurações">
+                <span class="material-symbols-outlined" style="font-size:20px">settings</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="app-container">
+
+        <!-- ===================== HOME ===================== -->
+        <section id="view-home" class="view active home-view">
+            <div id="home-peao" class="home-layout peao-only" style="display:none">
+                <div class="hero-greeting">
+                    <div class="greeting-text" id="greeting-text">Boa tarde</div>
+                    <div class="greeting-sub" id="greeting-date"></div>
+                </div>
+
+                <section class="mobile-command-deck" aria-label="Atalhos principais do campo">
+                    <button class="command-card" type="button" onclick="window.app.navigate('pastos')">
+                        <span class="material-symbols-outlined command-card-icon">grass</span>
+                        <span class="command-card-body">
+                            <strong>Pastos</strong>
+                            <small>Talhoes, cercas e rotacao</small>
+                        </span>
+                    </button>
+                    <button class="command-card" type="button" onclick="window.app.navigate('lotes')">
+                        <span class="material-symbols-outlined command-card-icon">pets</span>
+                        <span class="command-card-body">
+                            <strong>Rebanho</strong>
+                            <small>Lotes, peso e movimentacao</small>
+                        </span>
+                    </button>
+                    <button class="command-card" type="button" onclick="window.app.navigate('manejo')">
+                        <span class="material-symbols-outlined command-card-icon">vaccines</span>
+                        <span class="command-card-body">
+                            <strong>Manejo</strong>
+                            <small>Aplicacoes e rotina de campo</small>
+                        </span>
+                    </button>
+                    <button class="command-card" type="button" onclick="window.app.navigate('calendario')">
+                        <span class="material-symbols-outlined command-card-icon">event</span>
+                        <span class="command-card-body">
+                            <strong>Agenda</strong>
+                            <small>Alertas sanitarios e rotina</small>
+                        </span>
+                    </button>
+                </section>
+
+                <div id="pasto-hub" class="pasto-hub">
+                    <div class="pasto-hub-header">
+                        <div>
+                            <p class="pasto-hub-subtitle">Cadastros + Aplicações</p>
+                            <h2 class="pasto-hub-title">Pastos em movimento</h2>
+                        </div>
+                        <button type="button" class="pasto-hub-button" onclick="window.app.navigate('pastos')">
+                            Ver todos os pastos
+                        </button>
+                    </div>
+                    <div class="pasto-card-grid">
+                        <button type="button" class="pasto-card active" data-panel-key="cadastro"
+                            data-panel-route="pastos" aria-selected="true">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">assignment</span></div>
+                            <p class="pasto-card-title">Cadastro completo</p>
+                            <p class="pasto-card-sub">Áreas, solo e talhões</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="aplicacoes"
+                            data-panel-route="manejo">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">vaccines</span></div>
+                            <p class="pasto-card-title">Aplicações</p>
+                            <p class="pasto-card-sub">Dose, defensivo e carência</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="rotacao"
+                            data-panel-route="calendario">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">cycle</span></div>
+                            <p class="pasto-card-title">Rotação inteligente</p>
+                            <p class="pasto-card-sub">Plano de descanso</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="alertas"
+                            data-panel-route="pastos">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">warning</span></div>
+                            <p class="pasto-card-title">Alertas críticos</p>
+                            <p class="pasto-card-sub">Carência e estoque</p>
+                        </button>
+                        <button type="button" class="pasto-card" data-panel-key="mapa"
+                            data-panel-route="mapa">
+                            <div class="pasto-card-icon"><span class="material-symbols-outlined">map</span></div>
+                            <p class="pasto-card-title">Mapa e fotos</p>
+                            <p class="pasto-card-sub">Geografia + imagens</p>
+                        </button>
+                    </div>
+                    <div class="pasto-panel">
+                        <div>
+                            <p class="pasto-panel-label">Fluxos ativos</p>
+                            <h3 id="pasto-panel-title">Cadastro completo</h3>
+                            <p id="pasto-panel-description">Construa um cadastro completo do pasto (nome, capacidade,
+                                talhão,
+                                sondagem e círculo de cercas) para governança de rotação.</p>
+                        </div>
+                        <ul id="pasto-panel-apps" class="pasto-panel-apps">
+                            <li>Descreva capins e solos com atributos técnicos.</li>
+                            <li>Associe lotes e talhões para rotacionar automaticamente.</li>
+                            <li>Registre medições, fotos e alertas de baixa cobertura.</li>
+                        </ul>
+                        <div class="pasto-panel-actions">
+                            <button type="button" id="pasto-panel-open" class="pasto-open-btn">
+                                Abrir módulo selecionado
+                            </button>
+                            <span class="pasto-panel-hint">Mantenha o pasto em movimento e visível.</span>
+                        </div>
+                    </div>
+                    <div class="pasto-apps">
+                        <p class="pasto-apps-label">Aplicações rápidas cadastradas</p>
+                        <div class="pasto-tags">
+                            <span>Controle de capim</span>
+                            <span>Ferros e cercas</span>
+                            <span>Rotação dinâmica</span>
+                            <span>Densidade UA/ha</span>
+                            <span>Alertas de carência</span>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="home-section-block">
+                    <div class="section-eyebrow">Execucao do dia</div>
+                    <div class="section-heading-row">
+                        <h2 class="section-heading">Rotina do campo</h2>
+                        <span class="section-caption">Fluxos prioritarios</span>
+                    </div>
+                    <div class="peao-home-grid" style="padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;">
+                    <button class="peao-action-card" onclick="window.app.navigate('pastos')" style="grid-column:1/3;">
+                        <div class="peao-action-icon">🌿</div>
+                        <div class="peao-action-title">Gerenciar Pastos</div>
+                        <div class="peao-action-sub">Manejo e rotação</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('manejo')">
+                        <div class="peao-action-icon">💉</div>
+                        <div class="peao-action-title">Manejo</div>
+                        <div class="peao-action-sub">Vacinas</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('estoque')">
+                        <div class="peao-action-icon">📦</div>
+                        <div class="peao-action-title">Insumos</div>
+                        <div class="peao-action-sub">Almoxarifado</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('lotes')">
+                        <div class="peao-action-icon">🐄</div>
+                        <div class="peao-action-title">Lotes</div>
+                        <div class="peao-action-sub">Ver animais</div>
+                    </button>
+                    <button class="peao-action-card" onclick="window.app.navigate('rastreabilidade')">
+                        <div class="peao-action-icon">🏷️</div>
+                        <div class="peao-action-title">Rastreia</div>
+                        <div class="peao-action-sub">Brincos</div>
+                    </button>
+                    <button class="peao-action-card"onclick="window.app.navigate('calendario')">
+                        <div class="peao-action-icon">📅</div>
+                        <div class="peao-action-title">Agenda</div>
+                        <div class="peao-action-sub">Do dia</div>
+                    </button>
+                    </div>
+                </section>
+
+                <!-- Alertas Críticos para Peão -->
+                <div class="home-alert-strip home-section-block" style="padding:16px;margin-bottom:0;">
+                    <div style="font-weight:700;font-size:13px;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Atenção</div>
+                    <div id="peao-alerts-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+            </div>
+
+            <!-- ══ HOME ADMIN (Gerente) — Layout completo ══ -->
+            <div id="home-admin" class="admin-only gerencia-only space-y-4 p-4 home-profile dashboard-shell dashboard-shell-admin">
+
+                <!-- Greeting Card -->
+                <div class="relative overflow-hidden rounded-xl p-5 spotlight-card"
+                    style="background: var(--primary-surface); border: 1.5px solid var(--border-emphasis);">
+                    <div class="relative z-10">
+                        <h2 class="text-xl font-black" style="color: var(--primary);" id="admin-greeting-text">Bom dia, Produtor!</h2>
+                        <p class="text-sm mt-1" style="color: var(--text-2);" id="admin-greeting-date">Segunda-feira, 7 de Abril</p>
+                    </div>
+                    <div class="absolute -right-4 -top-4 text-6xl opacity-10" aria-hidden="true">🐄</div>
+                </div>
+
+                <section class="home-section-block management-quick-actions">
+                    <div class="section-eyebrow">Centro de comando</div>
+                    <div class="section-heading-row">
+                        <h2 class="section-heading">Operacoes principais</h2>
+                        <span class="section-caption">Acesso rapido</span>
+                    </div>
+                    <div class="mobile-command-deck mobile-command-deck-management" aria-label="Atalhos gerenciais">
+                        <button class="command-card" type="button" onclick="window.app.navigate('mapa')">
+                            <span class="material-symbols-outlined command-card-icon">map</span>
+                            <span class="command-card-body">
+                                <strong>Mapa</strong>
+                                <small>Talhoes, cercas e fotos</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('financeiro')">
+                            <span class="material-symbols-outlined command-card-icon">account_balance_wallet</span>
+                            <span class="command-card-body">
+                                <strong>Caixa</strong>
+                                <small>Fluxo, custos e balanco</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('estoque')">
+                            <span class="material-symbols-outlined command-card-icon">inventory_2</span>
+                            <span class="command-card-body">
+                                <strong>Estoque</strong>
+                                <small>Entradas, saidas e insumos</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('manejo')">
+                            <span class="material-symbols-outlined command-card-icon">health_and_safety</span>
+                            <span class="command-card-body">
+                                <strong>Manejo</strong>
+                                <small>Agenda sanitaria e aplicacoes</small>
+                            </span>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-2 gap-3 mobile-overview-grid">
+                    <!-- Map Card -->
+                    <div class="relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer feature-media-card"
+                        style="background: var(--bg-3); border: 1.5px solid var(--border-default);"
+                        onclick="window.app.navigate('mapa')">
+                        <div class="absolute inset-0 bg-cover bg-center"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdkrgOxFiNw3s4XWw07TxuU3p0C3WmVNBDSwx_cqgwGCYvRbeusmzY4tUIiLE67r28Rt0yb94CvhBaHPmm_8pKmwVsActmo7qoz2pU8_6o8aPcc6az92Ry53b7SJEuLxAAWZX09jVpEoOKiztfULvqzMjhK0q2QrQO6CQ6AWDTXFTTm4sEuCmHsL--f1-EPJBu8S-t4WT7zXC77rNv_2xbcKzaJMMDA2sdzCmoQ_1sxcE6YISGKV1Oikrtsn928byVErCp6VrkFfA_')">
+                        </div>
+                        <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 60%);"></div>
+                        <div class="absolute bottom-3 left-3">
+                            <p class="text-white font-bold text-sm">Mapa da Fazenda</p>
+                            <div class="flex items-center gap-1" style="font-size:10px;color:rgba(255,255,255,0.75);">
+                                <span class="material-symbols-outlined" style="font-size:12px;">near_me</span>
+                                <span>Ver Talhões</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weather / Climate Card -->
+                    <div class="aspect-[4/3] rounded-xl p-3 flex flex-col justify-between cursor-pointer feature-info-card"
+                        style="background: linear-gradient(135deg, rgba(29,78,216,0.10), rgba(0,121,107,0.08)); border: 1.5px solid rgba(29,78,216,0.18);"
+                        onclick="window.app.navigate('clima')">
+                        <div id="clima-widget" class="clima-widget w-full h-full">Carregando clima...</div>
+                    </div>
+                </div>
+
+                <!-- KPI Dashboard (Will be populated by app.js rendering) -->
+                <section class="dashboard-section">
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3 px-1">Indicadores Chave
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3" id="kpi-grid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- Menina (Clara AI) Insight Card -->
+                <div class="border-2 rounded-xl p-4 relative overflow-hidden mt-2 assistant-brief-card"
+                    style="background: var(--primary-surface); border-color: var(--border-emphasis);">
+                    <div class="flex gap-4 relative z-10">
+                        <div
+                            class="w-14 h-14 rounded-full border-2 border-primary overflow-hidden shrink-0 bg-primary/10">
+                            <img alt="Dona Clara Agent" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFmHC7jCRMKTOlqmMt72br00L3RfuNRywqLEdkRerB9yPTdw7YcbCHltSaivWMYCU9OrStC3g4ouVhkfOslfMGvcGpnOAEc3nBOCYs6Z7vpHV9PPS8fFLrU2n5PrpT9QzoqOLnvbJoMX7ULqUWiT8eipMvtJlfJSP4ISUmbklAgEK9u6k4llYBAMwcJ7SKcn5USfKEgbeonNzF_BCz3rqXx96E9eWQGGEzpRd1pIi0MRvx4upT4LvFwnPaKOuzospwYCPJO4n9uUlX" />
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs font-bold text-primary uppercase">Dona Clara</span>
+                                    <span class="material-symbols-outlined text-[14px] text-primary">verified</span>
+                                </div>
+                            </div>
+                            <div id="ia-insights-home" class="text-sm text-slate-200 leading-relaxed font-medium">"Olá.
+                                Sou a Dona Clara, sua gerente de IA. Estou monitorando seus lotes e pastos."</div>
+                            <button onclick="app.navigate('ia-chefa')"
+                                class="mt-4 w-full bg-primary text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-sm">forum</span>
+                                Falar com a Clara
+                            </button>
+                        </div>
+                    </div>
+                    <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+                </div>
+
+                <!-- ZootecIA Quick Access -->
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer"
+                    style="background: var(--green-surface); border: 1.5px solid rgba(22,163,74,0.22);"
+                    onclick="window.nutricaoIA.abrirModal('exigencias')">
+                    <div style="font-size:36px;line-height:1">🧬</div>
+                    <div style="flex:1">
+                        <div style="font-weight:800;font-size:14px;color:var(--green);">ZootecIA — Nutrição Bovina</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Formular ração · NRC 2016 · CQBAL 3.0 · Custo/arroba</div>
+                    </div>
+                    <span style="color:var(--green);font-size:20px;font-weight:700;">›</span>
+                </div>
+
+                <!-- Índices Zootécnicos Quick Access -->
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer"
+                    style="background: var(--blue-surface); border: 1.5px solid rgba(29,78,216,0.18);"
+                    onclick="window.zooIndices.abrirModal('indices')">
+                    <div style="font-size:36px;line-height:1">📈</div>
+                    <div style="flex:1">
+                        <div style="font-weight:800;font-size:14px;color:var(--blue)">Índices Zootécnicos</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Prenhez · Natalidade · Desmama · Custo/@</div>
+                    </div>
+                    <span style="color:var(--blue);font-size:20px;font-weight:700;">›</span>
+                </div>
+
+                <!-- Formulador Pro Quick Access -->
+                <div class="rounded-xl p-4 mt-2 flex items-center gap-4 cursor-pointer"
+                    style="background: var(--purple-surface); border: 1.5px solid rgba(124,58,237,0.18);"
+                    onclick="window.formulacaoRacao.abrirModal('otimizador')">
+                    <div style="font-size:36px;line-height:1">🔬</div>
+                    <div style="flex:1">
+                        <div style="font-weight:800;font-size:14px;color:var(--purple);">Formulador de Rações Pro</div>
+                        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Otimizador LP · Simplex · CQBAL 3.0 · BR-CORTE 2023 · Custo/@</div>
+                    </div>
+                    <span style="color:var(--purple);font-size:20px;font-weight:700;">›</span>
+                </div>
+
+                <!-- Cotação do Rebanho em Pé -->
+                <div id="cotacao-rebanho" style="margin-top:16px;"></div>
+
+                <!-- Dashboard Gráficos -->
+                <div id="graficos-home" style="margin-top:16px;"></div>
+
+                <!-- Atividade Recente -->
+                <div id="atividade-recente" style="margin-top:16px;"></div>
+
+                <!-- Spacer for Bottom Nav -->
+                <div class="h-20"></div>
+
+            </div>
+
+            <!-- ══ HOME DONO — Gestão, controle e estratégia ══ -->
+            <div id="home-dono" class="dono-only home-profile dashboard-shell dashboard-shell-owner" style="display:none;">
+                
+                <!-- Greeting Card -->
+                <div class="owner-greeting-card">
+                    <div class="owner-greeting-title" id="dono-greeting-text">Bem-vindo, Proprietário</div>
+                    <div class="owner-greeting-sub" id="dono-greeting-date">Visão Estratégica da Fazenda</div>
+                </div>
+
+                <section class="home-section-block management-quick-actions">
+                    <div class="section-eyebrow">Direcao</div>
+                    <div class="section-heading-row">
+                        <h2 class="section-heading">Painel executivo</h2>
+                        <span class="section-caption">Gestao da fazenda</span>
+                    </div>
+                    <div class="mobile-command-deck mobile-command-deck-management" aria-label="Atalhos executivos">
+                        <button class="command-card" type="button" onclick="window.app.navigate('funcionarios')">
+                            <span class="material-symbols-outlined command-card-icon">group</span>
+                            <span class="command-card-body">
+                                <strong>Equipe</strong>
+                                <small>Pessoas, obras e papeis</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('financeiro')">
+                            <span class="material-symbols-outlined command-card-icon">monitoring</span>
+                            <span class="command-card-body">
+                                <strong>Resultado</strong>
+                                <small>Margem, caixa e auditoria</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('config')">
+                            <span class="material-symbols-outlined command-card-icon">settings</span>
+                            <span class="command-card-body">
+                                <strong>Config</strong>
+                                <small>Perfis, fazenda e parametros</small>
+                            </span>
+                        </button>
+                        <button class="command-card" type="button" onclick="window.app.navigate('lotes')">
+                            <span class="material-symbols-outlined command-card-icon">pets</span>
+                            <span class="command-card-body">
+                                <strong>Rebanho</strong>
+                                <small>Lotes e produtividade</small>
+                            </span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Gestão de Pessoas — Rapid Access -->
+                <div class="owner-people-grid">
+                    <div class="owner-mini-card" onclick="window.app.navigate('funcionarios')">
+                        <div class="owner-mini-icon">👥</div>
+                        <div class="owner-mini-title">Membros</div>
+                        <div class="owner-mini-sub">Gerenciar equipe</div>
+                    </div>
+                    <div class="owner-mini-card" onclick="window.app.navigate('config')">
+                        <div class="owner-mini-icon">⚙️</div>
+                        <div class="owner-mini-title">Configurações</div>
+                        <div class="owner-mini-sub">Perfis e permissões</div>
+                    </div>
+                </div>
+
+                <!-- Indicadores Estratégicos -->
+                <div class="owner-kpi-shell">
+                    <div class="owner-block-label">Desempenho</div>
+                    <div id="dono-kpis" class="owner-kpi-grid">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+
+                <!-- Financeiro — Visão Executiva -->
+                <div class="gerencia-only owner-finance-card" onclick="window.app.navigate('financeiro')">
+                    <div class="owner-finance-row">
+                        <div class="owner-finance-icon">💰</div>
+                        <div class="owner-finance-copy">
+                            <div class="owner-finance-title">Finanças Consolidadas</div>
+                            <div class="owner-finance-sub">Receitas, custos e rentabilidade</div>
+                        </div>
+                        <div class="owner-finance-arrow">›</div>
+                    </div>
+                </div>
+
+                <!-- Auditoria e Atividades -->
+                <div id="dono-audit-summary" class="owner-audit-summary">
+                    <div class="owner-block-label">Últimas Atividades</div>
+                    <div id="dono-recent-activities" class="owner-recent-activities">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+
+                <!-- Acesso Rápido para Admin -->
+                <div class="owner-ops-block">
+                    <div class="owner-ops-label">Operações Completas</div>
+                    <div class="owner-ops-grid">
+                        <button class="owner-ops-btn" onclick="window.app.navigate('lotes')">Rebanho</button>
+                        <button class="owner-ops-btn" onclick="window.app.navigate('obras')">Operações</button>
+                        <button class="owner-ops-btn" onclick="window.app.navigate('estoque')">Insumos</button>
+                        <button class="owner-ops-btn" onclick="window.app.navigate('manejo')">Manejo</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Alerts Section (ambos perfis) -->
+            <div class="alerts-section home-section-block">
+                <div class="alerts-title">Alertas</div>
+                <div id="alerts-list"></div>
+            </div>
+
+        </section>
+
+        <!-- ===================== FINANCEIRO (Stitch Cash Flow) ===================== -->
+        <section id="view-financeiro" class="view hidden module-view gerencia-only">
+            <!-- Conteúdo renderizado dinamicamente pelo financeiro.js -->
+            <div id="fluxo-content"></div>
+        </section>
+
+        <!-- ===================== CHAT IA CHEFA (Dona Clara 3D) ===================== -->
+        <section id="view-ia-chefa" class="view hidden module-view flex flex-col h-[100dvh]">
+            <header class="sticky top-0 z-50 backdrop-blur-md border-b p-4"
+                style="background: var(--header-bg); border-color: var(--border-default);">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex-1 flex items-center gap-3">
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-full border-2 overflow-hidden bg-center bg-no-repeat bg-cover"
+                                style='border-color: var(--primary); background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqHoszHRJJ2hKYb-omy_hhBoRlXnM_jTy-VKWb0RhVUGnP9Bpm3PYJY3MWWUyiNgnGcZRK5awApx7l6sjc-udFb7CgE0rHckhVu0F9_6GngbYnXcqk9eauRUE5tNlsRfCQWhLNzqQRF-rgAWDueOzOi5J6ZDeSaZU-VQ7MztqLR2cj7j1PPhtaRZEW7lWDXn7tDBQCabba2L26q8JXhr44MKw1-C1NDfX-PRiiIaWtTSNH-ESDiNfFeXuCJ1V_03JkoLdh-MAcVM5i");'>
+                            </div>
+                            <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+                                style="background: var(--primary); border-color: var(--bg-1);"></div>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-0);">Dona Clara</h1>
+                            <span class="text-xs font-bold uppercase tracking-widest" style="color: var(--primary);">IA Gestora • AgroMacro</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
+                <!-- AI Message -->
+                <div class="flex flex-col gap-2 items-start max-w-[85%]">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter ml-4"
+                        style="color: var(--primary);">Clara</span>
+                    <div class="rounded-xl rounded-tl-none p-4 shadow-sm"
+                        style="background: var(--primary-surface); border: 1px solid var(--border-emphasis);">
+                        <p class="text-sm leading-relaxed" style="color: var(--text-1);" id="ia-welcome-msg">
+                            Olá! Sou a Dona Clara 👩‍💼, a IA Gestora da Fazenda. Domino as áreas de Administração,
+                            Agronomia, Zootecnia e Financeiro. Como posso ajudar com as análises do AgroMacro hoje?
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed bottom-[70px] left-0 right-0 p-4"
+                style="background: var(--nav-bg); border-top: 1.5px solid var(--border-default); backdrop-filter: blur(20px);">
+                <div class="flex items-center gap-3 rounded-full px-4 py-2 transition-all"
+                    style="background: var(--bg-3); border: 1.5px solid var(--border-default);">
+                    <input id="chat-input"
+                        class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2"
+                        style="outline:none; color: var(--text-0); font-family: inherit;"
+                        placeholder="Pergunte à Clara..." type="text" />
+                    <button id="chat-send"
+                        class="w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                        style="background: var(--primary); color: white;">
+                        <span class="material-symbols-outlined" style="font-size:18px;">send</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== COMPRA DE GADO ===================== -->
+        <section id="view-compra" class="view hidden module-view gerencia-only">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Compra de Gado</h2>
+            </div>
+            <form id="form-compra" class="card-form">
+                <div class="form-group">
+                    <label>Quantidade de Animais</label>
+                    <input type="number" id="compra-qty" placeholder="30" required>
+                </div>
+                <div class="form-group">
+                    <label>Peso Médio (kg)</label>
+                    <input type="number" id="compra-peso" step="0.1" placeholder="220">
+                </div>
+                <div class="form-group">
+                    <label>Valor Total Pago (R$)</label>
+                    <input type="number" id="compra-valor" step="0.01" placeholder="120000.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="compra-desc" placeholder="Ex: 30 Bezerros Nelore">
+                </div>
+                <div class="form-group">
+                    <label>Fornecedor</label>
+                    <input type="text" id="compra-fornecedor" placeholder="Ex: Fazenda São João">
+                </div>
+                <div class="form-group">
+                    <label>Lote de Destino</label>
+                    <select id="compra-lote">
+                        <option value="">Selecionar Lote...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🌿 Pasto de Destino</label>
+                    <select id="compra-pasto">
+                        <option value="">Selecionar Pasto...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="compra-data" required>
+                </div>
+                <!-- ═══ FORMA DE PAGAMENTO ═══ -->
+                <div class="form-group">
+                    <label>💳 Forma de Pagamento</label>
+                    <select id="compra-forma-pagamento" onchange="window.financeiro.togglePrazoFields('compra')">
+                        <option value="avista">💵 À Vista (entra no caixa agora)</option>
+                        <option value="prazo">📅 A Prazo (gera Conta a Pagar)</option>
+                        <option value="parcial">📆 Parcelado (paga parte agora)</option>
+                    </select>
+                </div>
+                <div id="compra-prazo-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>📅 Vencimento</label>
+                        <input type="date" id="compra-vencimento">
+                    </div>
+                </div>
+                <div id="compra-parcial-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>💵 Valor Pago Agora (R$)</label>
+                        <input type="number" id="compra-valor-pago" step="0.01" placeholder="Ex: 30000.00">
+                        <small style="color:#94A3B8;font-size:11px;">O restante vira Conta a Pagar
+                            automaticamente</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Vencimento do Saldo</label>
+                        <input type="date" id="compra-vencimento-parcial">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Registrar Compra</button>
+            </form>
+        </section>
+
+        <!-- ===================== VENDA DE GADO ===================== -->
+        <section id="view-venda" class="view hidden module-view gerencia-only">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Venda de Gado</h2>
+            </div>
+            <form id="form-venda" class="card-form">
+                <div class="form-group">
+                    <label>Lote</label>
+                    <select id="venda-lote">
+                        <option value="">Selecionar Lote...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Pasto de Origem</label>
+                    <input type="text" id="venda-pasto-info" placeholder="Selecione um lote" readonly>
+                    <input type="hidden" id="venda-pasto-hidden">
+                </div>
+                <div class="form-group">
+                    <label>Quantidade de Animais</label>
+                    <input type="number" id="venda-qty" placeholder="5" required>
+                </div>
+                <div class="form-group">
+                    <label>Peso Médio (kg)</label>
+                    <input type="number" id="venda-peso" step="0.1" placeholder="480">
+                </div>
+                <div class="form-group">
+                    <label>Valor Total (R$)</label>
+                    <input type="number" id="venda-valor" step="0.01" placeholder="25000.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Comprador</label>
+                    <input type="text" id="venda-comprador" placeholder="Ex: Frigorífico XYZ">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="venda-desc" placeholder="Ex: Venda 5 Bois Gordos">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="venda-data" required>
+                </div>
+                <!-- ═══ FORMA DE PAGAMENTO ═══ -->
+                <div class="form-group">
+                    <label>💳 Forma de Pagamento</label>
+                    <select id="venda-forma-pagamento" onchange="window.financeiro.togglePrazoFields('venda')">
+                        <option value="avista">💵 À Vista (entra no caixa agora)</option>
+                        <option value="prazo">📅 A Prazo — Frigorífico paga depois</option>
+                        <option value="parcial">📆 Parcelado (recebe parte agora)</option>
+                    </select>
+                </div>
+                <div id="venda-prazo-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>📅 Vencimento do Recebimento</label>
+                        <input type="date" id="venda-vencimento">
+                    </div>
+                </div>
+                <div id="venda-parcial-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>💵 Valor Recebido Agora (R$)</label>
+                        <input type="number" id="venda-valor-recebido" step="0.01" placeholder="Ex: 15000.00">
+                        <small style="color:#94A3B8;font-size:11px;">O restante vira Conta a Receber
+                            automaticamente</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Vencimento do Saldo</label>
+                        <input type="date" id="venda-vencimento-parcial">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Registrar Venda</button>
+            </form>
+        </section>
+
+        <!-- ===================== REBANHO ===================== -->
+        <section id="view-rebanho" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Cadastro de Rebanho</h2>
+            </div>
+            <!-- Tabs -->
+            <div class="tab-bar">
+                <button class="tab-btn active"
+                    onclick="window.rebanho.switchTab('individual', this)">Individual</button>
+                <button class="tab-btn" onclick="window.rebanho.switchTab('lote', this)">Por Lote</button>
+            </div>
+
+            <!-- Tab: Individual -->
+            <form id="form-rebanho" class="card-form tab-content active" data-tab="individual">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Brinco / ID</label>
+                        <input type="text" id="reb-brinco" placeholder="Ex: B-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Raça</label>
+                        <select id="reb-raca">
+                            <option value="Nelore">Nelore</option>
+                            <option value="Angus">Angus</option>
+                            <option value="Brahman">Brahman</option>
+                            <option value="Gir">Gir</option>
+                            <option value="Girolando">Girolando</option>
+                            <option value="Tabapuã">Tabapuã</option>
+                            <option value="Senepol">Senepol</option>
+                            <option value="Mestiço">Mestiço</option>
+                            <option value="Outra">Outra</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select id="reb-sexo">
+                            <option value="macho">♂ Macho</option>
+                            <option value="femea">♀ Fêmea</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Peso Atual (kg)</label>
+                        <input type="number" id="reb-peso" step="0.1" placeholder="220">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data Nascimento</label>
+                        <input type="date" id="reb-nascimento">
+                    </div>
+                    <div class="form-group">
+                        <label>Origem</label>
+                        <select id="reb-origem">
+                            <option value="compra">Compra</option>
+                            <option value="nascimento">Nascimento</option>
+                            <option value="doacao">Doação</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lote</label>
+                    <select id="reb-lote">
+                        <option value="">Sem Lote</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="reb-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">Cadastrar Animal</button>
+            </form>
+
+            <!-- Tab: Por Lote (cadastro em grupo) -->
+            <form id="form-rebanho-lote" class="card-form tab-content" data-tab="lote" style="display:none;">
+                <div class="form-group">
+                    <label>Nome / Identificação do Lote</label>
+                    <input type="text" id="reb-lote-nome" placeholder="Ex: Lote Compra Jan/2026" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantidade de Animais</label>
+                        <input type="number" id="reb-lote-qtd" placeholder="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Raça Predominante</label>
+                        <select id="reb-lote-raca">
+                            <option value="Nelore">Nelore</option>
+                            <option value="Angus">Angus</option>
+                            <option value="Brahman">Brahman</option>
+                            <option value="Gir">Gir</option>
+                            <option value="Girolando">Girolando</option>
+                            <option value="Tabapuã">Tabapuã</option>
+                            <option value="Senepol">Senepol</option>
+                            <option value="Mestiço">Mestiço</option>
+                            <option value="Outra">Outra</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso Médio (kg)</label>
+                        <input type="number" id="reb-lote-peso" step="0.1" placeholder="220">
+                    </div>
+                    <div class="form-group">
+                        <label>Idade Média (meses)</label>
+                        <input type="number" id="reb-lote-idade" placeholder="18">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sexo Predominante</label>
+                        <select id="reb-lote-sexo">
+                            <option value="macho">♂ Machos</option>
+                            <option value="femea">♀ Fêmeas</option>
+                            <option value="misto">⚤ Misto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Origem</label>
+                        <select id="reb-lote-origem">
+                            <option value="compra">Compra</option>
+                            <option value="nascimento">Nascimento</option>
+                            <option value="doacao">Doação</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lote Destino</label>
+                    <select id="reb-lote-destino">
+                        <option value="">Sem Lote</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="reb-lote-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">Cadastrar Lote de Animais</button>
+            </form>
+
+            <div class="section-title" style="margin-top:24px;">Rebanho Atual</div>
+            <div id="rebanho-list"></div>
+        </section>
+
+        <!-- ===================== LOTES ===================== -->
+        <section id="view-lotes" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Gestão de Lotes</h2>
+            </div>
+            <form id="form-lote" class="card-form">
+                <div class="form-group">
+                    <label>Nome do Lote</label>
+                    <input type="text" id="lote-nome" placeholder="Ex: Lote São João" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="lote-categoria">
+                            <option value="cria">🐮 Cria</option>
+                            <option value="recria">🐂 Recria</option>
+                            <option value="engorda">🥩 Engorda</option>
+                            <option value="matrizes">🐄 Matrizes</option>
+                            <option value="touros">🐃 Touros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qtd Animais</label>
+                        <input type="number" id="lote-qtd" placeholder="30" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Raça Predominante</label>
+                    <select id="lote-raca">
+                        <option value="">Selecionar...</option>
+                        <option value="Nelore">Nelore</option>
+                        <option value="Angus">Angus</option>
+                        <option value="Nelore x Angus">Nelore x Angus</option>
+                        <option value="Brahman">Brahman</option>
+                        <option value="Gir">Gir</option>
+                        <option value="Girolando">Girolando</option>
+                        <option value="Tabapuã">Tabapuã</option>
+                        <option value="Senepol">Senepol</option>
+                        <option value="Nelore PO">Nelore PO</option>
+                        <option value="Mestiço">Mestiço</option>
+                        <option value="Outra">Outra</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso Médio (kg)</label>
+                        <input type="number" id="lote-peso-medio" step="0.1" placeholder="220">
+                    </div>
+                    <div class="form-group">
+                        <label>Pasto Atual</label>
+                        <select id="lote-pasto">
+                            <option value="">Selecionar...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data de Entrada</label>
+                    <input type="date" id="lote-data-entrada">
+                </div>
+                <div class="section-title" style="margin-top:12px;">Nutrição do Lote</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sal Mineral</label>
+                        <select id="lote-sal">
+                            <option value="">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumo Sal (g/cab/dia)</label>
+                        <input type="number" id="lote-sal-consumo" step="0.1" placeholder="80">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ração</label>
+                        <select id="lote-racao">
+                            <option value="">Nenhuma</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumo Ração (kg/cab/dia)</label>
+                        <input type="number" id="lote-racao-consumo" step="0.1" placeholder="2.5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="lote-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">Cadastrar Lote</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Lotes Ativos</div>
+            <div id="lotes-list"></div>
+            <div id="indicadores-produtivos" style="margin-top:16px;"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioLotes('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioLotes('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== PASTOS ===================== -->
+        <section id="view-pastos" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Cadastro de Pastos</h2>
+            </div>
+            <form id="form-pasto" class="card-form">
+                <div class="form-group">
+                    <label>Nome do Pasto / Piquete</label>
+                    <input type="text" id="pasto-nome" placeholder="Ex: Piquete Norte" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Área (hectares)</label>
+                        <input type="number" id="pasto-area" step="0.1" placeholder="15.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidade (cabeças)</label>
+                        <input type="number" id="pasto-capacidade" placeholder="50">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Capim</label>
+                        <select id="pasto-tipo">
+                            <option value="Braquiária">Braquiária</option>
+                            <option value="Mombaça">Mombaça</option>
+                            <option value="Tifton">Tifton</option>
+                            <option value="Marandu">Marandu</option>
+                            <option value="Tanzânia">Tanzânia</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="pasto-status">
+                            <option value="disponivel">🟢 Disponível</option>
+                            <option value="ocupado">🔴 Ocupado</option>
+                            <option value="descanso">🟡 Em Descanso</option>
+                            <option value="manutencao">🔧 Manutenção</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="pasto-obs" placeholder="Opcional">
+                </div>
+                <button type="submit" class="submit-btn">Cadastrar Pasto</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Pastos Cadastrados</div>
+            <div id="pastos-list"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioPastos('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioPastos('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== ESTOQUE ===================== -->
+        <section id="view-estoque" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Estoque de Insumos</h2>
+            </div>
+            <!-- Quick add form -->
+            <form id="form-estoque" class="card-form" style="margin-bottom:16px;">
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="est-categoria" onchange="window.estoque.onCategoryChange()">
+                        <option value="racao_sal">🧂 Ração / Sal Mineral</option>
+                        <option value="remedios">💊 Remédios / Vacinas</option>
+                        <option value="obras">🔨 Obras / Ferramentas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Produto</label>
+                    <select id="est-produto-sugestao" onchange="window.estoque.onSuggestionSelect()">
+                        <option value="">— Selecionar ou digitar abaixo —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="est-produto" placeholder="Ex: Sal Mineral Fosbovi" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Qtd de Sacos</label>
+                        <input type="number" id="est-qty" placeholder="10" required
+                            oninput="window.estoque.calcTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Peso por Saco (kg)</label>
+                        <input type="number" id="est-peso-saco" step="0.1" placeholder="25" value="25"
+                            oninput="window.estoque.calcTotal()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor por Saco (R$)</label>
+                        <input type="number" id="est-valor" step="0.01" placeholder="85.00"
+                            oninput="window.estoque.calcTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <input type="text" id="est-unit" placeholder="sacos" value="sacos">
+                    </div>
+                </div>
+                <div id="est-total-preview" class="calc-preview" style="display:none;">
+                </div>
+                <button type="submit" class="submit-btn">Registrar Entrada</button>
+            </form>
+            <!-- Filter -->
+            <div class="filter-bar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <button type="button" class="filter-btn active"
+                    onclick="window.estoque.filterBy('todos')">Todos</button>
+                <button type="button" class="filter-btn"
+                    onclick="window.estoque.filterBy('racao_sal')">Ração/Sal</button>
+                <button type="button" class="filter-btn" onclick="window.estoque.filterBy('remedios')">Remédios</button>
+                <button type="button" class="filter-btn" onclick="window.estoque.filterBy('obras')">Obras</button>
+            </div>
+            <div id="estoque-list"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioEstoque('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioEstoque('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== FLUXO DE CAIXA ===================== -->
+        <section id="view-fluxo" class="view hidden module-view gerencia-only">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Fluxo de Caixa</h2>
+            </div>
+            <div id="fluxo-content"></div>
+            <div id="indicadores-financeiros"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioFluxo('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioFluxo('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== MANEJO ===================== -->
+        <section id="view-manejo" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Manejo</h2>
+            </div>
+            <form id="form-manejo" class="card-form">
+                <div class="form-group">
+                    <label>Tipo de Manejo</label>
+                    <select id="manejo-tipo" onchange="window.manejo.onTipoChange()">
+                        <option value="nutricao">🧂 Nutrição (Sal / Ração)</option>
+                        <option value="vacinacao">🩺 Vacinação / Sanitário</option>
+                        <option value="pesagem">⚖️ Pesagem</option>
+                        <option value="movimentacao">🔄 Movimentação de Pasto</option>
+                        <option value="mortalidade">⚠️ Mortalidade</option>
+                        <option value="outro">📝 Outro</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pasto</label>
+                        <select id="manejo-pasto">
+                            <option value="">Selecionar Pasto...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Lote</label>
+                        <select id="manejo-lote">
+                            <option value="">Selecionar Lote...</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Produto do estoque + quantidade usada -->
+                <div class="form-group">
+                    <label id="manejo-produto-label">Produto do Estoque</label>
+                    <select id="manejo-produto"
+                        onchange="if(this.value==='__outro__'){document.getElementById('manejo-desc-custom').style.display='block'}else{document.getElementById('manejo-desc-custom').style.display='none'}">
+                        <option value="">Selecionar do Estoque...</option>
+                    </select>
+                    <input type="text" id="manejo-desc-custom" placeholder="Descreva o manejo..."
+                        style="display:none; margin-top:8px;">
+                    <input type="hidden" id="manejo-desc" value="">
+                </div>
+                <div class="form-row">
+                    <div class="form-group" id="manejo-qty-produto-group">
+                        <label>Quantidade Usada (kg)</label>
+                        <input type="number" id="manejo-qty-produto" step="0.1" placeholder="Ex: 25">
+                    </div>
+                    <div class="form-group">
+                        <label>Qtd Animais</label>
+                        <input type="number" id="manejo-qtd" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="manejo-data" required>
+                </div>
+                <div id="manejo-materials-section">
+                    <div class="section-title">Materiais Utilizados (do Estoque)</div>
+                    <div id="manejo-materials-list" class="materials-list"></div>
+                </div>
+                <div class="form-group">
+                    <label>Custo Estimado (R$)</label>
+                    <input type="number" id="manejo-custo" step="0.01" placeholder="0,00">
+                </div>
+                <button type="submit" class="submit-btn">Registrar Manejo</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Histórico de Manejos</div>
+            <div id="manejo-history"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioManejo('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioManejo('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== OBRAS ===================== -->
+        <section id="view-rastreabilidade" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Rastreabilidade SISBOV</h2>
+            </div>
+            <div id="rastreabilidade-content">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <section id="view-obras" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Registrar Obra</h2>
+            </div>
+            <form id="form-obra" class="card-form">
+                <div class="form-group">
+                    <label>Nome da Obra</label>
+                    <input type="text" id="obra-nome" placeholder="Ex: Cercamento Curral 2" required>
+                </div>
+                <div class="form-group">
+                    <label>Pasto / Local</label>
+                    <select id="obra-pasto">
+                        <option value="">Selecionar pasto...</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data de Início</label>
+                        <input type="date" id="obra-inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Término</label>
+                        <input type="date" id="obra-fim">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="obra-obs" rows="2"></textarea>
+                </div>
+                <div class="section-title">Empreiteiro (Opcional)</div>
+                <div class="form-group">
+                    <label>Nome do Empreiteiro</label>
+                    <input type="text" id="obra-empreiteiro-nome" placeholder="Ex: João da Silva / Construtora ABC">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Contato</label>
+                        <input type="text" id="obra-empreiteiro-contato" placeholder="(77) 99999-0000">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Contratado (R$)</label>
+                        <input type="number" id="obra-empreiteiro-valor" step="0.01" placeholder="5000.00">
+                    </div>
+                </div>
+                <div class="section-title">Funcionários na Obra</div>
+                <div id="workers-list" class="workers-grid"></div>
+                <button type="button" class="add-btn" onclick="window.obras.addWorker()">+ Adicionar
+                    Funcionário</button>
+                <div class="section-title">Materiais Utilizados (do Estoque)</div>
+                <div id="obra-materials-list" class="materials-list"></div>
+                <button type="submit" class="submit-btn">Registrar Obra</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Obras Registradas</div>
+            <div id="obras-history"></div>
+        </section>
+
+        <!-- ===================== FUNCIONÁRIOS ===================== -->
+        <section id="view-funcionarios" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Funcionários</h2>
+            </div>
+            <form id="form-funcionario" class="card-form">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="func-nome" placeholder="Ex: João da Silva" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Função</label>
+                        <select id="func-funcao">
+                            <option value="Peão">🤠 Peão</option>
+                            <option value="Tratorista">🚜 Tratorista</option>
+                            <option value="Cercador">🔧 Cercador</option>
+                            <option value="Vaqueiro">🐄 Vaqueiro</option>
+                            <option value="Capataz">👔 Capataz</option>
+                            <option value="Servicos Gerais">🧹 Serviços Gerais</option>
+                            <option value="Diarista">📋 Diarista</option>
+                            <option value="Outro">📝 Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Pagamento</label>
+                        <select id="func-tipo-pagamento">
+                            <option value="mensal">💰 Salário Mensal</option>
+                            <option value="diaria">📋 Diária</option>
+                            <option value="empreiteiro">🔨 Empreiteiro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="number" id="func-valor" step="0.01" placeholder="2500.00">
+                        <small id="func-valor-hint" style="color:var(--text-light);font-size:11px;">Salário
+                            mensal</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="tel" id="func-telefone" placeholder="(xx) xxxxx-xxxx">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>CPF / Documento</label>
+                    <input type="text" id="func-cpf" placeholder="000.000.000-00">
+                </div>
+                <button type="submit" class="submit-btn">✅ Cadastrar Funcionário</button>
+            </form>
+            <div class="section-title" style="margin-top:24px;">Funcionários Cadastrados</div>
+            <div id="funcionarios-list"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioFuncionarios('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioFuncionarios('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== BALANÇO / DRE ===================== -->
+        <section id="view-balanco" class="view hidden module-view gerencia-only">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Balanço & DRE</h2>
+            </div>
+            <div id="balanco-content"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.gerarRelatorio('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.gerarRelatorio('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+        <!-- ===================== OPERAÇÕES (HUB) ===================== -->
+        <section id="view-operacoes" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Operações</h2>
+            </div>
+
+            <div class="hub-grid">
+                <!-- Rastreabilidade -->
+                <button class="hub-card" onclick="window.app.navigate('rastreabilidade')">
+                    <div class="hub-card-icon hub-icon-rastreabilidade">
+                        <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="hub-card-title">Rastreabilidade</div>
+                        <div class="hub-card-sub">SISBOV / GTA</div>
+                    </div>
+                </button>
+
+                <!-- Modo Pesagem -->
+                <button class="hub-card" onclick="window.app.navigate('balanca')">
+                    <div class="hub-card-icon hub-icon-balanca">
+                        <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                            <path
+                                d="M12 3L4 9v12h16V9l-8-6zm0 2.18L18 9.7V19H6V9.7l6-4.52zM12 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="hub-card-title">Modo Pesagem</div>
+                        <div class="hub-card-sub">Balança + RFID</div>
+                    </div>
+                </button>
+
+                <!-- Estoque -->
+                <button class="hub-card" onclick="window.app.navigate('estoque')">
+                    <div class="hub-card-icon hub-icon-estoque">
+                        <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                            <path
+                                d="M20 2H4c-1 0-2 1-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="hub-card-title">Estoque</div>
+                        <div class="hub-card-sub">Insumos e ração</div>
+                    </div>
+                </button>
+
+                <!-- Obras -->
+                <button class="hub-card" onclick="window.app.navigate('obras')">
+                    <div class="hub-card-icon" style="background:linear-gradient(135deg,#374151,#1F2937);">
+                        <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                            <path
+                                d="M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="hub-card-title">Obras</div>
+                        <div class="hub-card-sub">Construções</div>
+                    </div>
+                </button>
+
+                <!-- Funcionários -->
+                <button class="hub-card" onclick="window.app.navigate('funcionarios')">
+                    <div class="hub-card-icon hub-icon-funcionarios">
+                        <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                            <path
+                                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="hub-card-title">Funcionários</div>
+                        <div class="hub-card-sub">Equipe</div>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- ===================== CONFIGURAÇÕES ===================== -->
+        <section id="view-config" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Configurações</h2>
+            </div>
+
+            <!-- Tema -->
+            <div class="card-form">
+                <div class="section-title">🎨 Aparência</div>
+                <div class="form-group">
+                    <label>Tema</label>
+                    <div id="theme-toggle"
+                        style="display:flex;gap:4px;background:var(--bg-0);border-radius:var(--radius-sm);padding:3px;">
+                        <button type="button" class="theme-opt" data-theme="branco" onclick="window.app.setTheme('branco')"
+                            style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                            🤍
+                        </button>
+                        <button type="button" class="theme-opt" data-theme="claro"
+                            onclick="window.app.setTheme('claro')"
+                            style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                            ☀️
+                        </button>
+                        <button type="button" class="theme-opt" data-theme="escuro" onclick="window.app.setTheme('escuro')"
+                            style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                            🌙
+                        </button>
+                        <button type="button" class="theme-opt" data-theme="auto" onclick="window.app.setTheme('auto')"
+                            style="flex:1;padding:8px;border:none;border-radius:var(--radius-xs);background:transparent;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                            🔄
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cotação da Arroba -->
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">💰 Cotação da Arroba</div>
+                <div class="form-group">
+                    <label>Preço da @ (R$)</label>
+                    <input type="number" id="config-preco-arroba" step="0.01" placeholder="280.00"
+                        onchange="window.app.saveArrobaPrice()">
+                    <small style="color:var(--text-light);margin-top:4px;display:block;">Usado nos KPIs de valor do
+                        rebanho e projeções de receita</small>
+                </div>
+            </div>
+
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">Fazenda</div>
+                <div class="form-group">
+                    <label>Nome da Fazenda</label>
+                    <input type="text" id="config-nome-fazenda" placeholder="Ex: Fazenda São João"
+                        onchange="window.app.saveConfig()">
+                </div>
+                <div class="form-group">
+                    <label>Proprietário</label>
+                    <input type="text" id="config-proprietario" placeholder="Nome completo"
+                        onchange="window.app.saveConfig()">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cidade</label>
+                        <input type="text" id="config-cidade" placeholder="Cidade" onchange="window.app.saveConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="config-estado" onchange="window.app.saveConfig()">
+                            <option value="">Selecione</option>
+                            <option value="AC">AC</option>
+                            <option value="AL">AL</option>
+                            <option value="AM">AM</option>
+                            <option value="AP">AP</option>
+                            <option value="BA">BA</option>
+                            <option value="CE">CE</option>
+                            <option value="DF">DF</option>
+                            <option value="ES">ES</option>
+                            <option value="GO">GO</option>
+                            <option value="MA">MA</option>
+                            <option value="MG">MG</option>
+                            <option value="MS">MS</option>
+                            <option value="MT">MT</option>
+                            <option value="PA">PA</option>
+                            <option value="PB">PB</option>
+                            <option value="PE">PE</option>
+                            <option value="PI">PI</option>
+                            <option value="PR">PR</option>
+                            <option value="RJ">RJ</option>
+                            <option value="RN">RN</option>
+                            <option value="RO">RO</option>
+                            <option value="RR">RR</option>
+                            <option value="RS">RS</option>
+                            <option value="SC">SC</option>
+                            <option value="SE">SE</option>
+                            <option value="SP">SP</option>
+                            <option value="TO">TO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Área Total (hectares)</label>
+                    <input type="number" id="config-area" step="0.1" placeholder="0" onchange="window.app.saveConfig()">
+                </div>
+            </div>
+
+            <!-- Sync / Login / Fazenda -->
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">👤 Conta & Fazenda</div>
+                <div id="config-user-info" style="margin-bottom:12px;">
+                    <p style="font-size:13px; color:var(--text-2);">Não logado</p>
+                </div>
+                <div id="sync-container"></div>
+                <button type="button" id="config-logout-btn" class="submit-btn danger-btn"
+                    style="margin-top:10px; display:none;" onclick="window.firebaseSync.logout()">🚪 Sair da
+                    Conta</button>
+            </div>
+
+            <!-- Dashboard Admin — Membros da Fazenda -->
+            <div class="card-form gerencia-only" style="margin-top:16px;">
+                <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>👥 Membros da Fazenda</span>
+                    <button type="button" class="btn-sm" onclick="window.firebaseSync.renderMembros()">↻ Atualizar</button>
+                </div>
+                <div id="admin-membros-list">
+                    <p style="font-size:12px;color:var(--text-3);">Fa&ccedil;a login para ver membros.</p>
+                </div>
+            </div>
+
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">🤖 IA Consultor — Multi-Provedor</div>
+                <p style="font-size:11px; color:var(--text-2); margin-bottom:12px;">
+                    Configure 1 ou mais IAs gratuitas. O sistema tenta cada uma em cascata até obter resposta.
+                </p>
+                <div id="ia-providers-status" style="margin-bottom:12px;"></div>
+
+                <!-- Gemini -->
+                <div class="form-group">
+                    <label>🔵 Google Gemini <span style="font-size:10px;color:#059669;">(30 req/min
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-api-key" placeholder="Cole sua chave AIza..." style="flex:1;"
+                            onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#2563EB;"
+                            onclick="var el=document.getElementById('config-api-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://aistudio.google.com/apikey" target="_blank"
+                            style="color:#2563EB;">aistudio.google.com/apikey</a>
+                    </p>
+                </div>
+
+                <!-- Groq -->
+                <div class="form-group">
+                    <label>🟠 Groq (Llama 3.3) <span style="font-size:10px;color:#059669;">(14.400 req/dia
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-groq-key" placeholder="Cole sua chave gsk_..." style="flex:1;"
+                            onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#D97706;"
+                            onclick="var el=document.getElementById('config-groq-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://console.groq.com/keys" target="_blank"
+                            style="color:#D97706;">console.groq.com/keys</a>
+                    </p>
+                </div>
+
+                <!-- Cerebras -->
+                <div class="form-group">
+                    <label>🟣 Cerebras (Llama 3.3) <span style="font-size:10px;color:#059669;">(1M tokens/dia
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-cerebras-key" placeholder="Cole sua chave csk-..."
+                            style="flex:1;" onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#7C3AED;"
+                            onclick="var el=document.getElementById('config-cerebras-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://cloud.cerebras.ai/" target="_blank"
+                            style="color:#7C3AED;">cloud.cerebras.ai</a>
+                    </p>
+                </div>
+
+                <!-- OpenRouter -->
+                <div class="form-group">
+                    <label>🟢 OpenRouter (Multi-modelo) <span style="font-size:10px;color:#059669;">(modelos
+                            grátis)</span></label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="config-openrouter-key" placeholder="Cole sua chave sk-or-..."
+                            style="flex:1;" onchange="window.iaConsultor.salvarTodasChaves()">
+                        <button type="button" class="btn-sm" style="white-space:nowrap; background:#059669;"
+                            onclick="var el=document.getElementById('config-openrouter-key'); el.type = el.type==='password' ? 'text' : 'password';">👁️</button>
+                    </div>
+                    <p class="info-note" style="margin-top:4px; font-size:10px;">
+                        <a href="https://openrouter.ai/keys" target="_blank"
+                            style="color:#059669;">openrouter.ai/keys</a>
+                    </p>
+                </div>
+
+                <button type="button" class="submit-btn" style="margin-top:8px;background:#059669;"
+                    onclick="window.iaConsultor.salvarTodasChaves()">💾 Salvar Todas as Chaves</button>
+                <button type="button" class="submit-btn" style="margin-top:8px;background:#2563EB;"
+                    onclick="window.iaConsultor.testarChave()">🧪 Testar Conexão IA</button>
+            </div>
+
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">Dados</div>
+                <button type="button" class="submit-btn" style="margin-bottom:10px;"
+                    onclick="window.app.exportData()">📤 Exportar Dados (JSON)</button>
+                <button type="button" class="submit-btn"
+                    style="margin-bottom:10px; background:linear-gradient(135deg,#2563EB,#7C3AED);"
+                    onclick="document.getElementById('import-file-input').click()">📥 Importar Dados (JSON)</button>
+                <input type="file" id="import-file-input" accept=".json" style="display:none;"
+                    onchange="window.app.importData(event)">
+            </div>
+
+            <!-- Compartilhamento Automatico -->
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">🌐 Compartilhamento Automatico</div>
+                <p style="font-size:11px; color:var(--text-light); margin-bottom:10px;">
+                    Configure sincronizacao automatica. Dados sao compartilhados apenas com API configurada.
+                </p>
+                <button type="button" class="submit-btn" style="background:linear-gradient(135deg,#059669,#10B981);"
+                    onclick="window.SyncConfig.showConfigDialog()">⚙️ Configurar Sincronizacao</button>
+                <button type="button" class="submit-btn" style="margin-top:8px;background:#3B82F6;"
+                    onclick="if(window.SyncManager.isOnline()){window.SyncManager.syncNow().then(function(){alert('Sincronizado!');}).catch(function(e){alert('Erro: '+e.message);})}else{alert('Offline!');}">
+                    🔄 Sincronizar Agora
+                </button>
+                <div id="sync-status-display" style="margin-top:8px; font-size:11px; color:var(--text-light);"></div>
+            </div>
+
+            <div class="card-form" style="margin-top:16px;">
+                <button type="button" class="submit-btn danger-btn" onclick="window.app.resetData()">Zerar Todos os
+                    Dados</button>
+                <p class="info-note" style="margin-top:15px;">Esta ação apaga todos os registros. Não pode ser desfeita.
+                </p>
+            </div>
+
+            <div class="card-form" style="margin-top:16px;">
+                <div class="section-title">Sobre</div>
+                <p style="font-size:12px; color:var(--text-2); line-height:1.6;">
+                    <strong>AgroMacro</strong> v3.0<br>
+                    Sistema de Gestão Pecuária<br>
+                    Dados salvos localmente + nuvem Firebase
+                </p>
+            </div>
+        </section>
+
+        <!-- ===================== CALENDÁRIO SANITÁRIO ===================== -->
+        <section id="view-calendario" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Calendário Sanitário</h2>
+            </div>
+            <div id="calendario-content"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioCalendario('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioCalendario('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- ===================== CONTAS A PAGAR ===================== -->
+        <section id="view-contas" class="view hidden module-view gerencia-only">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Contas a Pagar</h2>
+            </div>
+            <div id="contas-pagar-content"></div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" class="submit-btn" style="flex:1;"
+                    onclick="window.relatorio.relatorioContas('pdf')">📄 Salvar PDF</button>
+                <button type="button" class="submit-btn"
+                    style="flex:1; background:linear-gradient(135deg,#1E3A5F,#1E40AF);"
+                    onclick="window.relatorio.relatorioContas('print')">🖨️ Imprimir</button>
+            </div>
+        </section>
+
+        <!-- HUBS REMOVIDOS — navegação direta via bottom nav para lotes/fluxo/estoque -->
+
+        <!-- ===================== CABEÇAS INDIVIDUAIS ===================== -->
+        <section id="view-cabecas" class="view hidden module-view">
+            <div class="view-header">
+                <button class="back-btn" onclick="window.app.navigateBack()">←</button>
+                <h2>Cabeças Individuais</h2>
+            </div>
+
+            <!-- Search + Filters -->
+            <div class="search-bar" style="margin-bottom:12px;">
+                <input type="text" id="cab-search" placeholder="Buscar por brinco, nome ou raça..."
+                    oninput="window.cabecas.setFilter('text', this.value)">
+            </div>
+            <div class="filter-bar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <button type="button" class="filter-btn active"
+                    onclick="window.cabecas.setFilter('sexo','todos'); this.parentNode.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')}); this.classList.add('active')">Todos</button>
+                <button type="button" class="filter-btn"
+                    onclick="window.cabecas.setFilter('sexo','macho'); this.parentNode.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')}); this.classList.add('active')">Machos</button>
+                <button type="button" class="filter-btn"
+                    onclick="window.cabecas.setFilter('sexo','femea'); this.parentNode.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')}); this.classList.add('active')">Fêmeas</button>
+                <select id="cab-filter-lote" class="filter-select"
+                    onchange="window.cabecas.setFilter('lote', this.value)">
+                    <option value="todos">Todos os Lotes</option>
+                </select>
+            </div>
+
+            <!-- Stats -->
+            <div id="cabecas-stats" class="stats-panel"></div>
+
+            <!-- Registration Form -->
+            <form id="form-cabeca" class="card-form">
+                <div class="section-title">Cadastrar Animal</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nº Brinco *</label>
+                        <input type="text" id="cab-brinco" placeholder="Ex: 0123" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Chip / RFID / Cód. Barras</label>
+                        <input type="text" id="cab-chip" placeholder="Ex: 982000...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome / Apelido</label>
+                        <input type="text" id="cab-nome" placeholder="Opcional">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Identificação</label>
+                        <select id="cab-tipo-id">
+                            <option value="brinco">Brinco</option>
+                            <option value="chip">Chip Eletrônico</option>
+                            <option value="rfid">RFID</option>
+                            <option value="barras">Código de Barras</option>
+                            <option value="brinco_chip">Brinco + Chip</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select id="cab-sexo">
+                            <option value="macho">Macho</option>
+                            <option value="femea">Fêmea</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Raça</label>
+                        <input type="text" id="cab-raca" placeholder="Ex: Nelore">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso (kg)</label>
+                        <input type="number" id="cab-peso" step="0.1" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Nascimento</label>
+                        <input type="date" id="cab-nascimento">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Lote</label>
+                        <select id="cab-lote">
+                            <option value="">Sem lote</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pasto</label>
+                        <select id="cab-pasto">
+                            <option value="">Sem pasto</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <input type="text" id="cab-obs" placeholder="Opcional">
+                </div>
+                <div class="form-group">
+                    <label>📸 Foto do Animal</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="file" id="cab-foto" accept="image/*" capture="environment"
+                            style="font-size:12px; flex:1;">
+                        <img id="cab-foto-preview"
+                            style="width:48px;height:48px;border-radius:8px;object-fit:cover;display:none;border:2px solid var(--green);">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Cadastrar Animal</button>
+            </form>
+
+            <!-- Animal List -->
+            <div class="section-title" style="margin-top:24px;">Animais Cadastrados</div>
+            <div id="cabecas-list"></div>
+        </section>
+
+        <!-- ===================== MAPA INTERATIVO ===================== -->
+        <section id="view-mapa" class="view hidden module-view">
+            <div class="mapa-header">
+                <button class="mapa-back-btn" onclick="window.app.navigateBack()">← Voltar</button>
+                <h2 class="mapa-title">🗺️ Mapa da Fazenda</h2>
+            </div>
+
+            <!-- Mini-Dashboard -->
+            <div class="mapa-dashboard">
+                <div class="mapa-dash-card">
+                    <span class="mapa-dash-num" id="dash-total-pastos">0</span>
+                    <span class="mapa-dash-label">Pastos</span>
+                </div>
+                <div class="mapa-dash-card mapa-dash-green">
+                    <span class="mapa-dash-num" id="dash-total-cabecas">0</span>
+                    <span class="mapa-dash-label">Cabeças</span>
+                </div>
+                <div class="mapa-dash-card mapa-dash-blue" onclick="window.mapa.showOcupados()" style="cursor:pointer;">
+                    <span class="mapa-dash-num" id="dash-ocupados">0</span>
+                    <span class="mapa-dash-label">Ocupados</span>
+                </div>
+                <div class="mapa-dash-card mapa-dash-gray" onclick="window.mapa.filterMap('vazio', this)"
+                    style="cursor:pointer;">
+                    <span class="mapa-dash-num" id="dash-vazios">0</span>
+                    <span class="mapa-dash-label">Vazios</span>
+                </div>
+                <div class="mapa-dash-card"
+                    style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-color:#0284c7;">
+                    <span class="mapa-dash-num" id="dash-total-hectares" style="color:#0369a1;">0</span>
+                    <span class="mapa-dash-label">📐 Hectares</span>
+                </div>
+            </div>
+
+            <!-- Filtros + Busca -->
+            <div class="mapa-controls">
+                <div class="mapa-filters">
+                    <button class="mapa-filter-btn active" onclick="window.mapa.filterMap('todos', this)">Todos</button>
+                    <button class="mapa-filter-btn" onclick="window.mapa.filterMap('gado', this)">🐄 Com Gado</button>
+                    <button class="mapa-filter-btn" onclick="window.mapa.filterMap('obra', this)">🔨 Em Obra</button>
+                    <button class="mapa-filter-btn" onclick="window.mapa.filterMap('vazio', this)">🌿 Vazios</button>
+                </div>
+                <div class="mapa-search">
+                    <input type="text" id="mapa-search-input" placeholder="🔍 Buscar pasto..."
+                        oninput="window.mapa.searchPasto(this.value)">
+                </div>
+            </div>
+
+            <div id="mapa-container"></div>
+
+            <!-- Tabela de Pastos (oculta por padrão) -->
+            <div id="mapa-table-container" class="mapa-table-container hidden"></div>
+
+            <!-- Toolbar -->
+            <div class="mapa-toolbar">
+                <button class="mapa-tool-btn" onclick="window.mapa.geolocate()" title="Minha localização">
+                    📍 GPS
+                </button>
+                <button class="mapa-tool-btn" onclick="window.mapa.importKML()"
+                    title="Importar arquivo KML do Google Earth">
+                    📂 KML
+                </button>
+                <button class="mapa-tool-btn" onclick="window.mapa.fitBounds()" title="Centralizar nos pastos">
+                    🎯 Centralizar
+                </button>
+                <button class="mapa-tool-btn" onclick="window.mapa.toggleTable()" title="Ver tabela de pastos"
+                    id="btn-toggle-table">
+                    📋 Tabela
+                </button>
+                <div class="mapa-legenda">
+                    <span class="legenda-item"><span class="legenda-cor" style="background:#16A34A;"></span>Com
+                        gado</span>
+                    <span class="legenda-item"><span class="legenda-cor" style="background:#F97316;"></span>Em
+                        obra</span>
+                    <span class="legenda-item"><span class="legenda-cor" style="background:#8B95A5;"></span>Vazio</span>
+                    <span class="legenda-item"><span class="legenda-cor"
+                            style="background:linear-gradient(90deg,#065F46,#86EFAC);"></span>Descanso</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ VIEW: AUDITORIA ══ -->
+        <section id="view-auditoria" class="view hidden module-view gerencia-only" style="overflow-y:auto;padding-bottom:96px;min-height:100vh;background:var(--bg-0);">
+            <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--bg-1);border-bottom:1px solid var(--border-0);">
+                <button onclick="window.app.navigate('financeiro')" style="background:none;border:none;color:var(--text-1);font-size:20px;cursor:pointer;">←</button>
+                <h2 style="margin:0;font-size:18px;color:var(--text-0);flex:1;">🛡 Auditoria Financeira</h2>
+                <button onclick="window.iaAuditoria.executarAuditoria()" style="background:var(--accent-green,#22C55E);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">▶ Executar</button>
+            </div>
+            <div id="auditoria-kpis" style="padding:12px 16px;"></div>
+            <div id="auditoria-status" style="padding:0 16px 8px;font-size:13px;color:var(--text-2);"></div>
+            <div style="display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap;">
+                <button onclick="window.iaAuditoria.exportarRelatorio('print')" style="background:#7C3AED22;color:#7C3AED;border:1px solid #7C3AED44;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">🖨 Relatorio</button>
+                <button onclick="window.iaAuditoria._exportarJSON()" style="background:#05966922;color:#059669;border:1px solid #05966944;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">📥 JSON</button>
+                <button onclick="window.iaAuditoria.syncAuditLogToFirestore()" style="background:#3B82F622;color:#3B82F6;border:1px solid #3B82F644;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">☁ Sync</button>
+                <button onclick="window.iaAuditoria.executarAuditoriaAlgoritmica()" style="background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B44;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">🔬 Bias Check</button>
+                <button onclick="window.iaAuditoria.limparAnomalias()" style="background:#EF444422;color:#EF4444;border:1px solid #EF444444;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;">🗑 Limpar</button>
+            </div>
+            <div id="auditoria-dashboard"></div>
+            <div id="auditoria-checklist"></div>
+            <div id="auditoria-algo-report"></div>
+            <div id="auditoria-lista" style="padding:0 16px 24px;">
+                <div style="text-align:center;padding:48px 16px;color:var(--text-2);">
+                    <div style="font-size:48px;margin-bottom:12px;">🛡</div>
+                    <p style="margin:0 0 4px;font-size:15px;">Auditoria ainda nao executada.</p>
+                    <p style="margin:0;font-size:13px;opacity:0.7;">Toque em "Executar" para analisar os dados financeiros.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar — Campo Vivo -->
+    <nav class="bottom-nav">
+        <button class="nav-item" onclick="app.navigate('home')" id="nav-home">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-home">home</span>
+            </div>
+            <span>Painel</span>
+        </button>
+        <button class="nav-item" onclick="app.navigate('obras')" id="nav-operacoes">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-obra">precision_manufacturing</span>
+            </div>
+            <span>Operações</span>
+        </button>
+        <button class="nav-item" onclick="app.navigate('ia-chefa')" id="nav-ia-chefa"
+            style="position:relative; top:-8px;">
+            <div class="nav-icon" style="width:54px; height:54px; border-radius:18px; background:var(--primary); color:white; box-shadow: 0 4px 16px var(--primary-glow);">
+                <span class="material-symbols-outlined" id="nav-icon-ia-chefa" style="font-size:26px;">psychology</span>
+            </div>
+            <span id="nav-label-ia" style="color:var(--primary); font-weight:800;">Clara</span>
+        </button>
+        <button class="nav-item gerencia-only" onclick="app.navigate('financeiro')" id="nav-financeiro">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-financeiro">account_balance_wallet</span>
+            </div>
+            <span>Financeiro</span>
+        </button>
+        <button class="nav-item" onclick="app.navigate('lotes')" id="nav-rebanho">
+            <div class="nav-icon">
+                <span class="material-symbols-outlined" id="nav-icon-rebanho">pets</span>
+            </div>
+            <span id="nav-label-rebanho">Rebanho</span>
+        </button>
+    </nav>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- Scripts -->
+    <script src="js/icons.js?v=20260212a"></script>
+    <script src="js/data.js?v=20260219b"></script>
+    <script src="js/context-builder.js?v=20260411a"></script>
+    <script src="js/action-bus.js?v=20260411a"></script>
+    <script src="js/agent-orchestrator.js?v=20260411a"></script>
+    <script src="js/leitor-cocho.js?v=20260411a"></script>
+    <script src="js/learning-store.js?v=20260411a"></script>
+    <script src="js/rebanho.js?v=20260211r"></script>
+    <script src="js/pastos.js?v=20260211r"></script>
+    <script src="js/lotes.js?v=20260211r"></script>
+    <script src="js/obras.js?v=20260211r"></script>
+    <script src="js/manejo.js?v=20260211r"></script>
+    <script src="js/financeiro.js?v=20260413g"></script>
+    <script src="js/estoque.js?v=20260211r"></script>
+    <script src="js/funcionarios.js?v=20260211r"></script>
+    <script src="js/rebanho-ops.js?v=20260211s"></script>
+    <script src="js/clima.js"></script>
+    <script src="js/pasto-mgmt.js?v=20260211s"></script>
+    <script src="js/calendario.js?v=20260212b"></script>
+    <script src="js/graficos.js?v=20260212a"></script>
+    <script src="js/relatorio.js?v=20260212a"></script>
+    <script src="js/contas.js?v=20260211s"></script>
+    <script src="js/indicadores.js?v=20260211s"></script>
+    <script src="js/nutricao.js"></script>
+    <script src="js/nutricao-ia.js"></script>
+    <script src="js/zoo-indices.js"></script>
+    <script src="js/formulacao-racao.js"></script>
+    <script src="js/balanca.js"></script>
+    <script src="js/blockchain.js"></script>
+    <script src="js/cabecas.js?v=20260212a"></script>
+    <script src="js/rastreabilidade.js"></script>
+    <script src="js/fotos.js?v=20260213a"></script>
+    <script src="js/fazenda-data.js?v=20260219a"></script>
+    <script src="js/mapa.js?v=20260220b"></script>
+    <script src="js/ia-consultor.js?v=20260413d"></script>
+    <script src="js/ux-helpers.js?v=20260219a"></script>
+    <script src="js/resultados.js?v=20260219a"></script>
+    <script src="js/config-loader.js?v=20260413b"></script>
+    <script src="js/firebase-sync.js?v=20260413g"></script>
+    <script src="js/ia-chefa.js?v=20260301a"></script>
+
+    <!-- Arquitetura Refatorada -->
+    <script src="refatoracao/domain/EventTypes.js"></script>
+    <script src="refatoracao/domain/EventValidator.js"></script>
+    <script src="refatoracao/models/AuthorEntity.js"></script>
+    <script src="refatoracao/models/NetworkAuthor.js"></script>
+    <script src="refatoracao/models/UIModel.js"></script>
+    <script src="refatoracao/repository/EventRepository.js"></script>
+    <script src="refatoracao/domain/AuditLog.js"></script>
+    <script src="refatoracao/domain/ConflictResolver.js"></script>
+    <script src="refatoracao/services/WorkManager.js"></script>
+    <script src="refatoracao/services/SyncManager.js"></script>
+    <script src="refatoracao/services/SyncConfig.js"></script>
+    <script src="refatoracao/architecture/index.js"></script>
+    <script src="js/ia-auditoria.js?v=20260409a"></script>
+
+    <script src="app.js?v=20260413d"></script>
+    <script>
+        (function () {
+            var panelInfo = {
+                cadastro: {
+                    title: 'Cadastro completo',
+                    description: 'Construa um cadastro detalhado com nome, capacidade, talhão e fotos.',
+                    apps: [
+                        'Capins e solos com atributos técnicos',
+                        'Ligações entre lotes e pastos',
+                        'Fotos, sondagens e alertas em um só lugar'
+                    ],
+                    route: 'pastos'
+                },
+                aplicacoes: {
+                    title: 'Aplicações registradas',
+                    description: 'Aplique defensivos, rações e adubos com cálculo automático de carência.',
+                    apps: [
+                        'Aplicações por lote com dose recomendada',
+                        'Bloqueio automático de carência',
+                        'Baixa instantânea de estoque'
+                    ],
+                    route: 'manejo'
+                },
+                rotacao: {
+                    title: 'Rotação inteligente',
+                    description: 'Mapa de descanso e alertas de próximos piquetes para o rebanho.',
+                    apps: [
+                        'Calendário de rotação com lembretes',
+                        'Indicador de capacidade por dia',
+                        'Anexos de pastoreio e tempo de descanso'
+                    ],
+                    route: 'calendario'
+                },
+                alertas: {
+                    title: 'Alertas críticos',
+                    description: 'Monitore carência, Estoque ruim e perda de cobertura com prioridades.',
+                    apps: [
+                        'Badge com contagem de carência',
+                        'Alertas de estoque mínimo',
+                        'Notificações push (future)'
+                    ],
+                    route: 'pastos'
+                },
+                mapa: {
+                    title: 'Mapa & fotos',
+                    description: 'Abre a tela de mapa para ver limites, cercas e imagens aéreas.',
+                    apps: [
+                        'Visualização de talhões',
+                        'Camadas de sensores e fotos',
+                        'Marcações para campo e GPS'
+                    ],
+                    route: 'mapa'
+                }
+            };
+            var cards = document.querySelectorAll('.pasto-card');
+            var titleEl = document.getElementById('pasto-panel-title');
+            var descEl = document.getElementById('pasto-panel-description');
+            var appsEl = document.getElementById('pasto-panel-apps');
+            var openBtn = document.getElementById('pasto-panel-open');
+            if (!cards.length || !titleEl || !descEl || !appsEl || !openBtn) return;
+            function setPanel(key, card) {
+                var info = panelInfo[key] || panelInfo.cadastro;
+                titleEl.textContent = info.title;
+                descEl.textContent = info.description;
+                appsEl.innerHTML = info.apps.map(function (item) {
+                    return '<li>' + item + '</li>';
+                }).join('');
+                cards.forEach(function (node) {
+                    node.classList.toggle('active', node === card);
+                });
+                openBtn.onclick = function () {
+                    var route = info.route || (card && card.dataset.panelRoute);
+                    if (route && window.app && window.app.navigate) {
+                        window.app.navigate(route);
+                    }
+                };
+            }
+            cards.forEach(function (card) {
+                card.addEventListener('click', function () {
+                    var key = card.dataset.panelKey || 'cadastro';
+                    setPanel(key, card);
+                });
+            });
+            setPanel(cards[0].dataset.panelKey || 'cadastro', cards[0]);
+        })();
+    </script>
+
+    <!-- Theme & Greeting Init -->
+    <script>
+            (function () {
+                var h = new Date().getHours();
+
+                // Light mode only — no dark mode
+
+                // Greeting
+                var greetEl = document.getElementById('greeting-text');
+                var dateEl = document.getElementById('greeting-date');
+                if (greetEl) {
+                    if (h < 6) greetEl.textContent = 'Boa madrugada';
+                    else if (h < 12) greetEl.textContent = 'Bom dia';
+                    else if (h < 18) greetEl.textContent = 'Boa tarde';
+                    else greetEl.textContent = 'Boa noite';
+                }
+                if (dateEl) {
+                    var days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                    var months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                    var now = new Date();
+                    dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' de ' + months[now.getMonth()] + ' de ' + now.getFullYear();
+                }
+
+                // Inject SVG icons into all data-icon elements
+                if (window.ICONS) {
+                    document.querySelectorAll('[data-icon]').forEach(function (el) {
+                        var key = el.getAttribute('data-icon');
+                        if (window.ICONS[key]) el.innerHTML = window.ICONS[key];
+                    });
+                }
+            })();
+    </script>
+
+    <script>
+        // Register Service Worker with AUTO-UPDATE
+        if ('serviceWorker' in navigator) {
+            var refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (!refreshing) {
+                    refreshing = true;
+                    console.log('[PWA] Nova versão detectada! Recarregando...');
+                    window.location.reload();
+                }
+            });
+            navigator.serviceWorker.register('/sw.js').then(function (reg) {
+                console.log('[PWA] Service Worker registered:', reg.scope);
+                // Check for updates every 60 seconds
+                setInterval(function () {
+                    reg.update().catch(function () { });
+                }, 60000);
+                // Also check immediately
+                reg.update().catch(function () { });
+            }).catch(function (err) {
+                console.log('[PWA] SW registration failed:', err);
+            });
+        }
+    </script>
+
+    <!-- IA Consultor Modal -->
+    <div id="ia-modal" class="ia-modal">
+        <div class="ia-modal-content">
+            <div class="ia-header">
+                <div class="ia-header-left">
+                    <img src="img/boteco-avatar.png" class="ia-header-avatar">
+                    <div>
+                        <div class="ia-header-title">Secretária AgroMacro</div>
+                        <div class="ia-header-sub">Inteligência Artificial Pecuária</div>
+                    </div>
+                </div>
+                <div class="ia-header-actions">
+                    <button class="ia-header-btn" onclick="window.iaConsultor.limparHistorico()"
+                        title="Limpar">🗑️</button>
+                    <button class="ia-header-btn" onclick="window.iaConsultor.toggle()" title="Fechar">✕</button>
+                </div>
+            </div>
+            <div id="ia-messages" class="ia-messages"></div>
+            <div id="ia-typing" class="ia-typing" style="display:none;">
+                <div class="ia-typing-dots"><span></span><span></span><span></span></div>
+                <span>AgroIA está analisando seus dados...</span>
+            </div>
+            <div class="ia-input-bar">
+                <button id="ia-mic-btn" class="ia-mic-btn" onclick="window.iaConsultor._toggleVoz()"
+                    title="Falar por voz">🎙️</button>
+                <button id="ia-tts-btn" class="ia-tts-btn" onclick="window.iaConsultor._toggleTTS()"
+                    title="Ouvir respostas (TTS)">🔇</button>
+                <button id="ia-voice-loop-btn" class="ia-voice-loop-btn" onclick="window.iaConsultor._toggleModoVozContinuo()"
+                    title="Modo voz contínuo (fala→responde→escuta)">🔄</button>
+                <button id="ia-cocho-btn" class="ia-cocho-btn" onclick="window.leitorCocho.capturarFoto()"
+                    title="Analisar cocho com câmera">📸</button>
+                <input type="text" id="ia-input" class="ia-input" placeholder="Fale ou digite..." autocomplete="off">
+                <button class="ia-send-btn" onclick="window.iaConsultor._enviarDoInput()">➤</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
