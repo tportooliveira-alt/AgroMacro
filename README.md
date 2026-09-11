@@ -43,7 +43,6 @@ src/
   ui/          componentes base (Kpi, Campo, Modal, Aviso), icones SVG
   features/    uma tela por arquivo: Inicio, Pastos, Rebanho, Manejo, Financeiro, Equipe, Configuracoes
 docs/          guia tecnico de pecuaria de corte e pesquisas de pastagem (referencia de dominio)
-_legado/       codigo antigo em quarentena - ver secao abaixo
 ```
 
 ## Legado
@@ -54,8 +53,6 @@ Nada ali e carregado pelo app novo. Quando nao precisar mais consultar, apague d
 
 ```bash
 git rm -r _legado && git commit -m "chore: remover legado"
-```
-
 ## Proximos passos sugeridos
 
 1. Sincronizacao multi-aparelho (Firebase Auth + Firestore) por cima de `src/data/db.ts`.
